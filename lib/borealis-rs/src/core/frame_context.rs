@@ -1,6 +1,6 @@
 use nanovg::Context;
 
-struct FrameContext {
+pub struct FrameContext {
     vg: Context,
     pixel_ratio: f32,
 }

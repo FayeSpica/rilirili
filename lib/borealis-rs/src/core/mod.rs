@@ -6,7 +6,9 @@ pub mod application;
 pub mod font;
 pub mod frame_context;
 pub mod platform;
-pub mod view;
+pub mod view_base;
+mod view_box;
+mod style;
 
 use nanovg::{Color, Context, PathOptions};
 use raw_window_handle::{
@@ -23,7 +25,7 @@ use winit::platform::unix;
 use winit::platform::unix::WindowBuilderExtUnix;
 use winit::window::{Window, WindowBuilder};
 
-use crate::core::view::View;
+use crate::core::view_base::BaseView;
 use glutin::config::{Config, ConfigSurfaceTypes, ConfigTemplate, ConfigTemplateBuilder};
 use glutin::context::{ContextApi, ContextAttributesBuilder};
 use glutin::display::{Display, DisplayApiPreference};
@@ -325,7 +327,7 @@ pub struct Renderer {
     vbo: gl::types::GLuint,
     gl: gl::Gl,
     context: Context,
-    views: Vec<View>,
+    views: Vec<BaseView>,
 }
 
 impl Renderer {
@@ -411,9 +413,9 @@ impl Renderer {
                 gl,
                 context,
                 views: vec![
-                    View::new(0.0, 0.0, 50.0, 50.0),
-                    View::new(0.0, 80.0, 10.0, 10.0),
-                    View::new(100.0, 100.0, 30.0, 30.0),
+                    BaseView::new(0.0, 0.0, 50.0, 50.0),
+                    BaseView::new(0.0, 80.0, 10.0, 10.0),
+                    BaseView::new(100.0, 100.0, 30.0, 30.0),
                 ],
             }
         }
