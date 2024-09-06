@@ -1,0 +1,19 @@
+[package]
+name = "rilirili"
+version = "0.1.0"
+edition = "2021"
+
+[workspace]
+
+members = [
+    ".",
+    "lib/borealis-rs"
+]
+
+[dependencies]
+borealis-rs = { path = "lib/borealis-rs" }
+
+
+log = "0.4.22"
+env_logger = "0.11.5"
+anyhow = "1.0.86"
