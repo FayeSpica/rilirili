@@ -1,9 +1,10 @@
 use std::cell::RefCell;
 use crate::core::global::{content_height, content_width};
-use crate::core::view_base::{View, ViewLayout};
+use crate::core::view_base::View;
 use crate::core::view_creator::ViewCreator;
 use std::path::PathBuf;
 use std::rc::Rc;
+use crate::core::view_layout::ViewLayout;
 
 pub struct ActivityViewData {
     pub xml_path: PathBuf,

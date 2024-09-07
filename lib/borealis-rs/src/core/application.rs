@@ -1,21 +1,23 @@
 use std::cell::RefCell;
 use crate::core::activity::{Activity, ActivityDyn};
 use crate::core::frame_context::FrameContext;
-use crate::core::view_base::{BaseView, View, ViewDraw};
+use crate::core::view_base::{BaseView, View};
 use crate::core::view_box::BoxView;
-use crate::core::GlWindow;
+use crate::core::{gl, GlWindow};
 use glutin::prelude::{GlSurface, NotCurrentGlContextSurfaceAccessor, PossiblyCurrentGlContext};
 use glutin::surface::SwapInterval;
-use nanovg_sys::{nvgBeginFrame, nvgEndFrame};
+use nanovg_sys::{nvgBeginFrame, nvgBeginPath, nvgEndFrame, nvgFill, nvgFillColor, nvgRect, nvgRGB, nvgRGBA};
 use std::ffi::c_float;
 use std::num::NonZeroU32;
 use std::rc::Rc;
 use std::sync::Arc;
+use nanovg::{Color, PathOptions};
 use winit::dpi::{LogicalSize, PhysicalSize};
 use winit::event::{Event, WindowEvent};
 use winit::event_loop::EventLoop;
 use winit::window::WindowBuilder;
 use crate::core::global::{set_content_height, set_content_width, set_window_height, set_window_scale, set_window_width, window_height, window_scale, window_width};
+use crate::core::view_drawer::ViewDrawer;
 
 const ORIGINAL_WINDOW_WIDTH: u32 = 1280;
 const ORIGINAL_WINDOW_HEIGHT: u32 = 720;
@@ -96,7 +98,7 @@ impl Application {
 
                         // Request opacity for window on macOS explicitly.
                         #[cfg(cgl_backend)]
-                        let window = WindowBuilder::new().with_transparent(true);
+                        let window = WindowBuilder::new();
 
                         // We must pass the visual into the X11 window upon creation, otherwise we
                         // could have mismatch errors during context activation and swap buffers.
@@ -139,7 +141,7 @@ impl Application {
                     trace!("Event::Suspended");
                     // This event is only raised on Android, where the backing NativeWindow for a GL
                     // Surface can appear and disappear at any moment.
-                    println!("Android window removed");
+                    warn!("Android window removed");
 
                     // Destroy the GL Surface and un-current the GL Context before ndk-glue releases
                     // the window back to the system.
@@ -167,8 +169,11 @@ impl Application {
                                     NonZeroU32::new(size.width).unwrap(),
                                     NonZeroU32::new(size.height).unwrap(),
                                 );
-                                // let renderer = renderer.as_ref().unwrap();
-                                // renderer.resize(size.width as i32, size.height as i32);
+                                let ctx =
+                                    frame_context.get_or_insert_with(|| FrameContext::new(&gl_display));
+                                unsafe {
+                                    ctx.gl.Viewport(0, 0, size.width as i32, size.height as i32);
+                                }
                                 self.set_window_size(size.width, size.height);
                             }
                         }
@@ -188,8 +193,11 @@ impl Application {
                         // renderer.draw(gl_window);
                         let ctx =
                             frame_context.get_or_insert_with(|| FrameContext::new(&gl_display));
+                        unsafe {
+                            ctx.gl.Clear(gl::COLOR_BUFFER_BIT);
+                        }
                         self.frame(ctx, gl_window);
-                        gl_window.window.request_redraw();
+                        // gl_window.window.request_redraw();
                         gl_window.surface.swap_buffers(gl_context).unwrap();
                     }
                 }
@@ -210,7 +218,7 @@ impl Application {
         let width = gl_window.window.inner_size().width;
         let height = gl_window.window.inner_size().height;
         // trace!("gl_window.window.inner_size(): {:?}", gl_window.window.inner_size());
-        // trace!("gl_window.window.scale_factor(): {}", gl_window.window.scale_factor());
+        // trace!("gl_window.window.scale_factor(): {} {}", gl_window.window.scale_factor(), window_scale());
         unsafe {
             nvgBeginFrame(
                 ctx.vg().raw(),
@@ -218,6 +226,18 @@ impl Application {
                 height as c_float,
                 gl_window.window.scale_factor() as c_float,
             );
+        }
+        unsafe {
+            nvgBeginPath(ctx.vg().raw());
+            nvgRect(
+                ctx.vg().raw(),
+                100.0,
+                100.0,
+                100.0,
+                100.0,
+            );
+            nvgFillColor(ctx.vg().raw(), nvgRGB(255, 100, 0, ));
+            nvgFill(ctx.vg().raw());
         }
         for view in &self.views_to_draw {
             view.borrow().frame(ctx);
@@ -242,6 +262,7 @@ impl Application {
     pub fn register_xml_view(&self, name: &str, creator: XMLViewCreator) {}
 
     pub fn push_activity(&mut self, mut activity: Activity) {
+        warn!("push activity");
         activity.set_content_view(activity.create_content_view());
         activity.on_content_available();
         activity.resize_to_fit_window();
@@ -253,10 +274,12 @@ impl Application {
         set_window_width(width);
         set_window_height(height);
 
+        let scale = width as f32 / ORIGINAL_WINDOW_WIDTH as f32;
+
         // Rescale UI
-        set_window_scale(width as f32 / ORIGINAL_WINDOW_WIDTH as f32);
-        set_content_width(ORIGINAL_WINDOW_WIDTH as f32 * window_scale());
-        set_content_height(height as f32 * window_scale());
+        set_window_scale(scale);
+        set_content_width(ORIGINAL_WINDOW_WIDTH as f32);
+        set_content_height(ORIGINAL_WINDOW_HEIGHT as f32);
 
         for activity in &self.activities_stack {
             activity.borrow().on_window_size_changed();

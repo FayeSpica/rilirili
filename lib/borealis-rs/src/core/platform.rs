@@ -1,5 +1,5 @@
 use glutin::config::{Config, ConfigSurfaceTypes, ConfigTemplate, ConfigTemplateBuilder};
-use glutin::context::{ContextApi, ContextAttributesBuilder, NotCurrentContext};
+use glutin::context::{ContextApi, ContextAttributesBuilder, NotCurrentContext, Version};
 use glutin::display::{Display, DisplayApiPreference, GlDisplay};
 use glutin::prelude::GlConfig;
 use raw_window_handle::{
@@ -104,12 +104,12 @@ pub fn create_window(
 
     let raw_display = event_loop.raw_display_handle();
     let window = cfg!(wgl_backend).then(|| {
+        trace!("wgl_backend");
         // We create a window before the display to accommodate for WGL, since it
         // requires creating HDC for properly loading the WGL and it should be taken
         // from the window you'll be rendering into.
         WindowBuilder::new()
             .with_inner_size(PhysicalSize::new(width, height))
-            .with_transparent(true)
             .build(&event_loop)
             .unwrap()
     });
@@ -118,7 +118,7 @@ pub fn create_window(
     // Create the GL display. This will create display automatically for the
     // underlying GL platform. See support module on how it's being done.
     let gl_display = crate::core::create_display(raw_display, raw_window_handle);
-    println!("Running on: {}", gl_display.version_string());
+    warn!("Running on: {}", gl_display.version_string());
 
     // Create the config we'll be used for window. We'll use the native window
     // raw-window-handle for it to get the right visual and use proper hdc. Note
@@ -162,27 +162,14 @@ pub fn create_window(
         })
         .unwrap();
 
-    println!("Picked a config with {} samples", config.num_samples());
+    warn!("Picked a config with {} samples", config.num_samples());
 
-    // The context creation part. It can be created before surface and that's how
-    // it's expected in multithreaded + multiwindow operation mode, since you
-    // can send NotCurrentContext, but not Surface.
-    let context_attributes = ContextAttributesBuilder::new().build(raw_window_handle);
-
-    // Since glutin by default tries to create OpenGL core context, which may not be
-    // present we should try gles.
-    let fallback_context_attributes = ContextAttributesBuilder::new()
-        .with_context_api(ContextApi::Gles(None))
+    let context_attributes = ContextAttributesBuilder::new()
+        .with_context_api(ContextApi::Gles(Some(Version::new(2, 0))))
         .build(raw_window_handle);
 
     let not_current_gl_context = Some(unsafe {
-        gl_display
-            .create_context(&config, &context_attributes)
-            .unwrap_or_else(|_| {
-                gl_display
-                    .create_context(&config, &fallback_context_attributes)
-                    .expect("failed to create context")
-            })
+        gl_display.create_context(&config, &context_attributes).unwrap()
     });
 
     trace!("platform create_window end");

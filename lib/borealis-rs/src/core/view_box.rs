@@ -1,4 +1,6 @@
-use crate::core::view_base::{ViewBase, ViewData, ViewDraw, ViewLayout};
+use crate::core::view_base::{ViewBase, ViewData};
+use crate::core::view_drawer::ViewDrawer;
+use crate::core::view_layout::ViewLayout;
 
 pub struct BoxView {
     view_data: ViewData,
@@ -29,4 +31,4 @@ impl ViewBase for BoxView {
 
 impl ViewLayout for BoxView {}
 
-impl ViewDraw for BoxView {}
+impl ViewDrawer for BoxView {}

@@ -3,18 +3,17 @@ extern crate android_log;
 #[macro_use]
 extern crate log;
 
+use borealis_rs::core::activity::Activity;
 use borealis_rs::core::application;
+use borealis_rs::demo::activity::main_activity::MainActivity;
 
 #[ndk_glue::main(backtrace = "on")]
 fn main() {
     android_log::init("borealis").unwrap();
 
-    trace!("Initialized Rust");
-    debug!("Address is {:p}", main as *const ());
-    info!("Did you know? {} = {}", "1 + 1", 2);
-    warn!("Don't log sensitive information!");
-    error!("Nothing more to say");
     let (mut application, event_loop) = application::Application::init().unwrap();
+
+    application.push_activity(Activity::MainActivity(MainActivity::new()));
 
     application.main_loop(event_loop);
 

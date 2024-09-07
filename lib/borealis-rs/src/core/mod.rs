@@ -14,6 +14,8 @@ pub mod theme;
 pub mod view_base;
 pub mod view_box;
 pub mod view_creator;
+pub mod view_drawer;
+pub mod view_layout;
 
 use nanovg::{Color, Context, PathOptions};
 use raw_window_handle::{
@@ -271,7 +273,7 @@ impl GlWindow {
 
 /// Create template to find OpenGL config.
 pub fn config_template(raw_window_handle: Option<RawWindowHandle>) -> ConfigTemplate {
-    let mut builder = ConfigTemplateBuilder::new().with_alpha_size(8);
+    let mut builder = ConfigTemplateBuilder::new();
 
     if let Some(raw_window_handle) = raw_window_handle {
         builder = builder
