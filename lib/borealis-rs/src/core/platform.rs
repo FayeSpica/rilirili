@@ -5,6 +5,7 @@ use glutin::prelude::GlConfig;
 use raw_window_handle::{
     HasRawDisplayHandle, HasRawWindowHandle, RawDisplayHandle, RawWindowHandle,
 };
+use winit::dpi::{LogicalSize, PhysicalSize};
 use winit::event_loop::EventLoop;
 use winit::window::{Window, WindowBuilder};
 
@@ -107,6 +108,7 @@ pub fn create_window(
         // requires creating HDC for properly loading the WGL and it should be taken
         // from the window you'll be rendering into.
         WindowBuilder::new()
+            .with_inner_size(PhysicalSize::new(width, height))
             .with_transparent(true)
             .build(&event_loop)
             .unwrap()

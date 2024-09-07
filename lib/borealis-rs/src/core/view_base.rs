@@ -210,6 +210,7 @@ pub trait ViewLayout: ViewBase {
     }
 
     fn set_dimensions(&self, width: f32, height: f32) {
+        trace!("set_dimensions({}, {})", width, height);
         unsafe {
             YGNodeStyleSetMinWidthPercent(self.data().yg_node, 0.0);
             YGNodeStyleSetMinHeightPercent(self.data().yg_node, 0.0);
@@ -413,7 +414,7 @@ pub trait ViewDraw: ViewLayout {
         }
 
         let rect = self.rect();
-        trace!("rect: {:?}", rect);
+        // trace!("rect: {:?}", rect);
         let x = rect.min_x();
         let y = rect.min_y();
         let width = rect.width();

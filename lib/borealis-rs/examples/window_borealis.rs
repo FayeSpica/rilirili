@@ -14,7 +14,7 @@ fn main() -> anyhow::Result<()> {
         .target(env_logger::Target::Stdout) // 将日志输出到 stdout
         .init();
 
-    let (application, event_loop) = application::Application::init()?;
+    let (mut application, event_loop) = application::Application::init()?;
 
     application.push_activity(Activity::MainActivity(MainActivity::new()));
 

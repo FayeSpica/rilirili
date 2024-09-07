@@ -1,3 +1,4 @@
+use std::cell::RefCell;
 use crate::core::activity::{Activity, ActivityDyn};
 use crate::core::frame_context::FrameContext;
 use crate::core::view_base::{BaseView, View, ViewDraw};
@@ -8,9 +9,13 @@ use glutin::surface::SwapInterval;
 use nanovg_sys::{nvgBeginFrame, nvgEndFrame};
 use std::ffi::c_float;
 use std::num::NonZeroU32;
+use std::rc::Rc;
+use std::sync::Arc;
+use winit::dpi::{LogicalSize, PhysicalSize};
 use winit::event::{Event, WindowEvent};
 use winit::event_loop::EventLoop;
 use winit::window::WindowBuilder;
+use crate::core::global::{set_content_height, set_content_width, set_window_height, set_window_scale, set_window_width, window_height, window_scale, window_width};
 
 const ORIGINAL_WINDOW_WIDTH: u32 = 1280;
 const ORIGINAL_WINDOW_HEIGHT: u32 = 720;
@@ -30,7 +35,9 @@ pub struct Application {
     frane_start_time: i64,
     frame_index: u64,
     global_fps: u64,
-    views_to_draw: Vec<View>,
+    views_to_draw: Vec<Rc<RefCell<View>>>,
+    activities_stack: Vec<Rc<RefCell<Activity>>>,
+    focus_stack: Vec<Rc<RefCell<View>>>,
 }
 
 impl Application {
@@ -53,12 +60,9 @@ impl Application {
                 frane_start_time: now,
                 frame_index: 0,
                 global_fps: 0,
-                views_to_draw: vec![
-                    View::Box(BoxView::new(20.0, 20.0, 100.0, 20.0)),
-                    View::Box(BoxView::new(100.0, 100.0, 60.0, 60.0)),
-                    View::Box(BoxView::new(200.0, 200.0, 80.0, 80.0)),
-                    View::Box(BoxView::new(300.0, 300.0, 100.0, 100.0)),
-                ],
+                views_to_draw: vec![],
+                activities_stack: vec![],
+                focus_stack: vec![],
             },
             EventLoop::new(),
         ))
@@ -88,7 +92,7 @@ impl Application {
                         // other platforms decide on that by what you draw, so there's no need to pass
                         // this information to the window.
                         #[cfg(not(cgl_backend))]
-                        let window = WindowBuilder::new();
+                        let window = WindowBuilder::new().with_inner_size(PhysicalSize::new(window_width(), window_height()));
 
                         // Request opacity for window on macOS explicitly.
                         #[cfg(cgl_backend)]
@@ -165,6 +169,7 @@ impl Application {
                                 );
                                 // let renderer = renderer.as_ref().unwrap();
                                 // renderer.resize(size.width as i32, size.height as i32);
+                                self.set_window_size(size.width, size.height);
                             }
                         }
                     }
@@ -173,7 +178,7 @@ impl Application {
                         control_flow.set_exit();
                     }
                     _ => {
-                        trace!("Event::WindowEvent::_");
+                        // trace!("Event::WindowEvent::_");
                     }
                 },
                 Event::RedrawEventsCleared => {
@@ -215,7 +220,7 @@ impl Application {
             );
         }
         for view in &self.views_to_draw {
-            view.frame(ctx);
+            view.borrow().frame(ctx);
         }
         unsafe {
             nvgEndFrame(ctx.vg().raw());
@@ -236,8 +241,26 @@ impl Application {
 
     pub fn register_xml_view(&self, name: &str, creator: XMLViewCreator) {}
 
-    pub fn push_activity(&self, mut activity: Activity) {
+    pub fn push_activity(&mut self, mut activity: Activity) {
         activity.set_content_view(activity.create_content_view());
+        activity.on_content_available();
+        activity.resize_to_fit_window();
+        self.views_to_draw.push(activity.view_data().content_view.as_ref().unwrap().clone());
+        self.activities_stack.push(Rc::new(RefCell::new(activity)));
+    }
+
+    pub fn set_window_size(&self, width: u32, height: u32) {
+        set_window_width(width);
+        set_window_height(height);
+
+        // Rescale UI
+        set_window_scale(width as f32 / ORIGINAL_WINDOW_WIDTH as f32);
+        set_content_width(ORIGINAL_WINDOW_WIDTH as f32 * window_scale());
+        set_content_height(height as f32 * window_scale());
+
+        for activity in &self.activities_stack {
+            activity.borrow().on_window_size_changed();
+        }
     }
 }
 

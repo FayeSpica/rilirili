@@ -34,7 +34,7 @@ pub trait Activity {
      * are made to make this process simpler: just use them in the public block of your activity
      * header and it will override createContentView() with the right code for you.
      *
-     * The onContentAvailable() method will be called once the content has been created, so that
+     * The on_content_available() method will be called once the content has been created, so that
      * you can get the references to the activity views (by id).
      */
     fn create_content_view(&self) ->  Rc<RefCell<Option<Box<dyn View>>>>;
