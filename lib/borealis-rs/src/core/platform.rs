@@ -77,7 +77,7 @@ pub trait Platform {
     fn get_name() -> String;
 
     /**
-     * Called at every iteration of the main loop.
+     * Called at every iteration of the main.xml loop.
      * Must return false if the app should continue running
      * (for example, return false if the X button was pressed on the window).
      */

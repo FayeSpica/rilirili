@@ -27,7 +27,7 @@ pub trait Activity {
      *
      * Returning nullptr means the content is not known when the activity is created.
      *
-     * You can use View::createFromXMLFile(), View::createFromXMLResource() and View::createFromXMLString() to load
+     * You can use View::createFromXMLFile(), View::create_from_xmlresource() and View::createFromXMLString() to load
      * a view from respectively an XML file path, an XML name in the resources/xml romfs directory and an XML string.
      *
      * The CONTENT_FROM_XML_FILE, CONTENT_FROM_XML_RES, CONTENT_FROM_XML_STR macros

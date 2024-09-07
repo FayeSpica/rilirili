@@ -5,12 +5,15 @@
 pub mod application;
 pub mod font;
 pub mod frame_context;
-mod geometry;
+pub mod geometry;
 pub mod platform;
-mod style;
-mod theme;
+pub mod style;
+pub mod theme;
 pub mod view_base;
-mod view_box;
+pub mod view_box;
+pub mod activity;
+pub mod global;
+pub mod view_creator;
 
 use nanovg::{Color, Context, PathOptions};
 use raw_window_handle::{
@@ -512,7 +515,7 @@ attribute vec3 color;
 
 varying vec3 v_color;
 
-void main() {
+void main.xml() {
     gl_Position = vec4(position, 0.0, 1.0);
     v_color = color;
 }
@@ -524,7 +527,7 @@ precision mediump float;
 
 varying vec3 v_color;
 
-void main() {
+void main.xml() {
     gl_FragColor = vec4(v_color, 1.0);
 }
 \0";

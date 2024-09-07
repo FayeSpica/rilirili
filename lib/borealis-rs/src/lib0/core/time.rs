@@ -36,7 +36,7 @@ impl TickManager {
     }
 
     /**
-     * Called internally by the main loop. Takes all running tickings
+     * Called internally by the main.xml loop. Takes all running tickings
      * and updates them.
      */
     fn update_tickings(&self) {
@@ -73,7 +73,7 @@ impl TickManager {
 // });
 
 // /**
-//  * Called internally by the main loop. Takes all running tickings
+//  * Called internally by the main.xml loop. Takes all running tickings
 //  * and updates them.
 //  */
 // fn update_tickings() {

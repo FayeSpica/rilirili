@@ -14,6 +14,7 @@ use nanovg_sys::{nvgBeginFrame, nvgBeginPath, NVGcolor, nvgEndFrame, nvgFill, nv
 use winit::event::{Event, WindowEvent};
 use winit::event_loop::EventLoop;
 use winit::window::{Window, WindowBuilder};
+use crate::core::activity::{Activity, ActivityDyn};
 use crate::core::view_box::BoxView;
 
 const ORIGINAL_WINDOW_WIDTH: u32 = 1280;
@@ -234,6 +235,10 @@ impl Application {
     }
 
     pub fn register_xml_view(&self, name: &str, creator: XMLViewCreator) {}
+
+    pub fn push_activity(&self, mut activity: Activity) {
+        activity.set_content_view(activity.create_content_view());
+    }
 }
 
 

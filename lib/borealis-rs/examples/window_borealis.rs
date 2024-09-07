@@ -3,7 +3,9 @@ extern crate env_logger;
 extern crate log;
 
 use log::LevelFilter::Trace;
+use borealis_rs::core::activity::Activity;
 use borealis_rs::core::application;
+use borealis_rs::demo::activity::main_activity::MainActivity;
 
 fn main() -> anyhow::Result<()> {
     // 初始化 env_logger
@@ -13,6 +15,8 @@ fn main() -> anyhow::Result<()> {
         .init();
 
     let (mut application, event_loop) = application::Application::init()?;
+
+    application.push_activity(Activity::MainActivity(MainActivity::new()));
 
     application.main_loop(event_loop);
 

@@ -6,7 +6,7 @@ use crate::core::style::{Style, style};
 use crate::core::view_box::BoxView;
 use nanovg::Context;
 use nanovg_sys::{nvgBeginFrame, nvgBeginPath, nvgEndFrame, nvgFill, nvgFillColor, nvgRect, NVGcolor, nvgLinearGradient, nvgFillPaint, nvgRoundedRect, nvgRoundedRectVarying, nvgBoxGradient, nvgRGBA, nvgPathWinding, NVGsolidity, nvgStrokeColor, nvgStrokeWidth, nvgSave, nvgRestore, nvgRGB, nvgStroke, nvgMoveTo, nvgLineTo, nvgResetScissor, nvgIntersectScissor};
-use yoga_sys::{YGDirection, YGEdge, YGNodeCalculateLayout, YGNodeFree, YGNodeLayoutGetHeight, YGNodeLayoutGetLeft, YGNodeLayoutGetMargin, YGNodeLayoutGetPadding, YGNodeLayoutGetTop, YGNodeLayoutGetWidth, YGNodeNew, YGNodeRef, YGNodeStyleSetAlignSelf, YGNodeStyleSetFlexGrow, YGNodeStyleSetFlexShrink, YGNodeStyleSetHeight, YGNodeStyleSetMinHeight, YGNodeStyleSetMinHeightPercent, YGNodeStyleSetMinWidth, YGNodeStyleSetMinWidthPercent, YGNodeStyleSetPosition, YGNodeStyleSetPositionPercent, YGNodeStyleSetPositionType, YGNodeStyleSetWidth};
+use yoga_sys::{YGDirection, YGEdge, YGNodeCalculateLayout, YGNodeFree, YGNodeLayoutGetHeight, YGNodeLayoutGetLeft, YGNodeLayoutGetMargin, YGNodeLayoutGetPadding, YGNodeLayoutGetTop, YGNodeLayoutGetWidth, YGNodeNew, YGNodeRef, YGNodeStyleSetAlignSelf, YGNodeStyleSetFlexGrow, YGNodeStyleSetFlexShrink, YGNodeStyleSetHeight, YGNodeStyleSetHeightAuto, YGNodeStyleSetMinHeight, YGNodeStyleSetMinHeightPercent, YGNodeStyleSetMinWidth, YGNodeStyleSetMinWidthPercent, YGNodeStyleSetPosition, YGNodeStyleSetPositionPercent, YGNodeStyleSetPositionType, YGNodeStyleSetWidth, YGNodeStyleSetWidthAuto};
 use yoga_sys::YGAlign::{YGAlignAuto, YGAlignBaseline, YGAlignCenter, YGAlignFlexEnd, YGAlignFlexStart, YGAlignSpaceAround, YGAlignSpaceBetween, YGAlignStretch};
 use yoga_sys::YGEdge::{YGEdgeBottom, YGEdgeLeft, YGEdgeRight, YGEdgeTop};
 use yoga_sys::YGPositionType::{YGPositionTypeAbsolute, YGPositionTypeRelative};
@@ -195,6 +195,37 @@ pub trait ViewLayout: ViewBase {
 
     fn height(&self) -> f32 {
         return unsafe { YGNodeLayoutGetHeight(self.data().yg_node) };
+    }
+
+    fn set_dimensions(&self, width: f32, height: f32) {
+        unsafe {
+            YGNodeStyleSetMinWidthPercent(self.data().yg_node, 0.0);
+            YGNodeStyleSetMinHeightPercent(self.data().yg_node, 0.0);
+
+            match width == AUTO {
+                true => {
+                    YGNodeStyleSetWidthAuto(self.data().yg_node);
+                    YGNodeStyleSetMinWidth(self.data().yg_node, YG_UNDEFINED);
+                }
+                false => {
+                    YGNodeStyleSetWidth(self.data().yg_node, width);
+                    YGNodeStyleSetMinWidth(self.data().yg_node, width);
+                }
+            }
+
+            match height == AUTO {
+                true => {
+                    YGNodeStyleSetHeightAuto(self.data().yg_node);
+                    YGNodeStyleSetMinHeight(self.data().yg_node, YG_UNDEFINED);
+                }
+                false => {
+                    YGNodeStyleSetHeight(self.data().yg_node, height);
+                    YGNodeStyleSetMinHeight(self.data().yg_node, height);
+                }
+            }
+        }
+
+        self.invalidate();
     }
 
     fn set_width(&self, width: f32) {
@@ -731,7 +762,6 @@ pub enum AlignSelf {
     SpaceBetween,
     SpaceAround,
 }
-
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub enum Visibility {
     Visible,

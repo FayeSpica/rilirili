@@ -1,7 +1,7 @@
 use crate::lib::core::time::{empty_end_fn, empty_fn, Ticking, Timestamp};
 use crate::lib::core::timer::RepeatingTimer;
 
-// A RepeatingTask is a task executed repeatedly on the main thread at a given period in ms
+// A RepeatingTask is a task executed repeatedly on the main.xml thread at a given period in ms
 pub struct RepeatingTask {
     repeat_timer: RepeatingTimer
 }
@@ -27,7 +27,7 @@ impl RepeatingTask {
     }
 
     /**
-     * Task handler executed repeatedly on the main thread at the given period.
+     * Task handler executed repeatedly on the main.xml thread at the given period.
      */
     pub fn run(&self) {
 
