@@ -51,7 +51,7 @@ pub trait ViewCreator {
         //     }
         // }
 
-        Rc::new(RefCell::new(View::Box(BoxView::new(100.0, 100.0, 100.0, 100.0))))
+        Rc::new(RefCell::new(View::Box(BoxView::new(0.0, 0.0, 0.0, 0.0))))
     }
 }
 

@@ -109,6 +109,7 @@ pub fn create_window(
         // requires creating HDC for properly loading the WGL and it should be taken
         // from the window you'll be rendering into.
         WindowBuilder::new()
+            .with_title(title)
             .with_inner_size(PhysicalSize::new(width, height))
             .build(&event_loop)
             .unwrap()

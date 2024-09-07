@@ -11,7 +11,7 @@ use borealis_rs::demo::activity::main_activity::MainActivity;
 fn main() {
     android_log::init("borealis").unwrap();
 
-    let (mut application, event_loop) = application::Application::init().unwrap();
+    let (mut application, event_loop) = application::Application::init("rilirili").unwrap();
 
     application.push_activity(Activity::MainActivity(MainActivity::new()));
 

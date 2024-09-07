@@ -47,7 +47,7 @@ impl Application {
      * Inits the borealis application.
      * Returns Ok if it succeeded, Err otherwise.
      */
-    pub fn init() -> anyhow::Result<(Self, EventLoop<()>)> {
+    pub fn init(title: &str) -> anyhow::Result<(Self, EventLoop<()>)> {
         let now = chrono::Local::now().timestamp_nanos();
         unsafe {
             // Init yoga
@@ -56,7 +56,7 @@ impl Application {
         }
         Ok((
             Application {
-                title: "".to_string(),
+                title: title.into(),
                 current_focus: None,
                 start_time: now,
                 frane_start_time: now,
@@ -77,7 +77,7 @@ impl Application {
         let (mut window, gl_display, mut not_current_gl_context, config) =
             crate::core::platform::create_window(
                 &event_loop,
-                "",
+                &self.title,
                 ORIGINAL_WINDOW_WIDTH,
                 ORIGINAL_WINDOW_HEIGHT,
             );
@@ -278,8 +278,8 @@ impl Application {
 
         // Rescale UI
         set_window_scale(scale);
-        set_content_width(ORIGINAL_WINDOW_WIDTH as f32);
-        set_content_height(ORIGINAL_WINDOW_HEIGHT as f32);
+        set_content_width(ORIGINAL_WINDOW_WIDTH as f32 * scale);
+        set_content_height(ORIGINAL_WINDOW_HEIGHT as f32 * scale);
 
         for activity in &self.activities_stack {
             activity.borrow().on_window_size_changed();
