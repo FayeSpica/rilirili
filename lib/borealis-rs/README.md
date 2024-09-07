@@ -2,7 +2,7 @@
 rust reimplement of https://github.com/natinusala/borealis
 
 ```shell
-cargo run --example wiliwili
+cargo run --example window_borealis
 ```
 
 ## mingw64
@@ -40,4 +40,5 @@ export ANDROID_NDK_ROOT=
 export PATH=JAVA_HOME/bin
 
 cargo apk r -p borealis-rs --example android
+cargo apk r -p borealis-rs --example android_borealis
 ```

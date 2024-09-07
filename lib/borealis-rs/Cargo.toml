@@ -23,6 +23,8 @@ log = "0.4.22"
 env_logger = "0.11.5"
 anyhow = "1.0.86"
 yoga-sys = "0.2.3"
+chrono = "0.4.38"
+lazy_static = "1.5.0"
 
 [target.'cfg(target_os = "android")'.dependencies]
 ndk-glue = "0.7" # Keep in sync with winit dependency
@@ -33,5 +35,5 @@ gl_generator = "0.14"
 cfg_aliases = "0.1.1"
 
 [[example]]
-name = "android"
+name = "android_borealis"
 crate-type = ["cdylib"]

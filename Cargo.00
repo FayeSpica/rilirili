@@ -7,11 +7,11 @@ edition = "2021"
 
 members = [
     ".",
-    "lib/borealis-rs"
+#    "lib/borealis-rs"
 ]
 
 [dependencies]
-borealis-rs = { path = "lib/borealis-rs" }
+#borealis-rs = { path = "lib/borealis-rs" }
 
 
 log = "0.4.22"

@@ -5,10 +5,12 @@
 pub mod application;
 pub mod font;
 pub mod frame_context;
+mod geometry;
 pub mod platform;
+mod style;
+mod theme;
 pub mod view_base;
 mod view_box;
-mod style;
 
 use nanovg::{Color, Context, PathOptions};
 use raw_window_handle::{
@@ -133,9 +135,6 @@ pub fn main() {
             Event::Resumed => {
                 // While this event is only relevant for Android, it is raised on all platforms
                 // to provide a consistent place to create windows
-
-                #[cfg(target_os = "android")]
-                println!("Android window available");
 
                 // Take a possibly early created window, or create a new one
                 let window = window.take().unwrap_or_else(|| {
@@ -322,9 +321,9 @@ pub fn create_display(
 }
 
 pub struct Renderer {
-    program: gl::types::GLuint,
-    vao: gl::types::GLuint,
-    vbo: gl::types::GLuint,
+    // program: gl::types::GLuint,
+    // vao: gl::types::GLuint,
+    // vbo: gl::types::GLuint,
     gl: gl::Gl,
     context: Context,
     views: Vec<BaseView>,
@@ -385,31 +384,31 @@ impl Renderer {
                 gl::STATIC_DRAW,
             );
 
-            let pos_attrib = gl.GetAttribLocation(program, b"position\0".as_ptr() as *const _);
-            let color_attrib = gl.GetAttribLocation(program, b"color\0".as_ptr() as *const _);
-            gl.VertexAttribPointer(
-                pos_attrib as gl::types::GLuint,
-                2,
-                gl::FLOAT,
-                0,
-                5 * std::mem::size_of::<f32>() as gl::types::GLsizei,
-                std::ptr::null(),
-            );
-            gl.VertexAttribPointer(
-                color_attrib as gl::types::GLuint,
-                3,
-                gl::FLOAT,
-                0,
-                5 * std::mem::size_of::<f32>() as gl::types::GLsizei,
-                (2 * std::mem::size_of::<f32>()) as *const () as *const _,
-            );
-            gl.EnableVertexAttribArray(pos_attrib as gl::types::GLuint);
-            gl.EnableVertexAttribArray(color_attrib as gl::types::GLuint);
+            // let pos_attrib = gl.GetAttribLocation(program, b"position\0".as_ptr() as *const _);
+            // let color_attrib = gl.GetAttribLocation(program, b"color\0".as_ptr() as *const _);
+            // gl.VertexAttribPointer(
+            //     pos_attrib as gl::types::GLuint,
+            //     2,
+            //     gl::FLOAT,
+            //     0,
+            //     5 * std::mem::size_of::<f32>() as gl::types::GLsizei,
+            //     std::ptr::null(),
+            // );
+            // gl.VertexAttribPointer(
+            //     color_attrib as gl::types::GLuint,
+            //     3,
+            //     gl::FLOAT,
+            //     0,
+            //     5 * std::mem::size_of::<f32>() as gl::types::GLsizei,
+            //     (2 * std::mem::size_of::<f32>()) as *const () as *const _,
+            // );
+            // gl.EnableVertexAttribArray(pos_attrib as gl::types::GLuint);
+            // gl.EnableVertexAttribArray(color_attrib as gl::types::GLuint);
 
             Self {
-                program,
-                vao,
-                vbo,
+                // program,
+                // vao,
+                // vbo,
                 gl,
                 context,
                 views: vec![
@@ -467,9 +466,9 @@ impl Renderer {
 impl Drop for Renderer {
     fn drop(&mut self) {
         unsafe {
-            self.gl.DeleteProgram(self.program);
-            self.gl.DeleteBuffers(1, &self.vbo);
-            self.gl.DeleteVertexArrays(1, &self.vao);
+            // self.gl.DeleteProgram(self.program);
+            // self.gl.DeleteBuffers(1, &self.vbo);
+            // self.gl.DeleteVertexArrays(1, &self.vao);
         }
     }
 }
