@@ -1,4 +1,4 @@
-use nanovg_sys::{nvgBeginPath, nvgBoxGradient, nvgClosePath, NVGcolor, nvgFill, nvgFillColor, nvgFillPaint, nvgLinearGradient, nvgLineTo, nvgMoveTo, nvgPathWinding, nvgRect, nvgRestore, nvgRGB, nvgRGBA, nvgRoundedRect, nvgRoundedRectVarying, nvgSave, NVGsolidity, nvgStroke, nvgStrokeColor, nvgStrokeWidth};
+use nanovg_sys::{nvgBeginPath, nvgBoxGradient, nvgClosePath, NVGcolor, nvgFill, nvgFillColor, nvgFillPaint, nvgIntersectScissor, nvgLinearGradient, nvgLineTo, nvgMoveTo, nvgPathWinding, nvgRect, nvgRestore, nvgRGB, nvgRGBA, nvgRoundedRect, nvgRoundedRectVarying, nvgSave, NVGsolidity, nvgStroke, nvgStrokeColor, nvgStrokeWidth};
 use std::ffi::{c_float, c_uchar};
 use yoga_sys::{YGNodeLayoutGetMargin, YGNodeLayoutGetPadding};
 use yoga_sys::YGEdge::{YGEdgeBottom, YGEdgeLeft, YGEdgeRight, YGEdgeTop};
@@ -33,60 +33,60 @@ pub trait ViewDrawer: ViewLayout {
             // Draw background
             self.draw_background(ctx, &rect);
 
-            // // Draw shadow
-            // if self.data().shadow_type != ShadowType::None
-            //     && (self.data().show_shadow || get_input_type() == InputType::TOUCH)
-            // {
-            //     self.draw_shadow(ctx, &rect);
-            // }
-            //
-            // // Draw border
-            // if self.data().border_thickness > 0.0 {
-            //     self.draw_border(ctx, &rect);
-            // }
-            //
+            // Draw shadow
+            if self.data().shadow_type != ShadowType::None
+                && (self.data().show_shadow || get_input_type() == InputType::TOUCH)
+            {
+                self.draw_shadow(ctx, &rect);
+            }
+
+            // Draw border
+            if self.data().border_thickness > 0.0 {
+                self.draw_border(ctx, &rect);
+            }
+
             self.draw_line(ctx, &rect);
-            //
-            // // Draw highlight background
-            // if self.data().highlight_alpha > 0.0
-            //     && !self.data().hide_highlight_background
-            //     && !self.data().hide_highlight
-            // {
-            //     self.draw_highlight(ctx, &rect, self.alpha(), true);
-            // }
-            //
-            // // Draw click animation
-            // if self.data().click_alpha > 0.0 {
-            //     self.draw_click_animation(ctx, &rect);
-            // }
-            //
-            // // Collapse clipping
-            // if self.data().collapse_state < 1.0 || self.data().clips_to_bounds {
-            //     unsafe {
-            //         nvgSave(ctx.vg().raw());
-            //         nvgIntersectScissor(
-            //             ctx.vg().raw(),
-            //             x,
-            //             y,
-            //             width,
-            //             height * self.data().collapse_state,
-            //         );
-            //     }
-            // }
-            //
-            // // Draw the view
-            // self.draw(ctx.vg(), x, y, width, height);
-            //
-            // if self.data().wireframe_enabled {
-            //     self.draw_wire_frame(ctx, &rect);
-            // }
-            //
-            // // Reset clipping
-            // if self.data().collapse_state < 1.0 || self.data().clips_to_bounds {
-            //     unsafe {
-            //         nvgRestore(ctx.vg().raw());
-            //     }
-            // }
+
+            // Draw highlight background
+            if self.data().highlight_alpha > 0.0
+                && !self.data().hide_highlight_background
+                && !self.data().hide_highlight
+            {
+                self.draw_highlight(ctx, &rect, self.alpha(), true);
+            }
+
+            // Draw click animation
+            if self.data().click_alpha > 0.0 {
+                self.draw_click_animation(ctx, &rect);
+            }
+
+            // Collapse clipping
+            if self.data().collapse_state < 1.0 || self.data().clips_to_bounds {
+                unsafe {
+                    nvgSave(ctx.vg().raw());
+                    nvgIntersectScissor(
+                        ctx.vg().raw(),
+                        x,
+                        y,
+                        width,
+                        height * self.data().collapse_state,
+                    );
+                }
+            }
+
+            // Draw the view
+            self.draw(ctx.vg(), x, y, width, height);
+
+            if self.data().wireframe_enabled {
+                self.draw_wire_frame(ctx, &rect);
+            }
+
+            // Reset clipping
+            if self.data().collapse_state < 1.0 || self.data().clips_to_bounds {
+                unsafe {
+                    nvgRestore(ctx.vg().raw());
+                }
+            }
         }
 
         unsafe {
