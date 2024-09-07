@@ -438,7 +438,7 @@ impl BaseView {
     //                 height,
     //                 corner_radius * 2.0,
     //                 shadow_offset,
-    //                 nvgRGBA(0, 0, 0, (*style.get_metric("brls/highlight/shadow_opacity").unwrap() * alpha) as u8),
+    //                 nvg_rgba(0, 0, 0, (*style.get_metric("brls/highlight/shadow_opacity").unwrap() * alpha) as u8),
     //                 TRANSPARENT.into(),
     //             );
     //             nvgBeginPath(vg.into());
@@ -525,14 +525,14 @@ impl BaseView {
     //
     //         // Outline
     //         nvgBeginPath(ctx.vg.into());
-    //         nvgStrokeColor(ctx.vg.into(), nvgRGB(0, 0, 255));
+    //         nvgStrokeColor(ctx.vg.into(), nvg_rgb(0, 0, 255));
     //         nvgRect(ctx.vg.into(), x, y, width, height);
     //         nvgStroke(ctx.vg.into());
     //
     //         if self.has_parent()
     //         {
     //             // Diagonals
-    //             nvgFillColor(ctx.vg.into(), nvgRGB(0, 0, 255));
+    //             nvgFillColor(ctx.vg.into(), nvg_rgb(0, 0, 255));
     //
     //             nvgBeginPath(ctx.vg.into());
     //             nvgMoveTo(ctx.vg.into(), x, y);
@@ -547,7 +547,7 @@ impl BaseView {
     //
     //         // Padding
     //         nvgBeginPath(ctx.vg.into());
-    //         nvgStrokeColor(ctx.vg.into(), nvgRGB(0, 255, 0));
+    //         nvgStrokeColor(ctx.vg.into(), nvg_rgb(0, 255, 0));
     //
     //         // Retrieve padding values
     //         let padding_top = self.yg_node.get_layout_padding_top();
@@ -579,7 +579,7 @@ impl BaseView {
     //
     //         // Margins
     //         nvgBeginPath(ctx.vg.into());
-    //         nvgStrokeColor(ctx.vg.into(), nvgRGB(255, 0, 0));
+    //         nvgStrokeColor(ctx.vg.into(), nvg_rgb(255, 0, 0));
     //
     //         // Retrieve margin values
     //         let margin_top = self.yg_node.get_layout_margin_top();
