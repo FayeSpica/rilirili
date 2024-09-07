@@ -10,7 +10,7 @@ lazy_static! {
 }
 
 pub fn content_width() -> f32 {
-    let mut map = CONTENT_WIDTH.lock().unwrap();
+    let map = CONTENT_WIDTH.lock().unwrap();
     *map
 }
 
@@ -20,7 +20,7 @@ pub fn set_content_width(value: f32) {
 }
 
 pub fn content_height() -> f32 {
-    let mut map = CONTENT_HEIGHT.lock().unwrap();
+    let map = CONTENT_HEIGHT.lock().unwrap();
     *map
 }
 
@@ -29,9 +29,8 @@ pub fn set_content_height(value: f32) {
     *map = value
 }
 
-
 pub fn window_width() -> u32 {
-    let mut map = WINDOW_WIDTH.lock().unwrap();
+    let map = WINDOW_WIDTH.lock().unwrap();
     *map
 }
 
@@ -41,7 +40,7 @@ pub fn set_window_width(value: u32) {
 }
 
 pub fn window_height() -> u32 {
-    let mut map = WINDOW_HEIGHT.lock().unwrap();
+    let map = WINDOW_HEIGHT.lock().unwrap();
     *map
 }
 
@@ -51,7 +50,7 @@ pub fn set_window_height(value: u32) {
 }
 
 pub fn window_x_pos() -> i32 {
-    let mut map = WINDOW_X_POS.lock().unwrap();
+    let map = WINDOW_X_POS.lock().unwrap();
     *map
 }
 
@@ -61,7 +60,7 @@ pub fn set_window_x_pos(value: i32) {
 }
 
 pub fn window_y_pos() -> i32 {
-    let mut map = WINDOW_Y_POS.lock().unwrap();
+    let map = WINDOW_Y_POS.lock().unwrap();
     *map
 }
 

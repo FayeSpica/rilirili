@@ -1,9 +1,7 @@
-use std::path::PathBuf;
-use quick_xml::events::Event;
-use quick_xml::Reader;
 use crate::core::global::{content_height, content_width};
 use crate::core::view_base::{View, ViewLayout};
 use crate::core::view_creator::ViewCreator;
+use std::path::PathBuf;
 
 pub struct ActivityViewData {
     xml_path: PathBuf,
@@ -29,7 +27,6 @@ pub trait ActivityDyn: ViewCreator {
 
     fn set_content_view(&mut self, view: View) {
         self.view_data_mut().content_view = Some(view);
-
     }
 
     fn resize_to_fit_window(&mut self) {
@@ -43,16 +40,19 @@ pub trait ActivityDyn: ViewCreator {
 }
 
 pub enum Activity {
-    MainActivity(crate::demo::activity::main_activity::MainActivity)
+    MainActivity(crate::demo::activity::main_activity::MainActivity),
 }
 
 impl ActivityDyn for Activity {
     fn view_data(&self) -> &ActivityViewData {
-        match self { Activity::MainActivity(a) => a.view_data() }
+        match self {
+            Activity::MainActivity(a) => a.view_data(),
+        }
     }
 
     fn view_data_mut(&mut self) -> &mut ActivityViewData {
-        match self { Activity::MainActivity(a) => a.view_data_mut() }
+        match self {
+            Activity::MainActivity(a) => a.view_data_mut(),
+        }
     }
 }
-

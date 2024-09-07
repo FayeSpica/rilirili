@@ -1,8 +1,10 @@
-use std::ffi::CString;
+use crate::core::{
+    create_shader, get_gl_string, gl, FRAGMENT_SHADER_SOURCE, VERTEX_DATA, VERTEX_SHADER_SOURCE,
+};
 use glutin::display::Display;
 use glutin::prelude::GlDisplay;
 use nanovg::Context;
-use crate::core::{create_shader, FRAGMENT_SHADER_SOURCE, get_gl_string, gl, VERTEX_DATA, VERTEX_SHADER_SOURCE};
+use std::ffi::CString;
 
 pub struct FrameContext {
     pub context: Context,

@@ -20,5 +20,3 @@ fn main() {
 
     info!("main_loop done");
 }
-
-

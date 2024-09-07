@@ -1,10 +1,10 @@
+use crate::core::activity::Activity;
+use crate::core::view_base::View;
+use quick_xml::events::Event;
+use quick_xml::Reader;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::PathBuf;
-use quick_xml::events::Event;
-use quick_xml::Reader;
-use crate::core::activity::Activity;
-use crate::core::view_base::View;
 
 const CUSTOM_RESOURCES_PATH: &str = "resources";
 
@@ -33,13 +33,17 @@ pub trait ViewCreator {
 
                     for attr in e.attributes() {
                         if let Ok(attr) = attr {
-                            trace!("              {:?}={:?}", attr.key, String::from_utf8(Vec::from(attr.value)))
+                            trace!(
+                                "              {:?}={:?}",
+                                attr.key,
+                                String::from_utf8(Vec::from(attr.value))
+                            )
                         }
                     }
-                },
+                }
                 Event::End(ref e) => {
                     trace!("{:?} end", e.name());
-                },
+                }
                 _ => {}
             }
         }

@@ -1,21 +1,16 @@
+use crate::core::activity::{Activity, ActivityDyn};
 use crate::core::frame_context::FrameContext;
 use crate::core::view_base::{BaseView, View, ViewDraw};
-use crate::core::{gl, GlWindow};
-use glutin::prelude::{
-    GlDisplay, GlSurface, NotCurrentGlContextSurfaceAccessor, PossiblyCurrentGlContext,
-};
+use crate::core::view_box::BoxView;
+use crate::core::GlWindow;
+use glutin::prelude::{GlSurface, NotCurrentGlContextSurfaceAccessor, PossiblyCurrentGlContext};
 use glutin::surface::SwapInterval;
-use nanovg::Context;
-use std::ffi::{c_float, CString};
+use nanovg_sys::{nvgBeginFrame, nvgEndFrame};
+use std::ffi::c_float;
 use std::num::NonZeroU32;
-use std::ops::Sub;
-use std::time::Instant;
-use nanovg_sys::{nvgBeginFrame, nvgBeginPath, NVGcolor, nvgEndFrame, nvgFill, nvgFillColor, nvgRect};
 use winit::event::{Event, WindowEvent};
 use winit::event_loop::EventLoop;
-use winit::window::{Window, WindowBuilder};
-use crate::core::activity::{Activity, ActivityDyn};
-use crate::core::view_box::BoxView;
+use winit::window::WindowBuilder;
 
 const ORIGINAL_WINDOW_WIDTH: u32 = 1280;
 const ORIGINAL_WINDOW_HEIGHT: u32 = 720;
@@ -23,10 +18,9 @@ const ORIGINAL_WINDOW_HEIGHT: u32 = 720;
 pub type XMLViewCreator = Box<dyn Fn() -> BaseView>;
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
-pub enum InputType
-{
+pub enum InputType {
     GAMEPAD, // Gamepad or keyboard
-    TOUCH, // Touch screen
+    TOUCH,   // Touch screen
 }
 
 pub struct Application {
@@ -70,7 +64,7 @@ impl Application {
         ))
     }
 
-    pub fn main_loop(mut self, event_loop: EventLoop<()>) {
+    pub fn main_loop(self, event_loop: EventLoop<()>) {
         let mut state = None;
         let mut frame_context = None;
         // Create a window with a default size and position
@@ -187,7 +181,8 @@ impl Application {
                     if let Some((gl_context, gl_window)) = &state {
                         // let renderer = renderer.as_ref().unwrap();
                         // renderer.draw(gl_window);
-                        let ctx = frame_context.get_or_insert_with(|| FrameContext::new(&gl_display));
+                        let ctx =
+                            frame_context.get_or_insert_with(|| FrameContext::new(&gl_display));
                         self.frame(ctx, gl_window);
                         gl_window.window.request_redraw();
                         gl_window.surface.swap_buffers(gl_context).unwrap();
@@ -212,7 +207,12 @@ impl Application {
         // trace!("gl_window.window.inner_size(): {:?}", gl_window.window.inner_size());
         // trace!("gl_window.window.scale_factor(): {}", gl_window.window.scale_factor());
         unsafe {
-            nvgBeginFrame(ctx.vg().raw(), width as c_float, height as c_float, gl_window.window.scale_factor() as c_float);
+            nvgBeginFrame(
+                ctx.vg().raw(),
+                width as c_float,
+                height as c_float,
+                gl_window.window.scale_factor() as c_float,
+            );
         }
         for view in &self.views_to_draw {
             view.frame(ctx);
@@ -240,7 +240,6 @@ impl Application {
         activity.set_content_view(activity.create_content_view());
     }
 }
-
 
 pub fn get_input_type() -> InputType {
     InputType::TOUCH

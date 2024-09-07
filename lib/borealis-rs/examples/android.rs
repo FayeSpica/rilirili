@@ -11,5 +11,5 @@ fn main() {
     info!("Did you know? {} = {}", "1 + 1", 2);
     warn!("Don't log sensitive information!");
     error!("Nothing more to say");
-    borealis_rs::core::main()
+    borealis_rs::core::main();
 }

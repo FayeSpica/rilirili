@@ -2,7 +2,7 @@ use crate::core::activity::{ActivityDyn, ActivityViewData};
 use crate::core::view_creator::ViewCreator;
 
 pub struct MainActivity {
-    activity_view_data: ActivityViewData
+    activity_view_data: ActivityViewData,
 }
 
 impl MainActivity {

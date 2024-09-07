@@ -2,17 +2,17 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
+pub mod activity;
 pub mod application;
 pub mod font;
 pub mod frame_context;
 pub mod geometry;
+pub mod global;
 pub mod platform;
 pub mod style;
 pub mod theme;
 pub mod view_base;
 pub mod view_box;
-pub mod activity;
-pub mod global;
 pub mod view_creator;
 
 use nanovg::{Color, Context, PathOptions};

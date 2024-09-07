@@ -140,7 +140,11 @@ lazy_static! {
 
 pub fn theme(theme: &str, key: &str) -> NVGcolor {
     let map = GLOBAL_THEME.lock().unwrap(); // 加锁，获取不可变引用
-    map.get(theme).expect(&format!("unknown theme: {}", theme)).get(key).unwrap().clone()
+    map.get(theme)
+        .expect(&format!("unknown theme: {}", theme))
+        .get(key)
+        .unwrap()
+        .clone()
 }
 
 pub fn add_theme(theme: &str, key: &str, value: NVGcolor) {

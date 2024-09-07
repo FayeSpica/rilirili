@@ -1,9 +1,4 @@
-use nanovg::Context;
-use yoga_sys::{YGNode, YGNodeNew};
-use crate::core::frame_context::FrameContext;
-use crate::core::style::Style;
-use crate::core::theme;
-use crate::core::view_base::{ShadowType, ViewBackground, ViewBase, ViewData, ViewDraw, ViewLayout};
+use crate::core::view_base::{ViewBase, ViewData, ViewDraw, ViewLayout};
 
 pub struct BoxView {
     view_data: ViewData,

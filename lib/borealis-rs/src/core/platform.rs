@@ -102,7 +102,7 @@ pub fn create_window(
     trace!("platform create_window start");
 
     let raw_display = event_loop.raw_display_handle();
-    let mut window = cfg!(wgl_backend).then(|| {
+    let window = cfg!(wgl_backend).then(|| {
         // We create a window before the display to accommodate for WGL, since it
         // requires creating HDC for properly loading the WGL and it should be taken
         // from the window you'll be rendering into.
@@ -173,7 +173,7 @@ pub fn create_window(
         .with_context_api(ContextApi::Gles(None))
         .build(raw_window_handle);
 
-    let mut not_current_gl_context = Some(unsafe {
+    let not_current_gl_context = Some(unsafe {
         gl_display
             .create_context(&config, &context_attributes)
             .unwrap_or_else(|_| {
