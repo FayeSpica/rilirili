@@ -2,21 +2,13 @@ use crate::core::theme;
 use crate::core::view_box::BoxView;
 use nanovg::Context;
 use nanovg_sys::{
-    nvgBeginFrame, nvgBeginPath, NVGcolor, nvgEndFrame, nvgFill, nvgFillColor
-    , nvgRect
-
-    ,
+    nvgBeginFrame, nvgBeginPath, nvgEndFrame, nvgFill, nvgFillColor, nvgRect, NVGcolor,
 };
 use std::cmp::PartialEq;
 use std::ffi::c_float;
-use yoga_sys::{
-    YGNodeFree
-
-    , YGNodeNew, YGNodeRef
-
-
-    ,
-};
+use yoga_sys::{YGNodeFree, YGNodeNew, YGNodeRef};
+use crate::core::view_layout::ViewLayout;
+use crate::core::view_style::ViewStyle;
 
 // common ViewData
 pub struct ViewData {
@@ -41,7 +33,11 @@ pub struct ViewData {
     pub line_bottom: f32,
     pub line_right: f32,
     pub highlight_alpha: f32,
+    pub highlight_corner_radius: f32,
+    pub highlight_padding: f32,
+    pub hide_click_animation: bool,
     pub hide_highlight_background: bool,
+    pub hide_highlight_border: bool,
     pub hide_highlight: bool,
     pub click_alpha: f32,
     pub collapse_state: f32,
@@ -73,7 +69,11 @@ impl Default for ViewData {
             line_bottom: 4.1,
             line_right: 4.1,
             highlight_alpha: 0.0,
+            highlight_corner_radius: 0.0,
+            highlight_padding: 0.0,
+            hide_click_animation: false,
             hide_highlight_background: false,
+            hide_highlight_border: false,
             hide_highlight: false,
             click_alpha: 0.0,
             collapse_state: 0.0,
@@ -149,6 +149,19 @@ pub trait ViewBase {
     fn get_parent(&self) -> &View {
         todo!()
     }
+
+    fn animate_hint(&self) -> bool {
+        false
+    }
+
+    fn set_background(&self, background: ViewBackground) {
+        todo!()
+    }
+
+    fn get_nearest_view(&self) {
+        todo!()
+    }
+
 }
 
 pub fn ntz(value: f32) -> f32 {
@@ -172,6 +185,18 @@ impl ViewBase for View {
     fn data_mut(&mut self) -> &mut ViewData {
         todo!()
     }
+}
+
+impl ViewStyle for View {}
+
+impl ViewLayout for View {}
+
+#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
+pub enum FocusDirection {
+    Up,
+    Down,
+    Left,
+    Right,
 }
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]

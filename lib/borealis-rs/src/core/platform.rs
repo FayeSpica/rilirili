@@ -170,7 +170,9 @@ pub fn create_window(
         .build(raw_window_handle);
 
     let not_current_gl_context = Some(unsafe {
-        gl_display.create_context(&config, &context_attributes).unwrap()
+        gl_display
+            .create_context(&config, &context_attributes)
+            .unwrap()
     });
 
     trace!("platform create_window end");

@@ -1,13 +1,13 @@
-use std::cell::RefCell;
 use crate::core::activity::Activity;
 use crate::core::view_base::View;
+use crate::core::view_box::BoxView;
 use quick_xml::events::Event;
 use quick_xml::Reader;
+use std::cell::RefCell;
 use std::fs::File;
 use std::io::BufReader;
 use std::path::PathBuf;
 use std::rc::Rc;
-use crate::core::view_box::BoxView;
 
 const CUSTOM_RESOURCES_PATH: &str = "resources";
 

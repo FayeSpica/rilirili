@@ -1,3 +1,4 @@
+use crate::core::theme::theme;
 use crate::core::{
     create_shader, get_gl_string, gl, FRAGMENT_SHADER_SOURCE, VERTEX_DATA, VERTEX_SHADER_SOURCE,
 };
@@ -5,7 +6,6 @@ use glutin::display::Display;
 use glutin::prelude::GlDisplay;
 use nanovg::Context;
 use std::ffi::CString;
-use crate::core::theme::theme;
 
 pub struct FrameContext {
     pub context: Context,
@@ -25,7 +25,12 @@ impl FrameContext {
         // OpenGL 设置
         unsafe {
             gl.Viewport(0, 0, 1920, 1080); // 设置视口
-            gl.ClearColor(clear_color.rgba[0], clear_color.rgba[1], clear_color.rgba[2], clear_color.rgba[3]); // 设置背景色
+            gl.ClearColor(
+                clear_color.rgba[0],
+                clear_color.rgba[1],
+                clear_color.rgba[2],
+                clear_color.rgba[3],
+            ); // 设置背景色
         }
         // 初始化 NanoVG
         let context = nanovg::ContextBuilder::new()

@@ -1,6 +1,38 @@
 use crate::core::view_base::{ViewBase, ViewData};
 use crate::core::view_drawer::ViewDrawer;
 use crate::core::view_layout::ViewLayout;
+use crate::core::view_style::ViewStyle;
+
+pub enum JustifyContent {
+    FlexStart,
+    Center,
+    FlexEnd,
+    SpaceBetween,
+    SpaceAround,
+    SpaceEvenly,
+}
+
+pub enum AlignItems {
+    Auto,
+    FlexStart,
+    Center,
+    FlexEnd,
+    Stretch,
+    Baseline,
+    SpaceBetween,
+    SpaceAround,
+}
+
+pub enum Axis {
+    Row,
+    Column,
+}
+
+pub enum Direction {
+    Inherit,
+    LeftToRight,
+    RightToLeft,
+}
 
 pub struct BoxView {
     view_data: ViewData,
@@ -28,6 +60,8 @@ impl ViewBase for BoxView {
         &mut self.view_data
     }
 }
+
+impl ViewStyle for BoxView {}
 
 impl ViewLayout for BoxView {}
 

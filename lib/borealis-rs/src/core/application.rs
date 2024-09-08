@@ -1,23 +1,28 @@
-use std::cell::RefCell;
 use crate::core::activity::{Activity, ActivityDyn};
 use crate::core::frame_context::FrameContext;
+use crate::core::global::{
+    set_content_height, set_content_width, set_window_height, set_window_scale, set_window_width,
+    window_height, window_scale, window_width,
+};
 use crate::core::view_base::{BaseView, View};
 use crate::core::view_box::BoxView;
+use crate::core::view_drawer::ViewDrawer;
 use crate::core::{gl, GlWindow};
 use glutin::prelude::{GlSurface, NotCurrentGlContextSurfaceAccessor, PossiblyCurrentGlContext};
 use glutin::surface::SwapInterval;
-use nanovg_sys::{nvgBeginFrame, nvgBeginPath, nvgEndFrame, nvgFill, nvgFillColor, nvgRect, nvgRGB, nvgRGBA};
+use nanovg::{Color, PathOptions};
+use nanovg_sys::{
+    nvgBeginFrame, nvgBeginPath, nvgEndFrame, nvgFill, nvgFillColor, nvgRGB, nvgRGBA, nvgRect,
+};
+use std::cell::RefCell;
 use std::ffi::c_float;
 use std::num::NonZeroU32;
 use std::rc::Rc;
 use std::sync::Arc;
-use nanovg::{Color, PathOptions};
 use winit::dpi::{LogicalSize, PhysicalSize};
 use winit::event::{Event, WindowEvent};
 use winit::event_loop::EventLoop;
 use winit::window::WindowBuilder;
-use crate::core::global::{set_content_height, set_content_width, set_window_height, set_window_scale, set_window_width, window_height, window_scale, window_width};
-use crate::core::view_drawer::ViewDrawer;
 
 const ORIGINAL_WINDOW_WIDTH: u32 = 1280;
 const ORIGINAL_WINDOW_HEIGHT: u32 = 720;
@@ -94,7 +99,8 @@ impl Application {
                         // other platforms decide on that by what you draw, so there's no need to pass
                         // this information to the window.
                         #[cfg(not(cgl_backend))]
-                        let window = WindowBuilder::new().with_inner_size(PhysicalSize::new(window_width(), window_height()));
+                        let window = WindowBuilder::new()
+                            .with_inner_size(PhysicalSize::new(window_width(), window_height()));
 
                         // Request opacity for window on macOS explicitly.
                         #[cfg(cgl_backend)]
@@ -169,8 +175,8 @@ impl Application {
                                     NonZeroU32::new(size.width).unwrap(),
                                     NonZeroU32::new(size.height).unwrap(),
                                 );
-                                let ctx =
-                                    frame_context.get_or_insert_with(|| FrameContext::new(&gl_display));
+                                let ctx = frame_context
+                                    .get_or_insert_with(|| FrameContext::new(&gl_display));
                                 unsafe {
                                     ctx.gl.Viewport(0, 0, size.width as i32, size.height as i32);
                                 }
@@ -229,14 +235,8 @@ impl Application {
         }
         unsafe {
             nvgBeginPath(ctx.vg().raw());
-            nvgRect(
-                ctx.vg().raw(),
-                100.0,
-                100.0,
-                100.0,
-                100.0,
-            );
-            nvgFillColor(ctx.vg().raw(), nvgRGB(255, 100, 0, ));
+            nvgRect(ctx.vg().raw(), 100.0, 100.0, 100.0, 100.0);
+            nvgFillColor(ctx.vg().raw(), nvgRGB(255, 100, 0));
             nvgFill(ctx.vg().raw());
         }
         for view in &self.views_to_draw {
@@ -266,7 +266,8 @@ impl Application {
         activity.set_content_view(activity.create_content_view());
         activity.on_content_available();
         activity.resize_to_fit_window();
-        self.views_to_draw.push(activity.view_data().content_view.as_ref().unwrap().clone());
+        self.views_to_draw
+            .push(activity.view_data().content_view.as_ref().unwrap().clone());
         self.activities_stack.push(Rc::new(RefCell::new(activity)));
     }
 

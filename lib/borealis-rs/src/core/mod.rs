@@ -16,6 +16,7 @@ pub mod view_box;
 pub mod view_creator;
 pub mod view_drawer;
 pub mod view_layout;
+mod view_style;
 
 use nanovg::{Color, Context, PathOptions};
 use raw_window_handle::{

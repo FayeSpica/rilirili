@@ -1,10 +1,10 @@
-use std::cell::RefCell;
 use crate::core::global::{content_height, content_width};
 use crate::core::view_base::View;
 use crate::core::view_creator::ViewCreator;
+use crate::core::view_layout::ViewLayout;
+use std::cell::RefCell;
 use std::path::PathBuf;
 use std::rc::Rc;
-use crate::core::view_layout::ViewLayout;
 
 pub struct ActivityViewData {
     pub xml_path: PathBuf,
@@ -36,14 +36,13 @@ pub trait ActivityDyn: ViewCreator {
         match &self.view_data().content_view {
             None => {}
             Some(view) => {
-                view.borrow().set_dimensions(content_width(), content_height());
+                view.borrow()
+                    .set_dimensions(content_width(), content_height());
             }
         }
     }
 
-    fn on_content_available(&self) {
-
-    }
+    fn on_content_available(&self) {}
 
     fn on_window_size_changed(&self) {
         self.resize_to_fit_window();
