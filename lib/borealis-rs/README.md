@@ -9,7 +9,7 @@ cargo run --example window_borealis
 
 ```shell
 pacman -S --needed base-devel mingw-w64-x86_64-toolchain
-pacman -S mingw-w64-x86_64-glfw
+pacman -S mingw-w64-x86_64-SDL2
 ```
 
 ```shell
@@ -17,28 +17,16 @@ export CC=gcc
 export CXX=g++
 ```
 
-## clang64
-
-```shell
-pacman -S --needed base-devel mingw-w64-clang-x86_64-toolchain
-pacman -S mingw-w64-clang-x86_64-rust
-#pacman -S mingw-w64-x86_64-libc++
-```
-
-```shell
-export CC=clang  
-export CXX=clang++
-```
-
 ## android
 ```shell
-cargo install cargo-apk
+cargo install cargo-sdl-apk
 rustup target add aarch64-linux-android
 
 export ANDROID_HOME=
 export ANDROID_NDK_ROOT=
 export PATH=JAVA_HOME/bin
+export SDL=
 
-cargo apk r -p borealis-rs --example android
-cargo apk r -p borealis-rs --example android_borealis
+# tested on linux
+cargo sdl-apk run --example android_borealis
 ```
