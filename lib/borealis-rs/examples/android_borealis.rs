@@ -3,19 +3,13 @@ extern crate android_log;
 #[macro_use]
 extern crate log;
 
-use borealis_rs::core::activity::Activity;
-use borealis_rs::core::application;
-use borealis_rs::demo::activity::main_activity::MainActivity;
-
-#[ndk_glue::main(backtrace = "on")]
-fn main() {
+// The entry point for our application must be caled SDL_main, and
+// must be attributed #[no_mangle]. From within this function we can
+// call out regular main function. This way the same program can run
+// both on desktop and on Android.
+#[no_mangle]
+#[allow(non_snake_case)]
+pub fn SDL_main() {
     android_log::init("borealis").unwrap();
-
-    let (mut application, event_loop) = application::Application::init("rilirili").unwrap();
-
-    application.push_activity(Activity::MainActivity(MainActivity::new()));
-
-    application.main_loop(event_loop);
-
-    info!("main_loop done");
+    borealis_rs::core::main0();
 }

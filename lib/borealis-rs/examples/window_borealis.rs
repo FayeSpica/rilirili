@@ -14,13 +14,7 @@ fn main() -> anyhow::Result<()> {
         .target(env_logger::Target::Stdout) // 将日志输出到 stdout
         .init();
 
-    let (mut application, event_loop) = application::Application::init("rilirili")?;
-
-    application.push_activity(Activity::MainActivity(MainActivity::new()));
-
-    application.main_loop(event_loop);
-
-    info!("main_loop done");
+    borealis_rs::core::main0();
 
     Ok(())
 }
