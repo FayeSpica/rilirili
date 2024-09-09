@@ -1,0 +1,1 @@
+cp ./target/android-project/app/build/outputs/apk/release/app-release.apk /mnt/d/bin/
