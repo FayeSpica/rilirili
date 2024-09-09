@@ -4,7 +4,7 @@ use crate::core::geometry::Rect;
 use crate::core::style::style;
 use crate::core::theme::{theme, transparent_color};
 use crate::core::view_base;
-use crate::core::view_base::{ShadowType, View, ViewBackground, ViewBase, Visibility};
+use crate::core::view_base::{ShadowType, TransitionAnimation, View, ViewBackground, ViewBase, Visibility};
 use crate::core::view_layout::ViewLayout;
 use nanovg::Context;
 use nanovg_sys::{
@@ -17,7 +17,17 @@ use std::ffi::{c_float, c_uchar};
 use yoga_sys::YGEdge::{YGEdgeBottom, YGEdgeLeft, YGEdgeRight, YGEdgeTop};
 use yoga_sys::{YGNodeLayoutGetMargin, YGNodeLayoutGetPadding};
 
+pub trait ViewTrait: ViewDrawer {
+
+}
+
 pub trait ViewDrawer: ViewLayout {
+
+    /**
+     * Called each frame
+     * Do not override it to draw your view,
+     * override draw() instead
+     */
     fn frame(&self, ctx: &FrameContext) {
         if self.data().visibility != Visibility::Visible {
             return;
@@ -34,7 +44,7 @@ pub trait ViewDrawer: ViewLayout {
         let width = rect.width();
         let height = rect.height();
 
-        if self.data().alpha > 0.0 {
+        if self.data().alpha.current_value > 0.0 {
             // Draw background
             self.draw_background(ctx, &rect);
 
@@ -53,7 +63,7 @@ pub trait ViewDrawer: ViewLayout {
             self.draw_line(ctx, &rect);
 
             // Draw highlight background
-            if self.data().highlight_alpha > 0.0
+            if self.data().highlight_alpha.current_value > 0.0
                 && !self.data().hide_highlight_background
                 && !self.data().hide_highlight
             {
@@ -61,12 +71,12 @@ pub trait ViewDrawer: ViewLayout {
             }
 
             // Draw click animation
-            if self.data().click_alpha > 0.0 {
+            if self.data().click_alpha.current_value > 0.0 {
                 self.draw_click_animation(ctx, &rect);
             }
 
             // Collapse clipping
-            if self.data().collapse_state < 1.0 || self.data().clips_to_bounds {
+            if self.data().collapse_state.current_value < 1.0 || self.data().clips_to_bounds {
                 unsafe {
                     nvgSave(ctx.vg().raw());
                     nvgIntersectScissor(
@@ -74,7 +84,7 @@ pub trait ViewDrawer: ViewLayout {
                         x,
                         y,
                         width,
-                        height * self.data().collapse_state,
+                        height * self.data().collapse_state.current_value,
                     );
                 }
             }
@@ -87,7 +97,7 @@ pub trait ViewDrawer: ViewLayout {
             }
 
             // Reset clipping
-            if self.data().collapse_state < 1.0 || self.data().clips_to_bounds {
+            if self.data().collapse_state.current_value < 1.0 || self.data().clips_to_bounds {
                 unsafe {
                     nvgRestore(ctx.vg().raw());
                 }
@@ -99,8 +109,94 @@ pub trait ViewDrawer: ViewLayout {
         }
     }
 
+    /**
+     * Called each frame
+     */
+    fn frame_highlight(&self, ctx: &FrameContext) {
+        todo!()
+    }
+
+    /**
+     * Called by frame() to draw the view onscreen.
+     * Views should not draw outside of their bounds (they
+     * may be clipped if they do so).
+     */
+    fn draw(&self, vg: &Context, x: f32, y: f32, width: f32, height: f32) {}
+
+    /**
+     * Called when the view will appear
+     * on screen, before or after layout().
+     *
+     * Can be called if the view has
+     * already appeared, so be careful.
+     */
+    fn will_appear(&self, reset_state: bool) {
+       // Nothing to do
+    }
+
+    /**
+     * Called when the view will disappear
+     * from the screen.
+     *
+     * Can be called if the view has
+     * already disappeared, so be careful.
+     */
+    fn will_disappear(&self, reset_state: bool) {
+        // Nothing to do
+    }
+
+    /**
+     * Called when the show() animation (fade in)
+     * ends
+     */
+    fn on_show_animation_end(&self) {}
+
+    /**
+     * Shows the view with a fade in animation.
+     */
+    fn show(&mut self, cb: Box<dyn Fn()>) {
+        self.show_animated(cb, true, self.show_animation_duration(TransitionAnimation::Fade));
+    }
+
+    /**
+     * Shows the view with a fade in animation, or no animation at all.
+     */
+    fn show_animated(&mut self, cb: Box<dyn Fn()>, animate: bool, animation_duration: f32) {
+        if !self.data().hidden {
+            self.on_show_animation_end();
+            cb();
+            return;
+        }
+
+        debug!("Showing {}", self.data().id);
+
+        self.data_mut().hidden = false;
+
+        self.data_mut().fade_in = true;
+
+        if animate {
+
+        } else {
+            self.data_mut().alpha.current_value = 1.0;
+            self.data_mut().fade_in = false;
+            self.on_show_animation_end();
+            cb();
+        }
+    }
+
+    /**
+     * Returns the duration of the view show / hide animation.
+     */
+    fn show_animation_duration(&self, animation: TransitionAnimation) -> f32 {
+        if animation == TransitionAnimation::SlideLeft || animation == TransitionAnimation::SlideRight {
+            panic!("Slide animation is not supported on views");
+        }
+
+        style("brls/animations/show")
+    }
+
     fn alpha(&self) -> c_float {
-        self.data().alpha
+        self.data().alpha.current_value
     }
 
     fn a(&self, color: NVGcolor) -> NVGcolor {
@@ -114,7 +210,6 @@ pub trait ViewDrawer: ViewLayout {
         let y = rect.min_y();
         let width = rect.width();
         let height = rect.height();
-        let theme_selected = ctx.theme();
 
         let vg = ctx.vg().raw();
 
@@ -122,7 +217,7 @@ pub trait ViewDrawer: ViewLayout {
             ViewBackground::None => {}
             ViewBackground::SideBar => {
                 let backdrop_height = style("brls/sidebar/border_height");
-                let sidebar_color = theme(theme_selected, "brls/sidebar/background");
+                let sidebar_color = theme("brls/sidebar/background");
                 unsafe {
                     // Solid color
                     nvgBeginPath(vg);
@@ -170,7 +265,7 @@ pub trait ViewDrawer: ViewLayout {
                 }
             }
             ViewBackground::BackDrop => {
-                let backdrop_color = theme(theme_selected, "brls/backdrop");
+                let backdrop_color = theme("brls/backdrop");
                 unsafe {
                     nvgFillColor(vg, self.a(backdrop_color));
                     nvgBeginPath(vg);
@@ -250,7 +345,7 @@ pub trait ViewDrawer: ViewLayout {
                 rect.height(),
                 self.data().corner_radius * 2.0,
                 shadow_feather,
-                nvgRGBA(0, 0, 0, (shadow_opacity * self.data().alpha) as c_uchar),
+                nvgRGBA(0, 0, 0, (shadow_opacity * self.data().alpha.current_value) as c_uchar),
                 transparent_color(),
             );
 
@@ -505,8 +600,4 @@ pub trait ViewDrawer: ViewLayout {
             }
         }
     }
-
-    fn draw(&self, vg: &Context, x: f32, y: f32, width: f32, height: f32) {}
 }
-
-impl ViewDrawer for View {}

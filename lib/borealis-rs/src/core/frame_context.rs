@@ -10,7 +10,6 @@ use std::ffi::CString;
 pub struct FrameContext {
     pub context: Context,
     pub pixel_ratio: f32,
-    pub theme: String,
     pub gl: gl::Gl,
 }
 
@@ -21,7 +20,7 @@ impl FrameContext {
             let symbol = CString::new(symbol).unwrap();
             gl_display.get_proc_address(symbol.as_c_str()).cast()
         });
-        let clear_color = theme("DARK", "brls/clear");
+        let clear_color = theme("brls/clear");
         // OpenGL 设置
         unsafe {
             gl.Viewport(0, 0, 1920, 1080); // 设置视口
@@ -84,16 +83,11 @@ impl FrameContext {
         Self {
             context,
             pixel_ratio: 1.0,
-            theme: "LIGHT".into(),
             gl,
         }
     }
 
     pub fn vg(&self) -> &Context {
         &self.context
-    }
-
-    pub fn theme(&self) -> &str {
-        &self.theme
     }
 }

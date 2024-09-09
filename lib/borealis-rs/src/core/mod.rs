@@ -16,7 +16,12 @@ pub mod view_box;
 pub mod view_creator;
 pub mod view_drawer;
 pub mod view_layout;
-mod view_style;
+pub mod view_style;
+pub mod audio;
+pub mod animation;
+pub mod time;
+pub mod tweening;
+pub mod bind;
 
 use nanovg::{Color, Context, PathOptions};
 use raw_window_handle::{

@@ -74,7 +74,7 @@ pub trait ViewLayout: ViewStyle {
      */
     fn invalidate(&self) {
         if self.has_parent() {
-            self.get_parent().invalidate();
+            self.parent().as_ref().unwrap().borrow().invalidate();
         } else {
             unsafe {
                 YGNodeCalculateLayout(

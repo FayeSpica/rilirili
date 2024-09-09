@@ -207,6 +207,8 @@ impl Application {
                         gl_window.surface.swap_buffers(gl_context).unwrap();
                     }
                 }
+                Event::MainEventsCleared => {
+                }
                 _ => (),
             }
         });

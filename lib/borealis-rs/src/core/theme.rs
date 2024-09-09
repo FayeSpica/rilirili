@@ -18,6 +18,7 @@ pub fn nvg_rgba(r: c_uchar, g: c_uchar, b: c_uchar, a: c_uchar) -> NVGcolor {
 }
 
 lazy_static! {
+    static ref GLOBAL_THEME_SELECTED: Mutex<String> = Mutex::new("DARK".into());
     static ref GLOBAL_THEME: Mutex<HashMap<String, HashMap<String, NVGcolor>>> = Mutex::new(HashMap::from(
         [
             ("LIGHT".into(), HashMap::from([
@@ -138,18 +139,28 @@ lazy_static! {
     ));
 }
 
-pub fn theme(theme: &str, key: &str) -> NVGcolor {
+pub fn theme(key: &str) -> NVGcolor {
     let map = GLOBAL_THEME.lock().unwrap(); // 加锁，获取不可变引用
-    map.get(theme)
-        .expect(&format!("unknown theme: {}", theme))
+    map.get(&theme_selected())
+        .expect(&format!("unknown theme: {}", &theme_selected()))
         .get(key)
         .unwrap()
         .clone()
 }
 
-pub fn add_theme(theme: &str, key: &str, value: NVGcolor) {
+pub fn add_theme(key: &str, value: NVGcolor) {
     let mut map = GLOBAL_THEME.lock().unwrap();
-    map.get_mut(theme)
+    map.get_mut(&theme_selected())
         .unwrap()
         .insert(key.parse().unwrap(), value);
+}
+
+pub fn set_theme_selected(theme: &str) {
+    let mut map = GLOBAL_THEME_SELECTED.lock().unwrap();
+    *map = theme.into();
+}
+
+pub fn theme_selected() -> String {
+    let mut map = GLOBAL_THEME_SELECTED.lock().unwrap();
+    (*map).to_string()
 }

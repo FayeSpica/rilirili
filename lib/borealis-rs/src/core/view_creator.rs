@@ -1,6 +1,6 @@
 use crate::core::activity::Activity;
 use crate::core::view_base::View;
-use crate::core::view_box::BoxView;
+use crate::core::view_box::{BoxEnum, BoxView};
 use quick_xml::events::Event;
 use quick_xml::Reader;
 use std::cell::RefCell;
@@ -12,11 +12,29 @@ use std::rc::Rc;
 const CUSTOM_RESOURCES_PATH: &str = "resources";
 
 pub trait ViewCreator {
-    fn create_from_xml_resource(&self, name: PathBuf) -> Rc<RefCell<View>> {
-        let path_buf: PathBuf = PathBuf::from(CUSTOM_RESOURCES_PATH);
-        self.create_from_xml_file(path_buf.join("xml").join(name))
+
+    /**
+     * Creates a view from the given XML file content.
+     *
+     * The method handleXMLElement() is executed for each child node in the XML.
+     *
+     * Uses the internal lookup table to instantiate the views.
+     * Use registerXMLView() to add your own views to the table so that
+     * you can use them in your own XML files.
+     */
+    fn create_from_xml_string(&self, xml: String) -> Rc<RefCell<View>> {
+        todo!()
     }
 
+    /**
+     * Creates a view from the given XML file path.
+     *
+     * The method handleXMLElement() is executed for each child node in the XML.
+     *
+     * Uses the internal lookup table to instantiate the views.
+     * Use registerXMLView() to add your own views to the table so that
+     * you can use them in your own XML files.
+     */
     fn create_from_xml_file(&self, name: PathBuf) -> Rc<RefCell<View>> {
         trace!("create_from_xml_file: {:?}", name);
 
@@ -51,7 +69,21 @@ pub trait ViewCreator {
         //     }
         // }
 
-        Rc::new(RefCell::new(View::Box(BoxView::new(0.0, 0.0, 0.0, 0.0))))
+        Rc::new(RefCell::new(View::Box(BoxEnum::Box(BoxView::new(0.0, 0.0, 0.0, 0.0)))))
+    }
+
+    /**
+     * Creates a view from the given XML resource file name.
+     *
+     * The method handleXMLElement() is executed for each child node in the XML.
+     *
+     * Uses the internal lookup table to instantiate the views.
+     * Use registerXMLView() to add your own views to the table so that
+     * you can use them in your own XML files.
+     */
+    fn create_from_xml_resource(&self, name: PathBuf) -> Rc<RefCell<View>> {
+        let path_buf: PathBuf = PathBuf::from(CUSTOM_RESOURCES_PATH);
+        self.create_from_xml_file(path_buf.join("xml").join(name))
     }
 }
 
