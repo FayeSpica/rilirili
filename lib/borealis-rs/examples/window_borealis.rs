@@ -14,7 +14,7 @@ fn main() -> anyhow::Result<()> {
         .target(env_logger::Target::Stdout) // 将日志输出到 stdout
         .init();
 
-    borealis_rs::core::main0();
+    borealis_rs::core::main();
 
     Ok(())
 }

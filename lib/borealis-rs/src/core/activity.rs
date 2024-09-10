@@ -1,14 +1,28 @@
 use crate::core::global::{content_height, content_width};
-use crate::core::view_base::View;
+use crate::core::view_base::{View, ViewBase};
 use crate::core::view_creator::ViewCreator;
 use crate::core::view_layout::ViewLayout;
 use std::cell::RefCell;
 use std::path::PathBuf;
 use std::rc::Rc;
+use crate::core::view_drawer::ViewDrawer;
 
 pub struct ActivityViewData {
     pub xml_path: PathBuf,
     pub content_view: Option<Rc<RefCell<View>>>,
+}
+
+impl Drop for ActivityViewData {
+    fn drop(&mut self) {
+        trace!("ActivityViewData dropped");
+        match &self.content_view {
+            None => {}
+            Some(view) => {
+                view.borrow_mut().free_view();
+            }
+        }
+        self.content_view = None;
+    }
 }
 
 impl ActivityViewData {
@@ -46,6 +60,53 @@ pub trait ActivityDyn: ViewCreator {
 
     fn on_window_size_changed(&self) {
         self.resize_to_fit_window();
+    }
+
+    fn will_appear(&self, reset_state: bool) {
+        if let Some(content_view) = &self.view_data().content_view {
+            content_view.borrow().will_appear(reset_state);
+        }
+    }
+
+    fn will_disappear(&self, reset_state: bool) {
+        if let Some(content_view) = &self.view_data().content_view {
+            content_view.borrow().will_disappear(reset_state);
+        }
+    }
+
+    fn set_in_fade_animation(&self, in_fade_animation: bool) {
+        if let Some(content_view) = &self.view_data().content_view {
+            content_view.borrow_mut().set_in_fade_animation(in_fade_animation);
+        }
+    }
+
+    fn show(&self, cb: Box<dyn Fn()>, animate: bool, animation_duration: f32) {
+        if let Some(content_view) = &self.view_data().content_view {
+            content_view.borrow_mut().show_animated(cb, animate, animation_duration);
+        }
+    }
+
+    fn hide(&self, cb: Box<dyn Fn()>, animate: bool, animation_duration: f32) {
+        if let Some(content_view) = &self.view_data().content_view {
+            content_view.borrow_mut().show_animated(cb, animate, animation_duration);
+        }
+    }
+
+    fn on_pause(&self) {
+
+    }
+
+    fn on_resume(&self) {
+
+    }
+
+    fn default_focus(&self) -> Option<Rc<RefCell<View>>> {
+        match &self.view_data().content_view {
+            None => None,
+            Some(content_view) => {
+                content_view.borrow().default_focus()
+            }
+        }
     }
 }
 

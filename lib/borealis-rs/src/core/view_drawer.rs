@@ -7,15 +7,12 @@ use crate::core::view_base;
 use crate::core::view_base::{ShadowType, TransitionAnimation, View, ViewBackground, ViewBase, Visibility};
 use crate::core::view_layout::ViewLayout;
 use nanovg::Context;
-use nanovg_sys::{
-    nvgBeginPath, nvgBoxGradient, nvgClosePath, nvgFill, nvgFillColor, nvgFillPaint,
-    nvgIntersectScissor, nvgLineTo, nvgLinearGradient, nvgMoveTo, nvgPathWinding, nvgRGB, nvgRGBA,
-    nvgRect, nvgRestore, nvgRoundedRect, nvgRoundedRectVarying, nvgSave, nvgStroke, nvgStrokeColor,
-    nvgStrokeWidth, NVGcolor, NVGsolidity,
-};
+use nanovg_sys::{nvgBeginPath, nvgBoxGradient, nvgClosePath, nvgFill, nvgFillColor, nvgFillPaint, nvgIntersectScissor, nvgLineTo, nvgLinearGradient, nvgMoveTo, nvgPathWinding, nvgRGB, nvgRGBA, nvgRect, nvgRestore, nvgRoundedRect, nvgRoundedRectVarying, nvgSave, nvgStroke, nvgStrokeColor, nvgStrokeWidth, NVGcolor, NVGsolidity, nvgResetScissor, nvgRGBAf};
 use std::ffi::{c_float, c_uchar};
 use yoga_sys::YGEdge::{YGEdgeBottom, YGEdgeLeft, YGEdgeRight, YGEdgeTop};
 use yoga_sys::{YGNodeLayoutGetMargin, YGNodeLayoutGetPadding};
+use crate::core::animation::Animating;
+use crate::core::view_box::BoxTrait;
 
 pub trait ViewTrait: ViewDrawer {
 
@@ -67,7 +64,7 @@ pub trait ViewDrawer: ViewLayout {
                 && !self.data().hide_highlight_background
                 && !self.data().hide_highlight
             {
-                self.draw_highlight(ctx, &rect, self.alpha(), true);
+                self.draw_highlight(ctx, &rect, self.data().highlight_alpha.value(), true);
             }
 
             // Draw click animation
@@ -90,7 +87,7 @@ pub trait ViewDrawer: ViewLayout {
             }
 
             // Draw the view
-            self.draw(ctx.vg(), x, y, width, height);
+            self.draw(ctx, x, y, width, height);
 
             if self.data().wireframe_enabled {
                 self.draw_wire_frame(ctx, &rect);
@@ -121,7 +118,9 @@ pub trait ViewDrawer: ViewLayout {
      * Views should not draw outside of their bounds (they
      * may be clipped if they do so).
      */
-    fn draw(&self, vg: &Context, x: f32, y: f32, width: f32, height: f32) {}
+    fn draw(&self, ctx: &FrameContext, x: f32, y: f32, width: f32, height: f32) {
+        trace!("default draw");
+    }
 
     /**
      * Called when the view will appear
@@ -168,7 +167,7 @@ pub trait ViewDrawer: ViewLayout {
             return;
         }
 
-        debug!("Showing {}", self.data().id);
+        debug!("Showing {}", self.describe());
 
         self.data_mut().hidden = false;
 
@@ -193,6 +192,35 @@ pub trait ViewDrawer: ViewLayout {
         }
 
         style("brls/animations/show")
+    }
+
+    /**
+     * Hides the view with a fade out animation.
+     */
+    fn hide(&mut self, cb: Box<dyn Fn()>) {
+        self.hide_animated(cb, true, self.show_animation_duration(TransitionAnimation::Fade));
+    }
+
+    /**
+     * Hides the view with a fade out animation, or no animation at all.
+     */
+    fn hide_animated(&mut self, cb: Box<dyn Fn()>, animate: bool, animation_duration: f32) {
+        if self.data().hidden {
+            cb();
+            return;
+        }
+
+        debug!("Hiding {}", self.describe());
+
+        self.data_mut().hidden = true;
+        self.data_mut().fade_in = false;
+
+        if animate {
+
+        } else {
+            self.data_mut().alpha.current_value = 0.0;
+            cb();
+        }
     }
 
     fn alpha(&self) -> c_float {
@@ -398,7 +426,36 @@ pub trait ViewDrawer: ViewLayout {
 
         unsafe {
             nvgSave(vg);
+            nvgResetScissor(vg);
+        }
 
+        let padding = self.data().highlight_padding;
+        let corner_radius = self.data().highlight_corner_radius;
+        let stroke_width = style("brls/highlight/stroke_width");
+
+        let x = self.x() - padding - stroke_width / 2.0;
+        let y = self.y() - padding - stroke_width / 2.0;
+        let width = self.width() + padding * 2.0 + stroke_width;
+        let height = self.height() + padding * 2.0 + stroke_width;
+
+
+        // Draw
+        if background {
+            // Background
+            let highlight_background_color = theme("brls/highlight/background");
+            unsafe {
+                nvgFillColor(vg, nvgRGBAf(highlight_background_color.rgba[0], highlight_background_color.rgba[1], highlight_background_color.rgba[2], self.data().highlight_alpha.value()));
+                nvgBeginPath(vg);
+                nvgRoundedRect(vg, x, y, width, height, corner_radius);
+                nvgFill(vg);
+            }
+        } else {
+            // Border
+            let shadowOffset = style("brls/highlight/shadow_offset");
+            todo!()
+        }
+
+        unsafe {
             nvgRestore(vg);
         }
     }

@@ -31,7 +31,13 @@ impl FiniteTicking for Animatable {}
 impl Ticking for Animatable {}
 
 impl Animating for Animatable {
+    fn value(&self) -> f32 {
+        self.current_value
+    }
 
+    fn value_mut(&mut self) -> &mut f32 {
+        &mut self.current_value
+    }
 }
 
 pub trait Animating: FiniteTicking {
@@ -39,9 +45,12 @@ pub trait Animating: FiniteTicking {
     /**
      * Returns the current animatable value.
      */
-    fn value(&self) -> f32 {
-        todo!()
-    }
+    fn value(&self) -> f32;
+
+    /**
+     * Returns the current animatable value.
+     */
+    fn value_mut(&mut self) -> &mut f32;
 
     /**
      * Stops and resets the animation, going back to the given initial value.
@@ -70,8 +79,8 @@ pub trait Animating: FiniteTicking {
      * Duration is int32_t due to internal limitations, so a step cannot last for longer than 2 147 483 647ms.
      * The sum of the duration of all steps cannot exceed 71582min.
      */
-    fn add_step_easing(target_value: f32, duration: i32, easing: EasingFunction) {
-
+    fn add_step_easing(&mut self, target_value: f32, duration: f32, easing: EasingFunction) {
+        *self.value_mut() = target_value
     }
 
     /**

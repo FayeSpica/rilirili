@@ -1,8 +1,10 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
+use nanovg::Context;
 use yoga_sys::{YGNodeGetChildCount, YGNodeInsertChild, YGNodeRemoveChild, YGNodeStyleGetPadding, YGNodeStyleSetPadding};
 use yoga_sys::YGEdge::{YGEdgeBottom, YGEdgeLeft, YGEdgeRight, YGEdgeTop};
+use crate::core::frame_context::FrameContext;
 use crate::core::view_base::{View, ViewBase, ViewData};
 use crate::core::view_drawer::{ViewDrawer, ViewTrait};
 use crate::core::view_layout::ViewLayout;
@@ -55,13 +57,21 @@ pub enum Direction {
 }
 
 pub struct BoxView {
-    view_data: ViewData,
+    box_view_data: BoxViewData,
 }
 
 impl BoxView {
     pub fn new(x: f32, y: f32, width: f32, height: f32) -> Self {
         let s = Self {
-            view_data: ViewData::default(),
+            box_view_data: BoxViewData {
+                view_data: Default::default(),
+                axis: Axis::Row,
+                children: vec![],
+                default_focused_index: 0,
+                last_focused_view: None,
+                forwarded_attributes: Default::default(),
+                box_view: None,
+            }
         };
         s.set_width(width);
         s.set_height(height);
@@ -73,11 +83,11 @@ impl BoxView {
 
 impl ViewBase for BoxView {
     fn data(&self) -> &ViewData {
-        &self.view_data
+        &self.box_view_data.view_data
     }
 
     fn data_mut(&mut self) -> &mut ViewData {
-        &mut self.view_data
+        &mut self.box_view_data.view_data
     }
 }
 
@@ -85,7 +95,21 @@ impl ViewStyle for BoxView {}
 
 impl ViewLayout for BoxView {}
 
-impl ViewDrawer for BoxView {}
+impl ViewDrawer for BoxView {
+    fn draw(&self, ctx: &FrameContext, x: f32, y: f32, width: f32, height: f32) {
+        BoxTrait::draw(self, ctx, x, y, width, height);
+    }
+}
+
+impl BoxTrait for BoxView {
+    fn box_view_data(&self) -> &BoxViewData {
+        &self.box_view_data
+    }
+
+    fn box_view_data_mut(&mut self) -> &mut BoxViewData {
+        &mut self.box_view_data
+    }
+}
 
 pub enum BoxEnum {
     Box(BoxView),
@@ -109,7 +133,16 @@ pub enum BoxEnum {
 
 impl ViewTrait for BoxEnum {}
 
-impl ViewDrawer for BoxEnum {}
+impl ViewDrawer for BoxEnum {
+
+    /// manually dispatch
+    fn draw(&self, ctx: &FrameContext, x: f32, y: f32, width: f32, height: f32) {
+        match self {
+            BoxEnum::Box(v) => BoxTrait::draw(v, ctx, x, y, width, height),
+            _ => {}
+        }
+    }
+}
 
 impl ViewLayout for BoxEnum {}
 
@@ -146,7 +179,19 @@ pub struct BoxViewData {
 }
 
 impl BoxTrait for BoxEnum {
+    fn box_view_data(&self) -> &BoxViewData {
+        match self {
+            BoxEnum::Box(b) => &b.box_view_data,
+            _ => todo!(),
+        }
+    }
 
+    fn box_view_data_mut(&mut self) -> &mut BoxViewData {
+        match self {
+            BoxEnum::Box(b) => &mut b.box_view_data,
+            _ => todo!(),
+        }
+    }
 }
 
 // Generic FlexBox layout
@@ -218,7 +263,7 @@ pub trait BoxTrait: ViewDrawer {
 
             view.borrow().will_disappear(true);
             if free {
-                view.borrow().free_view();
+                view.borrow_mut().free_view();
             }
             self.invalidate();
         }
@@ -237,7 +282,7 @@ pub trait BoxTrait: ViewDrawer {
 
             view.borrow().will_disappear(true);
             if free {
-                view.borrow().free_view();
+                view.borrow_mut().free_view();
             }
         }
 
@@ -273,6 +318,20 @@ pub trait BoxTrait: ViewDrawer {
 
         for child in &self.box_view_data().children {
             child.borrow().on_parent_focus_lost(self.view().as_ref().unwrap().clone())
+        }
+    }
+
+    fn on_child_focus_gained(&mut self, direct_child: Rc<RefCell<View>>, focused_view: Rc<RefCell<View>>) {
+        self.box_view_data_mut().last_focused_view = Some(direct_child);
+        if let Some(parent) = self.parent() {
+            parent.borrow_mut().on_child_focus_gained(self.view().unwrap().clone(), focused_view);
+        }
+    }
+
+    fn on_child_focus_lost(&mut self, direct_child: Rc<RefCell<View>>, focused_view: Rc<RefCell<View>>) {
+        self.box_view_data_mut().last_focused_view = Some(direct_child);
+        if let Some(parent) = self.parent() {
+            parent.borrow_mut().on_child_focus_lost(self.view().unwrap().clone(), focused_view);
         }
     }
 
@@ -352,6 +411,13 @@ pub trait BoxTrait: ViewDrawer {
 
     fn set_box_view(&mut self, box_view: Option<Rc<RefCell<BoxEnum>>>) {
         self.box_view_data_mut().box_view = box_view;
+    }
+
+    fn draw(&self, ctx: &FrameContext, x: f32, y: f32, width: f32, height: f32) {
+        trace!("box draw {} {} {} {}, childs: {}", x, y, width, height,  &self.box_view_data().children.len());
+        for child in &self.box_view_data().children {
+            child.borrow().frame(ctx);
+        }
     }
 }
 

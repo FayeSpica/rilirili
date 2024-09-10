@@ -1,6 +1,6 @@
 use crate::core::activity::Activity;
-use crate::core::view_base::View;
-use crate::core::view_box::{BoxEnum, BoxView};
+use crate::core::view_base::{View, ViewBase};
+use crate::core::view_box::{BoxEnum, BoxTrait, BoxView};
 use quick_xml::events::Event;
 use quick_xml::Reader;
 use std::cell::RefCell;
@@ -69,7 +69,17 @@ pub trait ViewCreator {
         //     }
         // }
 
-        Rc::new(RefCell::new(View::Box(BoxEnum::Box(BoxView::new(0.0, 0.0, 0.0, 0.0)))))
+        let box_view = BoxView::new(0.0, 0.0, 0.0, 0.0);
+        let mut box_enum = BoxEnum::Box(box_view);
+        box_enum.add_view(Rc::new(RefCell::new(View::Box(BoxEnum::Box(BoxView::new(100.0, 100.0, 80.0, 80.0))))));
+        box_enum.add_view(Rc::new(RefCell::new(View::Box(BoxEnum::Box(BoxView::new(200.0, 100.0, 80.0, 80.0))))));
+        box_enum.add_view(Rc::new(RefCell::new(View::Box(BoxEnum::Box(BoxView::new(300.0, 100.0, 80.0, 80.0))))));
+        box_enum.add_view(Rc::new(RefCell::new(View::Box(BoxEnum::Box(BoxView::new(400.0, 100.0, 80.0, 80.0))))));
+        box_enum.add_view(Rc::new(RefCell::new(View::Box(BoxEnum::Box(BoxView::new(500.0, 100.0, 80.0, 80.0))))));
+        let view = Rc::new(RefCell::new(View::Box(box_enum)));
+        let view_self = view.clone();
+        view.borrow_mut().set_view(Some(view_self));
+        view
     }
 
     /**

@@ -5,11 +5,8 @@ pub type Time = u128;
 /**
  * Returns the current CPU time in microseconds.
  */
-pub fn get_time_usec() -> u128 {
-    // 获取当前时间，并转换为微秒
-    let now = SystemTime::now().duration_since(UNIX_EPOCH)
-        .expect("Time went backwards");
-    now.as_micros() // 返回微秒
+pub fn get_time_usec() -> i64 {
+    chrono::Local::now().timestamp_micros()
 }
 
 

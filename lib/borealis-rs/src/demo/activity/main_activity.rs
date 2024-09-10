@@ -13,6 +13,12 @@ impl MainActivity {
     }
 }
 
+impl Drop for MainActivity {
+    fn drop(&mut self) {
+        trace!("MainActivity dropped");
+    }
+}
+
 impl ViewCreator for MainActivity {}
 
 impl ActivityDyn for MainActivity {

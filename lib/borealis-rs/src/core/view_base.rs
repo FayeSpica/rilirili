@@ -1,3 +1,4 @@
+use std::any::{Any, type_name};
 use std::cell::RefCell;
 use crate::core::theme;
 use crate::core::view_box::{BoxEnum, BoxTrait, BoxView};
@@ -9,9 +10,14 @@ use std::cmp::PartialEq;
 use std::ffi::c_float;
 use std::rc::Rc;
 use yoga_sys::{YGNodeFree, YGNodeNew, YGNodeRef};
-use crate::core::animation::Animatable;
+use crate::core::activity::Activity;
+use crate::core::animation::{Animatable, Animating};
 use crate::core::audio::Sound;
+use crate::core::frame_context::FrameContext;
 use crate::core::geometry::Point;
+use crate::core::style::style;
+use crate::core::time::{FiniteTicking, Ticking};
+use crate::core::tweening::EasingFunction;
 use crate::core::view_drawer::{ViewDrawer, ViewTrait};
 use crate::core::view_layout::ViewLayout;
 use crate::core::view_style::ViewStyle;
@@ -60,7 +66,25 @@ pub struct ViewData {
     pub clips_to_bounds: bool,
     pub wireframe_enabled: bool,
     pub parent: Option<Rc<RefCell<BoxEnum>>>,
+    pub parent_activity: Option<Rc<RefCell<Activity>>>,
     pub view: Option<Rc<RefCell<View>>>,
+    pub ptr_lock_counter: i32,
+}
+
+impl Drop for ViewData {
+    fn drop(&mut self) {
+        unsafe {
+            YGNodeFree(self.yg_node);
+        }
+        match &self.view {
+            None => {
+                trace!("ViewData dropped");
+            }
+            Some(view) => {
+                trace!("ViewData dropped with view {}", view.borrow().describe())
+            }
+        }
+    }
 }
 
 impl Default for ViewData {
@@ -79,7 +103,7 @@ impl Default for ViewData {
             alpha: Animatable::new(1.0),
             detached: false,
             detached_origin: Default::default(),
-            focusable: false,
+            focusable: true,
             focused: true,
             focus_sound: Sound::SoundNone,
             shadow_type: ShadowType::Generic,
@@ -96,23 +120,17 @@ impl Default for ViewData {
             highlight_corner_radius: 0.0,
             highlight_padding: 0.0,
             hide_click_animation: false,
-            hide_highlight_background: false,
-            hide_highlight_border: false,
+            hide_highlight_background: true,
+            hide_highlight_border: true,
             hide_highlight: false,
             click_alpha: Animatable::new(0.0),
             collapse_state: Animatable::new(1.0),
             clips_to_bounds: false,
             wireframe_enabled: true,
             parent: None,
+            parent_activity: None,
             view: None,
-        }
-    }
-}
-
-impl Drop for ViewData {
-    fn drop(&mut self) {
-        unsafe {
-            YGNodeFree(self.yg_node);
+            ptr_lock_counter: 0,
         }
     }
 }
@@ -157,13 +175,30 @@ pub trait ViewBase {
     fn data_mut(&mut self) -> &mut ViewData;
 
     fn on_focus_gained(&mut self) {
+        trace!("on_focus_gained {}", self.describe());
         self.data_mut().focused = true;
-        todo!()
+
+        self.data_mut().highlight_alpha.reset();
+        self.data_mut().highlight_alpha.add_step_easing(1.0, style("brls/animations/highlight"), EasingFunction::QuadraticOut);
+        self.data_mut().highlight_alpha.start();
+
+        if let Some(parent) = self.parent() {
+            parent.borrow_mut().on_child_focus_gained(parent.borrow().view().unwrap().clone(), parent.borrow().view().unwrap().clone());
+        }
+
     }
 
     fn on_focus_lost(&mut self) {
+        trace!("on_focus_lost {}", self.describe());
         self.data_mut().focused = false;
-        todo!()
+
+        self.data_mut().highlight_alpha.reset();
+        self.data_mut().highlight_alpha.add_step_easing(0.0, style("brls/animations/highlight"), EasingFunction::QuadraticOut);
+        self.data_mut().highlight_alpha.start();
+
+        if let Some(parent) = self.parent() {
+            parent.borrow_mut().on_child_focus_lost(parent.borrow().view().unwrap().clone(), parent.borrow().view().unwrap().clone());
+        }
     }
 
     fn animate_hint(&self) -> bool {
@@ -190,7 +225,7 @@ pub trait ViewBase {
      * If set to true, will force the view to be translucent.
      */
     fn set_in_fade_animation(&mut self, translucent: bool) {
-        todo!()
+        // todo!()
     }
 
     /**
@@ -293,8 +328,20 @@ pub trait ViewBase {
         self.data().view.clone()
     }
 
-    fn set_view(&mut self, self_ref: Rc<RefCell<View>>) {
-        self.data_mut().view = Some(self_ref);
+    fn set_view(&mut self, self_ref: Option<Rc<RefCell<View>>>) {
+        self.data_mut().view = self_ref;
+    }
+
+    /// free_view need two steps
+    ///
+    /// 1. remove loop reference
+    ///     View.view = Rc<RefCell<View>> -> View.view = None
+    /// 2. remove all reference
+    ///     other refs = None
+    ///
+    /// view will not be released before reference removed
+    fn free_view(&mut self) {
+        self.set_view(None);
     }
 
     fn on_parent_focus_gained(&self, view: Rc<RefCell<View>>) {
@@ -305,12 +352,43 @@ pub trait ViewBase {
 
     }
 
-    fn describe(&self) -> &String {
-        todo!()
+    fn describe(&self) -> String {
+        String::new()
     }
 
-    fn free_view(&self) {
+    fn ptr_lock(&mut self) {
+        self.data_mut().ptr_lock_counter += 1;
+    }
 
+    fn ptr_unlock(&mut self) {
+        self.data_mut().ptr_lock_counter -= 1;
+    }
+
+    fn ptr_locked(&self) -> bool {
+        self.data().ptr_lock_counter > 0
+    }
+
+    fn default_focus(&self) -> Option<Rc<RefCell<View>>> {
+        if self.is_focusable() {
+            return self.view();
+        }
+        return None;
+    }
+
+    fn parent_activity(&self) -> Option<Rc<RefCell<Activity>>> {
+        if let Some(parent_activity) = &self.data().parent_activity {
+            return Some(parent_activity.clone());
+        }
+
+        if let Some(parent) = &self.data().parent {
+            return parent.borrow().parent_activity();
+        }
+
+        None
+    }
+
+    fn set_parent_activity(&mut self, parent_activity: Option<Rc<RefCell<Activity>>>) {
+        self.data_mut().parent_activity = parent_activity;
     }
 }
 
@@ -329,6 +407,24 @@ pub enum View {
     Rectangle(Rectangle),
 }
 
+impl Drop for View {
+    fn drop(&mut self) {
+        trace!("View {} dropped", self.describe());
+    }
+}
+
+impl View {
+    fn variant_name(&self) -> &'static str {
+        match self {
+            View::Box(_) => "Box",
+            View::Image(_) => "Image",
+            View::Label(_) => "Label",
+            View::ProgressSpinner(_) => "ProgressSpinner",
+            View::Rectangle(_) => "Rectangle",
+        }
+    }
+}
+
 impl ViewBase for View {
     fn data(&self) -> &ViewData {
         match self {
@@ -343,11 +439,36 @@ impl ViewBase for View {
             _ => todo!(),
         }
     }
+
+    fn describe(&self) -> String {
+        format!("[{}({})]", self.variant_name(), &self.data().id)
+    }
+
 }
 
 impl ViewTrait for View {}
 
-impl ViewDrawer for View {}
+impl ViewDrawer for View {
+    fn frame(&self, ctx: &FrameContext) {
+        match self {
+            View::Box(v) => ViewDrawer::frame(v, ctx),
+            View::Image(v) => ViewDrawer::frame(v, ctx),
+            View::Label(v) => ViewDrawer::frame(v, ctx),
+            View::ProgressSpinner(v) => ViewDrawer::frame(v, ctx),
+            View::Rectangle(v) => ViewDrawer::frame(v, ctx),
+        }
+    }
+
+    fn draw(&self, ctx: &FrameContext, x: f32, y: f32, width: f32, height: f32) {
+        match self {
+            View::Box(v) => BoxTrait::draw(v, ctx, x, y, width, height),
+            View::Image(v) => ViewDrawer::draw(v, ctx, x, y, width, height),
+            View::Label(v) => ViewDrawer::draw(v, ctx, x, y, width, height),
+            View::ProgressSpinner(v) => ViewDrawer::draw(v, ctx, x, y, width, height),
+            View::Rectangle(v) => ViewDrawer::draw(v, ctx, x, y, width, height),
+        }
+    }
+}
 
 impl ViewLayout for View {}
 
