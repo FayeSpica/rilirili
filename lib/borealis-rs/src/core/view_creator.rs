@@ -8,7 +8,6 @@ use std::fs::File;
 use std::io::BufReader;
 use std::path::PathBuf;
 use std::rc::Rc;
-
 const CUSTOM_RESOURCES_PATH: &str = "resources";
 
 pub trait ViewCreator {

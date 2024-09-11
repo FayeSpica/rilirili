@@ -1,14 +1,17 @@
+use sdl2::VideoSubsystem;
 use crate::core::activity::{ActivityDyn, ActivityViewData};
 use crate::core::view_creator::ViewCreator;
 
 pub struct MainActivity {
     activity_view_data: ActivityViewData,
+    video_subsystem: VideoSubsystem,
 }
 
 impl MainActivity {
-    pub fn new() -> Self {
+    pub fn new(video_subsystem: VideoSubsystem) -> Self {
         Self {
-            activity_view_data: ActivityViewData::new(),
+            activity_view_data: ActivityViewData::new(video_subsystem.clone()),
+            video_subsystem,
         }
     }
 }

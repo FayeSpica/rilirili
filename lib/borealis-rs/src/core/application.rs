@@ -1,9 +1,6 @@
 use crate::core::activity::{Activity, ActivityDyn};
 use crate::core::frame_context::FrameContext;
-use crate::core::global::{
-    set_content_height, set_content_width, set_window_height, set_window_scale, set_window_width,
-    window_height, window_scale, window_width,
-};
+use crate::core::global::{set_content_height, set_content_width, set_window_height, set_window_scale, set_window_width, window_height, window_scale, window_width};
 use crate::core::view_base::{BaseView, View, ViewBase};
 use crate::core::view_box::BoxView;
 use crate::core::view_drawer::ViewDrawer;
@@ -47,13 +44,39 @@ pub struct Application {
     activities_stack: Vec<Rc<RefCell<Activity>>>,
     focus_stack: Vec<Rc<RefCell<View>>>,
     sdl: Sdl,
-    video_subsystem: VideoSubsystem,
+    pub video_subsystem: VideoSubsystem,
     window: Window,
     gl_context: GLContext,
     window_width: i32,
     window_height: i32,
     context: FrameContext,
     deletion_pool: Vec<Rc<RefCell<View>>>,
+}
+
+fn create_sdl2_context(title: &str, width: u32, height: u32) -> (
+    sdl2::video::Window,
+    sdl2::EventPump,
+    sdl2::EventSubsystem,
+    sdl2::VideoSubsystem,
+    sdl2::video::GLContext,
+) {
+    let sdl = sdl2::init().unwrap();
+    let video = sdl.video().unwrap();
+    let event_subsystem = sdl.event().unwrap();
+    let gl_attr = video.gl_attr();
+    gl_attr.set_context_profile(sdl2::video::GLProfile::Core);
+    gl_attr.set_context_version(3, 3);
+    gl_attr.set_context_flags().forward_compatible().set();
+    let window = video
+        .window(title, width, height)
+        .opengl()
+        .resizable()
+        .build()
+        .unwrap();
+    let gl_context = window.gl_create_context().unwrap();
+    let event_loop = sdl.event_pump().unwrap();
+
+    (window, event_loop, event_subsystem, video, gl_context)
 }
 
 impl Application {
@@ -77,6 +100,9 @@ impl Application {
             .build()
             .unwrap();
         let gl_context = window.gl_create_context().unwrap();
+
+        // let (window, events_loop, event_subsystem, video_subsystem, gl_context) = create_sdl2_context(title, 1280, 720);
+        //
         gl::load_with(|s|video_subsystem.gl_get_proc_address(s) as *const std::os::raw::c_void);
         unsafe {
             gl::ClearColor(0.75, 0.5, 0.1, 0.0);
@@ -109,7 +135,7 @@ impl Application {
                 gl_context,
                 window_width: 1280,
                 window_height: 720,
-                context: FrameContext{context, pixel_ratio: 1.0},
+                context: FrameContext{ context, pixel_ratio: 1.0},
                 deletion_pool: vec![],
             },
         )
@@ -174,7 +200,7 @@ impl Application {
                             Some(code) => {
                                 match code {
                                     Keycode::Equals => {
-                                        self.push_activity(Activity::MainActivity(MainActivity::new()));
+                                        self.push_activity(Activity::MainActivity(MainActivity::new(self.video_subsystem.clone())));
                                     }
                                     Keycode::Minus => {
                                         self.pop_activity();

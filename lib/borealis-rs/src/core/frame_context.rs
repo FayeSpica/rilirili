@@ -1,6 +1,7 @@
 use crate::core::theme::theme;
 use nanovg::Context;
 use std::ffi::CString;
+use sdl2::video::Window;
 
 pub struct FrameContext {
     pub context: Context,

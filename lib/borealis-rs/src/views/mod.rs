@@ -17,3 +17,4 @@ pub mod scrolling_frame;
 pub mod sidebar;
 pub mod slider;
 pub mod tab_frame;
+pub mod video;

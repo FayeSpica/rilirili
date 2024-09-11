@@ -3,6 +3,7 @@ use libmpv2::{
     Mpv,
 };
 use std::{env, ffi::c_void};
+use log::info;
 
 fn get_proc_address(display: &sdl2::VideoSubsystem, name: &str) -> *mut c_void {
     display.gl_get_proc_address(name) as *mut c_void
@@ -22,6 +23,8 @@ fn main() {
     let path = env::args()
         .nth(1)
         .unwrap_or_else(|| String::from(VIDEO_URL));
+
+    println!("{}", path);
 
     let mut mpv = Mpv::with_initializer(|init| {
         init.set_property("vo", "libmpv")?;
@@ -61,6 +64,11 @@ fn main() {
     });
     mpv.command("loadfile", &[&path, "replace"]).unwrap();
 
+    mpv.command("set", &["video-margin-ratio-right", "0.5"]).unwrap();
+    mpv.command("set", &["video-margin-ratio-bottom", "0.5"]).unwrap();
+    // mpv.command("set", &["video-margin-ratio-top", "0.5"]).unwrap();
+    // mpv.command("set", &["video-margin-ratio-left", "0.5"]).unwrap();
+
     'render: loop {
         for event in events_loop.poll_iter() {
             use sdl2::event::Event;
@@ -68,7 +76,7 @@ fn main() {
             if event.is_user_event() {
                 match event.as_user_event_type::<UserEvent>().unwrap() {
                     UserEvent::RedrawRequested => {
-                        let (width, height) = window.drawable_size();
+                        // let (width, height) = window.drawable_size();
                         let (width, height) = (640, 360);
                         render_context
                             .render::<sdl2::VideoSubsystem>(0, width as _, height as _, true)

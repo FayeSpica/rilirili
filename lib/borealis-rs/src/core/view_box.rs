@@ -24,6 +24,7 @@ use crate::views::recycler::{RecyclerCell, RecyclerHeader};
 use crate::views::scrolling_frame::ScrollingFrame;
 use crate::views::slider::Slider;
 use crate::views::tab_frame::TabFrame;
+use crate::views::video::{Video, VideoTrait};
 
 pub enum JustifyContent {
     FlexStart,
@@ -129,6 +130,7 @@ pub enum BoxEnum {
     ScrollingFrame(ScrollingFrame),
     Slider(Slider),
     TabFrame(TabFrame),
+    Video(Video),
 }
 
 impl ViewTrait for BoxEnum {}
@@ -139,6 +141,7 @@ impl ViewDrawer for BoxEnum {
     fn draw(&self, ctx: &FrameContext, x: f32, y: f32, width: f32, height: f32) {
         match self {
             BoxEnum::Box(v) => BoxTrait::draw(v, ctx, x, y, width, height),
+            BoxEnum::Video(v) => VideoTrait::draw(v, ctx, x, y, width, height),
             _ => {}
         }
     }
@@ -153,6 +156,7 @@ impl ViewBase for BoxEnum {
         match self {
             BoxEnum::Box(v) => v.data(),
             BoxEnum::AppletFrame(v) => v.data(),
+            BoxEnum::Video(v) => v.data(),
             _ => todo!(),
         }
     }
@@ -161,21 +165,22 @@ impl ViewBase for BoxEnum {
         match self {
             BoxEnum::Box(v) => v.data_mut(),
             BoxEnum::AppletFrame(v) => v.data_mut(),
+            BoxEnum::Video(v) => v.data_mut(),
             _ => todo!(),
         }
     }
 }
 
 pub struct BoxViewData {
-    view_data: ViewData,
+    pub view_data: ViewData,
 
-    axis: Axis,
-    children: Vec<Rc<RefCell<View>>>,
+    pub axis: Axis,
+    pub children: Vec<Rc<RefCell<View>>>,
 
-    default_focused_index: usize,
-    last_focused_view: Option<Rc<RefCell<View>>>,
-    forwarded_attributes: HashMap<String, (String, Rc<RefCell<RefCell<View>>>)>,
-    box_view: Option<Rc<RefCell<BoxEnum>>>,
+    pub default_focused_index: usize,
+    pub last_focused_view: Option<Rc<RefCell<View>>>,
+    pub forwarded_attributes: HashMap<String, (String, Rc<RefCell<RefCell<View>>>)>,
+    pub box_view: Option<Rc<RefCell<BoxEnum>>>,
 }
 
 impl BoxTrait for BoxEnum {
@@ -414,7 +419,7 @@ pub trait BoxTrait: ViewDrawer {
     }
 
     fn draw(&self, ctx: &FrameContext, x: f32, y: f32, width: f32, height: f32) {
-        trace!("box draw {} {} {} {}, childs: {}", x, y, width, height,  &self.box_view_data().children.len());
+        // trace!("box draw {} {} {} {}, childs: {}", x, y, width, height,  &self.box_view_data().children.len());
         for child in &self.box_view_data().children {
             child.borrow().frame(ctx);
         }
