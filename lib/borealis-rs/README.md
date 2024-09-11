@@ -10,6 +10,7 @@ cargo run --example window_borealis
 ```shell
 pacman -S --needed base-devel mingw-w64-x86_64-toolchain
 pacman -S mingw-w64-x86_64-SDL2
+pacman -S mingw-w64-x86_64-mpv
 ```
 
 ```shell
