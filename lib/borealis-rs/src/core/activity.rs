@@ -47,13 +47,13 @@ pub trait ActivityDyn: ViewCreator {
         // self.create_from_xml_resource(self.view_data().xml_path.clone())
         let box_view = BoxView::new(0.0, 0.0, 0.0, 0.0);
         let mut box_enum = BoxEnum::Box(box_view);
-        box_enum.add_view(Rc::new(RefCell::new(View::Box(BoxEnum::Video(Video::new(100.0, 200.0, 640.0, 360.0, self.view_data().video_subsystem.clone()))))));
-
         box_enum.add_view(Rc::new(RefCell::new(View::Box(BoxEnum::Box(BoxView::new(100.0, 100.0, 80.0, 80.0))))));
         box_enum.add_view(Rc::new(RefCell::new(View::Box(BoxEnum::Box(BoxView::new(200.0, 100.0, 80.0, 80.0))))));
         box_enum.add_view(Rc::new(RefCell::new(View::Box(BoxEnum::Box(BoxView::new(300.0, 100.0, 80.0, 80.0))))));
         box_enum.add_view(Rc::new(RefCell::new(View::Box(BoxEnum::Box(BoxView::new(400.0, 100.0, 80.0, 80.0))))));
         box_enum.add_view(Rc::new(RefCell::new(View::Box(BoxEnum::Box(BoxView::new(500.0, 100.0, 80.0, 80.0))))));
+
+        box_enum.add_view(Rc::new(RefCell::new(View::Box(BoxEnum::Video(Video::new(100.0, 200.0, 640.0, 360.0, self.view_data().video_subsystem.clone()))))));
 
         let view = Rc::new(RefCell::new(View::Box(box_enum)));
         let view_self = view.clone();

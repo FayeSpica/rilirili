@@ -14,6 +14,7 @@ use std::num::NonZeroU32;
 use std::ptr::eq;
 use std::rc::Rc;
 use std::sync::Arc;
+use gl::{ClearColor, FRAMEBUFFER};
 use sdl2::{Sdl, VideoSubsystem};
 use sdl2::event::{Event, WindowEvent};
 use sdl2::keyboard::Keycode;
@@ -105,8 +106,9 @@ impl Application {
         //
         gl::load_with(|s|video_subsystem.gl_get_proc_address(s) as *const std::os::raw::c_void);
         unsafe {
-            gl::ClearColor(0.75, 0.5, 0.1, 0.0);
-            gl::Clear(gl::COLOR_BUFFER_BIT);
+            gl::Enable(gl::BLEND);
+            gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
+            ClearColor(0.0, 0.0, 0.0, 0.0);
         }
 
         let context = nanovg::ContextBuilder::new()
@@ -135,7 +137,7 @@ impl Application {
                 gl_context,
                 window_width: 1280,
                 window_height: 720,
-                context: FrameContext{ context, pixel_ratio: 1.0},
+                context: FrameContext{ context, pixel_ratio: 1.5},
                 deletion_pool: vec![],
             },
         )
@@ -176,8 +178,8 @@ impl Application {
                                 self.set_window_size(width as u32, height as u32);
                                 unsafe {
                                     gl::Viewport(0, 0, width, height);
-                                    gl::ClearColor(0.75, 0.5, 0.1, 0.0);
-                                    gl::Clear(gl::COLOR_BUFFER_BIT);
+                                    // ClearColor(0.75, 0.5, 0.1, 0.0);
+                                    // gl::Clear(gl::COLOR_BUFFER_BIT);
                                 }
                             }
                             WindowEvent::SizeChanged(_, _) => {}
@@ -285,8 +287,9 @@ impl Application {
         // trace!("gl_window.window.inner_size(): {:?}", gl_window.window.inner_size());
         // trace!("gl_window.window.scale_factor(): {} {}", gl_window.window.scale_factor(), window_scale());
         unsafe {
-            gl::Viewport(0, 0, width, height);
-            gl::Clear(gl::COLOR_BUFFER_BIT);
+            gl::BindFramebuffer(FRAMEBUFFER, 0);
+            gl::ClearColor(0.0, 0.0, 0.0, 0.0); // Transparent background
+            gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
         }
         unsafe {
             nvgBeginFrame(
@@ -296,12 +299,12 @@ impl Application {
                 scale as c_float,
             );
         }
-        unsafe {
-            nvgBeginPath(ctx.vg().raw());
-            nvgRect(ctx.vg().raw(), 100.0, 100.0, 100.0, 100.0);
-            nvgFillColor(ctx.vg().raw(), nvgRGB(255, 100, 0));
-            nvgFill(ctx.vg().raw());
-        }
+        // unsafe {
+        //     nvgBeginPath(ctx.vg().raw());
+        //     nvgRect(ctx.vg().raw(), 100.0, 100.0, 100.0, 100.0);
+        //     nvgFillColor(ctx.vg().raw(), nvgRGB(255, 100, 0));
+        //     nvgFill(ctx.vg().raw());
+        // }
         for view in &self.views_to_draw {
             view.borrow().frame(ctx);
         }
