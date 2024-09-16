@@ -1,10 +1,9 @@
 use crate::core::theme::theme;
-use nanovg::Context;
 use std::ffi::CString;
 use sdl2::video::Window;
 
 pub struct FrameContext {
-    pub context: Context,
+    pub context: *mut nanovg_sys::NVGcontext,
     pub pixel_ratio: f32,
 }
 
@@ -38,8 +37,4 @@ impl FrameContext {
     //         pixel_ratio: 1.0,
     //     }
     // }
-
-    pub fn vg(&self) -> &Context {
-        &self.context
-    }
 }

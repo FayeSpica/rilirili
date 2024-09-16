@@ -6,7 +6,6 @@ use crate::core::theme::{theme, transparent_color};
 use crate::core::view_base;
 use crate::core::view_base::{ShadowType, TransitionAnimation, View, ViewBackground, ViewBase, Visibility};
 use crate::core::view_layout::ViewLayout;
-use nanovg::Context;
 use nanovg_sys::{nvgBeginPath, nvgBoxGradient, nvgClosePath, nvgFill, nvgFillColor, nvgFillPaint, nvgIntersectScissor, nvgLineTo, nvgLinearGradient, nvgMoveTo, nvgPathWinding, nvgRGB, nvgRGBA, nvgRect, nvgRestore, nvgRoundedRect, nvgRoundedRectVarying, nvgSave, nvgStroke, nvgStrokeColor, nvgStrokeWidth, NVGcolor, NVGsolidity, nvgResetScissor, nvgRGBAf};
 use std::ffi::{c_float, c_uchar};
 use yoga_sys::YGEdge::{YGEdgeBottom, YGEdgeLeft, YGEdgeRight, YGEdgeTop};
@@ -25,13 +24,13 @@ pub trait ViewDrawer: ViewLayout {
      * Do not override it to draw your view,
      * override draw() instead
      */
-    fn frame(&self, ctx: &FrameContext) {
+    fn frame(&mut self, ctx: &FrameContext) {
         if self.data().visibility != Visibility::Visible {
             return;
         }
 
         unsafe {
-            nvgSave(ctx.vg().raw());
+            nvgSave(ctx.context);
         }
 
         let rect = self.rect();
@@ -75,9 +74,9 @@ pub trait ViewDrawer: ViewLayout {
             // Collapse clipping
             if self.data().collapse_state.current_value < 1.0 || self.data().clips_to_bounds {
                 unsafe {
-                    nvgSave(ctx.vg().raw());
+                    nvgSave(ctx.context);
                     nvgIntersectScissor(
-                        ctx.vg().raw(),
+                        ctx.context,
                         x,
                         y,
                         width,
@@ -96,13 +95,13 @@ pub trait ViewDrawer: ViewLayout {
             // Reset clipping
             if self.data().collapse_state.current_value < 1.0 || self.data().clips_to_bounds {
                 unsafe {
-                    nvgRestore(ctx.vg().raw());
+                    nvgRestore(ctx.context);
                 }
             }
         }
 
         unsafe {
-            nvgRestore(ctx.vg().raw());
+            nvgRestore(ctx.context);
         }
     }
 
@@ -118,7 +117,7 @@ pub trait ViewDrawer: ViewLayout {
      * Views should not draw outside of their bounds (they
      * may be clipped if they do so).
      */
-    fn draw(&self, ctx: &FrameContext, x: f32, y: f32, width: f32, height: f32) {
+    fn draw(&mut self, ctx: &FrameContext, x: f32, y: f32, width: f32, height: f32) {
         trace!("default draw");
     }
 
@@ -239,7 +238,7 @@ pub trait ViewDrawer: ViewLayout {
         let width = rect.width();
         let height = rect.height();
 
-        let vg = ctx.vg().raw();
+        let vg = ctx.context;
 
         match self.data().background {
             ViewBackground::None => {}
@@ -362,7 +361,7 @@ pub trait ViewDrawer: ViewLayout {
             ShadowType::Custom => {}
         }
 
-        let vg = ctx.vg().raw();
+        let vg = ctx.context;
 
         unsafe {
             let shadow_paint = nvgBoxGradient(
@@ -400,7 +399,7 @@ pub trait ViewDrawer: ViewLayout {
     }
 
     fn draw_border(&self, ctx: &FrameContext, rect: &Rect) {
-        let vg = ctx.vg().raw();
+        let vg = ctx.context;
         unsafe {
             nvgBeginPath(vg);
             nvgStrokeColor(vg, self.a(self.data().border_color));
@@ -422,7 +421,7 @@ pub trait ViewDrawer: ViewLayout {
             return;
         }
 
-        let vg = ctx.vg().raw();
+        let vg = ctx.context;
 
         unsafe {
             nvgSave(vg);
@@ -463,7 +462,7 @@ pub trait ViewDrawer: ViewLayout {
     fn draw_click_animation(&self, ctx: &FrameContext, rect: &Rect) {}
 
     fn draw_wire_frame(&self, ctx: &FrameContext, rect: &Rect) {
-        let vg = ctx.vg().raw();
+        let vg = ctx.context;
         unsafe {
             nvgStrokeWidth(vg, 1.0);
 
@@ -589,7 +588,7 @@ pub trait ViewDrawer: ViewLayout {
     }
 
     fn draw_line(&self, ctx: &FrameContext, rect: &Rect) {
-        let vg = ctx.vg().raw();
+        let vg = ctx.context;
         // Don't setup and draw empty nvg path if there is no line to draw
         if self.data().line_top <= 0.0
             && self.data().line_left <= 0.0

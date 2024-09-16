@@ -2,7 +2,6 @@ use std::any::{Any, type_name};
 use std::cell::RefCell;
 use crate::core::theme;
 use crate::core::view_box::{BoxEnum, BoxTrait, BoxView};
-use nanovg::Context;
 use nanovg_sys::{
     nvgBeginFrame, nvgBeginPath, nvgEndFrame, nvgFill, nvgFillColor, nvgRect, NVGcolor,
 };
@@ -91,7 +90,7 @@ impl Default for ViewData {
     fn default() -> Self {
         Self {
             id: "fake_id".to_string(),
-            background: ViewBackground::VerticalLinear,
+            background: ViewBackground::None,
             background_color: theme::theme("brls/background"),
             background_start_color: theme::theme("brls/background"),
             background_end_color: theme::theme("brls/background"),
@@ -152,20 +151,20 @@ impl BaseView {
         }
     }
 
-    pub fn draw(&self, vg: &Context) {
+    pub fn draw(&self, vg: *mut nanovg_sys::NVGcontext) {
         // 默认的绘制方法，子类可以重写此方法
         unsafe {
-            nvgBeginFrame(vg.raw(), 800.0, 600.0, 1.0);
-            nvgBeginPath(vg.raw());
-            nvgRect(vg.raw(), self.x, self.y, self.width, self.height);
+            nvgBeginFrame(vg, 800.0, 600.0, 1.0);
+            nvgBeginPath(vg);
+            nvgRect(vg, self.x, self.y, self.width, self.height);
             nvgFillColor(
-                vg.raw(),
+                vg,
                 NVGcolor {
                     rgba: [0.0, 1.0, 1.0, 1.0],
                 },
             );
-            nvgFill(vg.raw());
-            nvgEndFrame(vg.raw());
+            nvgFill(vg);
+            nvgEndFrame(vg);
         }
     }
 }
@@ -449,7 +448,7 @@ impl ViewBase for View {
 impl ViewTrait for View {}
 
 impl ViewDrawer for View {
-    fn frame(&self, ctx: &FrameContext) {
+    fn frame(&mut self, ctx: &FrameContext) {
         match self {
             View::Box(v) => ViewDrawer::frame(v, ctx),
             View::Image(v) => ViewDrawer::frame(v, ctx),
@@ -459,7 +458,7 @@ impl ViewDrawer for View {
         }
     }
 
-    fn draw(&self, ctx: &FrameContext, x: f32, y: f32, width: f32, height: f32) {
+    fn draw(&mut self, ctx: &FrameContext, x: f32, y: f32, width: f32, height: f32) {
         match self {
             View::Box(v) => BoxTrait::draw(v, ctx, x, y, width, height),
             View::Image(v) => ViewDrawer::draw(v, ctx, x, y, width, height),

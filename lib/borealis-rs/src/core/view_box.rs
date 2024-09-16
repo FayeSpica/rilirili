@@ -1,7 +1,6 @@
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
-use nanovg::Context;
 use yoga_sys::{YGNodeGetChildCount, YGNodeInsertChild, YGNodeRemoveChild, YGNodeStyleGetPadding, YGNodeStyleSetPadding};
 use yoga_sys::YGEdge::{YGEdgeBottom, YGEdgeLeft, YGEdgeRight, YGEdgeTop};
 use crate::core::frame_context::FrameContext;
@@ -97,7 +96,7 @@ impl ViewStyle for BoxView {}
 impl ViewLayout for BoxView {}
 
 impl ViewDrawer for BoxView {
-    fn draw(&self, ctx: &FrameContext, x: f32, y: f32, width: f32, height: f32) {
+    fn draw(&mut self, ctx: &FrameContext, x: f32, y: f32, width: f32, height: f32) {
         BoxTrait::draw(self, ctx, x, y, width, height);
     }
 }
@@ -138,7 +137,7 @@ impl ViewTrait for BoxEnum {}
 impl ViewDrawer for BoxEnum {
 
     /// manually dispatch
-    fn draw(&self, ctx: &FrameContext, x: f32, y: f32, width: f32, height: f32) {
+    fn draw(&mut self, ctx: &FrameContext, x: f32, y: f32, width: f32, height: f32) {
         match self {
             BoxEnum::Box(v) => BoxTrait::draw(v, ctx, x, y, width, height),
             BoxEnum::Video(v) => VideoTrait::draw(v, ctx, x, y, width, height),
@@ -421,7 +420,7 @@ pub trait BoxTrait: ViewDrawer {
     fn draw(&self, ctx: &FrameContext, x: f32, y: f32, width: f32, height: f32) {
         // trace!("box draw {} {} {} {}, childs: {}", x, y, width, height,  &self.box_view_data().children.len());
         for child in &self.box_view_data().children {
-            child.borrow().frame(ctx);
+            child.borrow_mut().frame(ctx);
         }
     }
 }

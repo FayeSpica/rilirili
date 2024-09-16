@@ -4,7 +4,6 @@ use crate::core::global::{set_content_height, set_content_width, set_window_heig
 use crate::core::view_base::{BaseView, View, ViewBase};
 use crate::core::view_box::BoxView;
 use crate::core::view_drawer::ViewDrawer;
-use nanovg::{Color, PathOptions};
 use nanovg_sys::{
     nvgBeginFrame, nvgBeginPath, nvgEndFrame, nvgFill, nvgFillColor, nvgRGB, nvgRGBA, nvgRect,
 };
@@ -111,11 +110,12 @@ impl Application {
             ClearColor(0.0, 0.0, 0.0, 0.0);
         }
 
-        let context = nanovg::ContextBuilder::new()
-            .stencil_strokes()
-            .antialias()
-            .build()
-            .unwrap();
+        let context =
+            unsafe {
+                nanovg_sys::gladLoadGL();
+                let f = nanovg_sys::NVGcreateFlags::NVG_STENCIL_STROKES | nanovg_sys::NVGcreateFlags::NVG_ANTIALIAS;
+                nanovg_sys::nvgCreateGL3(f.bits())
+            };
 
         window.gl_swap_window();
         let now_us = get_time_usec();
@@ -283,7 +283,6 @@ impl Application {
     }
 
     pub fn frame(&self, ctx: &FrameContext, width: i32, height: i32, scale: f32) {
-        let vg = ctx.vg().raw();
         // trace!("gl_window.window.inner_size(): {:?}", gl_window.window.inner_size());
         // trace!("gl_window.window.scale_factor(): {} {}", gl_window.window.scale_factor(), window_scale());
         unsafe {
@@ -293,7 +292,7 @@ impl Application {
         }
         unsafe {
             nvgBeginFrame(
-                ctx.vg().raw(),
+                ctx.context,
                 width as c_float,
                 height as c_float,
                 scale as c_float,
@@ -306,10 +305,10 @@ impl Application {
         //     nvgFill(ctx.vg().raw());
         // }
         for view in &self.views_to_draw {
-            view.borrow().frame(ctx);
+            view.borrow_mut().frame(ctx);
         }
         unsafe {
-            nvgEndFrame(ctx.vg().raw());
+            nvgEndFrame(ctx.context);
         }
         // will vsync depends on driver/graphics card
         self.window.gl_swap_window();
