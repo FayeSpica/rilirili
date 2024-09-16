@@ -112,6 +112,7 @@ impl Application {
 
         let context =
             unsafe {
+                #[cfg(target_os = "windows")]
                 nanovg_sys::gladLoadGL();
                 let f = nanovg_sys::NVGcreateFlags::NVG_STENCIL_STROKES | nanovg_sys::NVGcreateFlags::NVG_ANTIALIAS;
                 nanovg_sys::nvgCreateGL3(f.bits())
