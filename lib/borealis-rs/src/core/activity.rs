@@ -67,12 +67,6 @@ pub trait ActivityDyn: ViewCreator {
         box_enum.add_view(Rc::new(RefCell::new(View::Box(BoxEnum::Box(
             BoxView::new(0.0, 0.0, 80.0, 80.0),
         )))));
-        box_enum.add_view(Rc::new(RefCell::new(View::Box(BoxEnum::Box(
-            BoxView::new(0.0, 0.0, 80.0, 80.0),
-        )))));
-        box_enum.add_view(Rc::new(RefCell::new(View::Box(BoxEnum::Box(
-            BoxView::new(0.0, 0.0, 80.0, 80.0),
-        )))));
 
         let view = Rc::new(RefCell::new(View::Box(box_enum)));
         let view_self = view.clone();
