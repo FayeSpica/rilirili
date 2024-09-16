@@ -26,6 +26,4 @@ impl ViewBase for Image {
     }
 }
 
-impl ImageTrait for Image {
-
-}
+impl ImageTrait for Image {}

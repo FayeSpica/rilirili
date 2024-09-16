@@ -1,5 +1,5 @@
-use nanovg_sys::NVGcolor;
 use crate::core::view_base::{ShadowType, ViewBackground, ViewBase};
+use nanovg_sys::NVGcolor;
 
 /// -----------------------------------------------------------
 /// Styling and view shape properties
@@ -58,8 +58,7 @@ pub trait ViewStyle: ViewBase {
     /**
      * Sets the view shape background color.
      */
-    fn set_background_color(&mut self, color: NVGcolor)
-    {
+    fn set_background_color(&mut self, color: NVGcolor) {
         self.data_mut().background_color = color;
         self.set_background(ViewBackground::ShapeColor);
     }
@@ -86,8 +85,7 @@ pub trait ViewStyle: ViewBase {
      * Sets the view shape corner radius.
      * 0 means no rounded corners.
      */
-    fn set_corner_radius(&mut self, radius: f32)
-    {
+    fn set_corner_radius(&mut self, radius: f32) {
         self.data_mut().corner_radius = radius;
     }
 
@@ -106,8 +104,7 @@ pub trait ViewStyle: ViewBase {
     /**
      * Sets the shadow visibility.
      */
-    fn set_shadow_visibility(&mut self, visible: bool)
-    {
+    fn set_shadow_visibility(&mut self, visible: bool) {
         self.data_mut().show_shadow = visible;
     }
 
@@ -115,29 +112,25 @@ pub trait ViewStyle: ViewBase {
      * If set to true, the highlight background will be hidden for this view
      * (the white rectangle that goes behind the view, replacing the usual background shape).
      */
-    fn set_hide_highlight_background(&mut self, hide: bool)
-    {
+    fn set_hide_highlight_background(&mut self, hide: bool) {
         self.data_mut().hide_highlight_background = hide;
     }
 
     /**
      * If set to true, the highlight border will be hidden for this view.
      */
-    fn set_hide_highlight_border(&mut self, hide: bool)
-    {
+    fn set_hide_highlight_border(&mut self, hide: bool) {
         self.data_mut().hide_highlight_border = hide;
     }
 
     /**
      * If set to true, the highlight will be hidden for this view.
      */
-    fn set_hide_highlight(&mut self, hide: bool)
-    {
+    fn set_hide_highlight(&mut self, hide: bool) {
         self.data_mut().hide_highlight = hide;
     }
 
-    fn set_hide_click_animation(&mut self, hide: bool)
-    {
+    fn set_hide_click_animation(&mut self, hide: bool) {
         self.data_mut().hide_click_animation = hide;
     }
 
@@ -145,16 +138,14 @@ pub trait ViewStyle: ViewBase {
      * Sets the highlight padding of the view, aka the space between the
      * highlight rectangle and the view. The highlight rect is enlarged, the view is untouched.
      */
-    fn set_highlight_padding(&mut self, padding: f32)
-    {
+    fn set_highlight_padding(&mut self, padding: f32) {
         self.data_mut().highlight_padding = padding;
     }
 
     /**
      * Sets the highlight rectangle corner radius.
      */
-    fn set_highlight_corner_radius(&mut self, radius: f32)
-    {
+    fn set_highlight_corner_radius(&mut self, radius: f32) {
         self.data_mut().highlight_corner_radius = radius;
     }
 }

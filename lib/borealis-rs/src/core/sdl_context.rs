@@ -1,8 +1,8 @@
+use crate::core::frame_context::FrameContext;
 use gl::ClearColor;
 use nanovg_sys::NVGcontext;
-use sdl2::{EventPump, Sdl, VideoSubsystem};
 use sdl2::video::{GLContext, Window};
-use crate::core::frame_context::FrameContext;
+use sdl2::{EventPump, Sdl, VideoSubsystem};
 
 pub const ORIGINAL_WINDOW_WIDTH: u32 = 1280;
 pub const ORIGINAL_WINDOW_HEIGHT: u32 = 720;
@@ -51,20 +51,20 @@ impl SdlContext {
         let gl_context = window.gl_create_context().unwrap();
         window.gl_make_current(&gl_context).unwrap();
 
-        gl::load_with(|s|video_subsystem.gl_get_proc_address(s) as *const std::os::raw::c_void);
+        gl::load_with(|s| video_subsystem.gl_get_proc_address(s) as *const std::os::raw::c_void);
         unsafe {
             gl::Enable(gl::BLEND);
             gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
             ClearColor(0.0, 0.0, 0.0, 0.0);
         }
 
-        let nvg_context =
-            unsafe {
-                #[cfg(target_os = "windows")]
-                nanovg_sys::gladLoadGL();
-                let f = nanovg_sys::NVGcreateFlags::NVG_STENCIL_STROKES | nanovg_sys::NVGcreateFlags::NVG_ANTIALIAS;
-                nanovg_sys::nvgCreateGL3(f.bits())
-            };
+        let nvg_context = unsafe {
+            #[cfg(target_os = "windows")]
+            nanovg_sys::gladLoadGL();
+            let f = nanovg_sys::NVGcreateFlags::NVG_STENCIL_STROKES
+                | nanovg_sys::NVGcreateFlags::NVG_ANTIALIAS;
+            nanovg_sys::nvgCreateGL3(f.bits())
+        };
 
         window.gl_swap_window();
 
@@ -75,7 +75,12 @@ impl SdlContext {
             window,
             gl_context,
             nvg_context,
-            frame_context: FrameContext{ context: nvg_context, pixel_ratio: 1.0, window_width, window_height },
+            frame_context: FrameContext {
+                context: nvg_context,
+                pixel_ratio: 1.0,
+                window_width,
+                window_height,
+            },
             size_w: 0,
             size_h: 0,
             pos_x: 0,
@@ -92,6 +97,10 @@ impl SdlContext {
         self.window.gl_swap_window();
     }
 
+    pub fn window(&self) -> &Window {
+        &self.window
+    }
+
     pub fn video_subsystem(&self) -> &VideoSubsystem {
         &self.video_subsystem
     }
@@ -105,16 +114,6 @@ impl SdlContext {
     }
 
     pub fn sdl_window_framebuffer_size_callback(&mut self, width: i32, height: i32) {
-        let (f_width, f_height) = get_drawable_size(&self.window);
-
-        let (window_width, window_height) = self.window.size();
-
-        info!("f {} {} | p {} {} | w {} {}", f_width, f_height, width, height, window_width, window_height);
-
-        let display_index = self.window.display_index().unwrap();
-        let (ddpi, hdpi, vdpi) = self.video_subsystem.display_dpi(display_index).unwrap();
-        info!("ddpi: {} hdpi:{} vdpi:{}", ddpi, hdpi, vdpi);
-
         unsafe {
             gl::Viewport(0, 0, width, height);
         }
@@ -122,18 +121,16 @@ impl SdlContext {
         self.size_w = width;
         self.size_h = height;
     }
-}
 
-/// Gets the drawable size of the SDL window, i.e., the actual pixel size used by OpenGL.
-fn get_drawable_size(window: &Window) -> (i32, i32) {
-    let mut width: i32 = 0;
-    let mut height: i32 = 0;
-
-    // Call SDL_GL_GetDrawableSize from SDL2's FFI
-    unsafe {
-        sdl2::sys::SDL_GL_GetDrawableSize(window.raw(), &mut width, &mut height);
+    fn get_fullscreen_bound(&mut self) {
+        let display_index = self.window.display_index().unwrap();
+        match self.video_subsystem.display_bounds(display_index) {
+            Ok(bounds) => {
+                info!("Display Bounds: {:?}", bounds);
+            }
+            Err(err) => {
+                info!("Failed to get display bounds: {}", err);
+            }
+        }
     }
-
-    (width, height)
 }
-

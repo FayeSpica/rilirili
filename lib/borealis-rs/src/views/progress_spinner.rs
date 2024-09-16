@@ -5,9 +5,7 @@ use crate::core::view_style::ViewStyle;
 
 pub struct ProgressSpinner;
 
-pub trait ProgressSpinnerTrait: ViewTrait {
-
-}
+pub trait ProgressSpinnerTrait: ViewTrait {}
 
 impl ViewTrait for ProgressSpinner {}
 
@@ -27,6 +25,4 @@ impl ViewBase for ProgressSpinner {
     }
 }
 
-impl ProgressSpinnerTrait for ProgressSpinner {
-
-}
+impl ProgressSpinnerTrait for ProgressSpinner {}

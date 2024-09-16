@@ -1,5 +1,5 @@
-extern crate sdl2;
 extern crate gl;
+extern crate sdl2;
 
 use gl::types::*;
 use sdl2::event::Event;
@@ -88,16 +88,11 @@ fn main() {
     // Set up vertices for a full-screen quad
     let vertices: [f32; 20] = [
         // positions   // texture coords
-         0.5,  0.5,  0.0,  1.0,  1.0,
-         0.5, -0.5,  0.0,  1.0,  0.0,
-        -0.5, -0.5,  0.0,  0.0,  0.0,
-        -0.5,  0.5,  0.0,  0.0,  1.0,
+        0.5, 0.5, 0.0, 1.0, 1.0, 0.5, -0.5, 0.0, 1.0, 0.0, -0.5, -0.5, 0.0, 0.0, 0.0, -0.5, 0.5,
+        0.0, 0.0, 1.0,
     ];
 
-    let indices: [u32; 6] = [
-        0, 1, 3,
-        1, 2, 3,
-    ];
+    let indices: [u32; 6] = [0, 1, 3, 1, 2, 3];
 
     let (mut vao, mut vbo, mut ebo) = (0, 0, 0);
 
@@ -209,7 +204,6 @@ fn main() {
             gl::BindVertexArray(vao);
             gl::DrawElements(gl::TRIANGLES, 6, gl::UNSIGNED_INT, ptr::null());
 
-
             window.gl_swap_window();
         }
     }
@@ -235,8 +229,7 @@ unsafe fn compile_shader(src: &str, shader_type: GLenum) -> GLuint {
         );
         panic!(
             "{}",
-            str::from_utf8(&buffer)
-                .expect("ShaderInfoLog not valid utf8")
+            str::from_utf8(&buffer).expect("ShaderInfoLog not valid utf8")
         );
     }
 
@@ -263,8 +256,7 @@ unsafe fn link_program(vertex_shader: GLuint, fragment_shader: GLuint) -> GLuint
         );
         panic!(
             "{}",
-            str::from_utf8(&buffer)
-                .expect("ProgramInfoLog not valid utf8")
+            str::from_utf8(&buffer).expect("ProgramInfoLog not valid utf8")
         );
     }
 

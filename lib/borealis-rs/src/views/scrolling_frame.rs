@@ -8,7 +8,7 @@ use crate::views::sidebar::Sidebar;
 
 pub enum ScrollingFrame {
     RecyclerFrame(RecyclerFrame),
-    Sidebar(Sidebar)
+    Sidebar(Sidebar),
 }
 
 pub trait ScrollingFrameTrait: BoxTrait {}
@@ -31,6 +31,4 @@ impl ViewBase for ScrollingFrame {
     }
 }
 
-impl ScrollingFrameTrait for ScrollingFrame {
-
-}
+impl ScrollingFrameTrait for ScrollingFrame {}

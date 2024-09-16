@@ -6,9 +6,7 @@ use crate::core::view_style::ViewStyle;
 
 pub struct Slider;
 
-pub trait SliderTrait: BoxTrait {
-
-}
+pub trait SliderTrait: BoxTrait {}
 
 impl BoxTrait for Slider {}
 
@@ -28,6 +26,4 @@ impl ViewBase for Slider {
     }
 }
 
-impl SliderTrait for Slider {
-
-}
+impl SliderTrait for Slider {}

@@ -1,8 +1,11 @@
-use std::cell::RefCell;
-use std::rc::Rc;
 use crate::core::geometry::{Point, Rect, Size};
 use crate::core::theme::{AUTO, YG_UNDEFINED};
-use crate::core::view_base::{AlignSelf, FocusDirection, PositionType, View, ViewBackground, ViewBase, Visibility};
+use crate::core::view_base::{
+    AlignSelf, FocusDirection, PositionType, View, ViewBackground, ViewBase, Visibility,
+};
+use crate::core::view_style::ViewStyle;
+use std::cell::RefCell;
+use std::rc::Rc;
 use yoga_sys::YGAlign::{
     YGAlignAuto, YGAlignBaseline, YGAlignCenter, YGAlignFlexEnd, YGAlignFlexStart,
     YGAlignSpaceAround, YGAlignSpaceBetween, YGAlignStretch,
@@ -16,7 +19,6 @@ use yoga_sys::{
     YGNodeStyleSetMinWidthPercent, YGNodeStyleSetPosition, YGNodeStyleSetPositionPercent,
     YGNodeStyleSetPositionType, YGNodeStyleSetWidth, YGNodeStyleSetWidthAuto,
 };
-use crate::core::view_style::ViewStyle;
 
 pub trait ViewLayout: ViewStyle {
     fn shake_highlight(&self, direction: FocusDirection) {
@@ -390,7 +392,6 @@ pub trait ViewLayout: ViewStyle {
         todo!()
     }
 
-
     /**
      * Sets the right margin of the view, aka the space that separates
      * this view and the surrounding ones.
@@ -408,9 +409,7 @@ pub trait ViewLayout: ViewStyle {
     /**
      * Sets the visibility of the view.
      */
-    fn set_visibility(&self, visibility: Visibility) {
-
-    }
+    fn set_visibility(&self, visibility: Visibility) {}
 
     /**
      * Gets the visibility of the view.
@@ -418,7 +417,6 @@ pub trait ViewLayout: ViewStyle {
     fn visibility(&self) -> Visibility {
         todo!()
     }
-
 
     /**
      * Sets the top position of the view, in pixels.

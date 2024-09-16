@@ -34,39 +34,45 @@ impl ViewBase for BoxView {
 }
 
 // Implement ViewExtend for MyView
-impl ViewExtend for BoxView {
-}
+impl ViewExtend for BoxView {}
 
 pub enum View {
-    Box(BoxEnum)
+    Box(BoxEnum),
 }
 
 impl ViewBase for View {
     fn frame(&self) {
-        match self { View::Box(v) => ViewBase::frame(v) }
+        match self {
+            View::Box(v) => ViewBase::frame(v),
+        }
     }
 
     fn draw(&self) {
-        match self { View::Box(v) => ViewExtend::draw(v) }
+        match self {
+            View::Box(v) => ViewExtend::draw(v),
+        }
     }
 }
 
 pub enum BoxEnum {
-    Box(BoxView)
+    Box(BoxView),
 }
 
 impl ViewBase for BoxEnum {
     fn frame(&self) {
-        match self { BoxEnum::Box(v) => ViewBase::frame(v) }
+        match self {
+            BoxEnum::Box(v) => ViewBase::frame(v),
+        }
     }
 
     fn draw(&self) {
-        match self { BoxEnum::Box(v) => ViewExtend::draw(v) }
+        match self {
+            BoxEnum::Box(v) => ViewExtend::draw(v),
+        }
     }
 }
 
-impl ViewExtend for BoxEnum {
-}
+impl ViewExtend for BoxEnum {}
 
 fn main() {
     let my_view = BoxView;

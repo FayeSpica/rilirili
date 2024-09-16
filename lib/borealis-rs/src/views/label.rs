@@ -1,4 +1,3 @@
-use nanovg_sys::NVGcolor;
 use crate::core::animation::Animatable;
 use crate::core::theme::nvg_rgb;
 use crate::core::time::Time;
@@ -6,18 +5,17 @@ use crate::core::view_base::{ViewBase, ViewData};
 use crate::core::view_drawer::{ViewDrawer, ViewTrait};
 use crate::core::view_layout::ViewLayout;
 use crate::core::view_style::ViewStyle;
+use nanovg_sys::NVGcolor;
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
-pub enum HorizontalAlign
-{
+pub enum HorizontalAlign {
     Left,
     Center,
     Right,
 }
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
-pub enum VerticalAlign
-{
+pub enum VerticalAlign {
     Baseline,
     Top,
     Center,
@@ -25,10 +23,9 @@ pub enum VerticalAlign
 }
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
-pub enum CursorPosition
-{
+pub enum CursorPosition {
     Unset = -2,
-    End   = -1,
+    End = -1,
     Start = 0,
 }
 
@@ -101,7 +98,6 @@ impl Label {
 }
 
 pub trait LabelTrait: ViewTrait {
-
     fn label(&self) -> &Label;
 
     fn label_mut(&mut self) -> &mut Label;

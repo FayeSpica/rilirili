@@ -28,8 +28,6 @@ impl ViewBase for Hint {
 
 impl HintTrait for Hint {}
 
-
-
 pub struct Hints;
 
 pub trait HintsTrait: BoxTrait {}

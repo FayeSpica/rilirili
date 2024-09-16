@@ -6,9 +6,7 @@ use crate::core::view_style::ViewStyle;
 
 pub struct EditTextDialog;
 
-pub trait EditTextDialogTrait: BoxTrait {
-
-}
+pub trait EditTextDialogTrait: BoxTrait {}
 
 impl BoxTrait for EditTextDialog {}
 

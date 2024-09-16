@@ -2,20 +2,22 @@ extern crate gl;
 extern crate libmpv2_sys;
 extern crate sdl2;
 
-use std::ffi::{c_float, c_void, CStr, CString};
-use std::ptr;
 use gl::types::GLsizei;
 use libmpv2_sys::*;
-use nanovg_sys::{nvgBeginFrame, nvgBeginPath, nvgEndFrame, nvgFill, nvgFillColor, nvgRect, nvgRGB};
+use nanovg_sys::{
+    nvgBeginFrame, nvgBeginPath, nvgEndFrame, nvgFill, nvgFillColor, nvgRGB, nvgRect,
+};
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use sdl2::video::GLProfile;
+use std::ffi::{c_float, c_void, CStr, CString};
+use std::ptr;
 
 const VIDEO_URL: &str = "test-data/test-video.mp4";
 
 unsafe extern "C" fn get_proc_address(ctx: *mut c_void, name: *const i8) -> *mut c_void {
     let cname = CStr::from_ptr(name);
-    let sdl_video_subsystem =  &*(ctx as *mut sdl2::VideoSubsystem);
+    let sdl_video_subsystem = &*(ctx as *mut sdl2::VideoSubsystem);
     let fn_name = cname.to_str().unwrap();
     sdl_video_subsystem.gl_get_proc_address(fn_name) as *mut _
 }
@@ -68,7 +70,12 @@ fn main() {
 
         // Set MPV to use OpenGL for rendering
         let opengl_backend = CString::new("opengl").unwrap();
-        if mpv_set_option_string(mpv_handle, CString::new("vo").unwrap().as_ptr(), opengl_backend.as_ptr()) < 0 {
+        if mpv_set_option_string(
+            mpv_handle,
+            CString::new("vo").unwrap().as_ptr(),
+            opengl_backend.as_ptr(),
+        ) < 0
+        {
             eprintln!("Failed to set video output backend to OpenGL");
             mpv_destroy(mpv_handle);
             return;
@@ -152,12 +159,7 @@ fn main() {
                 gl::Clear(gl::COLOR_BUFFER_BIT);
             }
 
-            nvgBeginFrame(
-                context.raw(),
-                1280 as c_float,
-                720 as c_float,
-                1.0,
-            );
+            nvgBeginFrame(context.raw(), 1280 as c_float, 720 as c_float, 1.0);
 
             nvgBeginPath(context.raw());
             nvgRect(context.raw(), 100.0, 100.0, 100.0, 100.0);

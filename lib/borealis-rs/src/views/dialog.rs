@@ -6,9 +6,7 @@ use crate::core::view_style::ViewStyle;
 
 pub struct Dialog;
 
-pub trait DialogTrait: BoxTrait {
-
-}
+pub trait DialogTrait: BoxTrait {}
 
 impl BoxTrait for Dialog {}
 
@@ -28,6 +26,4 @@ impl ViewBase for Dialog {
     }
 }
 
-impl DialogTrait for Dialog {
-
-}
+impl DialogTrait for Dialog {}

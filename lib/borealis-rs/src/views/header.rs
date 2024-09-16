@@ -6,9 +6,7 @@ use crate::core::view_style::ViewStyle;
 
 pub struct Header;
 
-pub trait HeaderTrait: BoxTrait {
-
-}
+pub trait HeaderTrait: BoxTrait {}
 
 impl BoxTrait for Header {}
 

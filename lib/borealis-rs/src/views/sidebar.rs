@@ -27,17 +27,11 @@ impl ViewBase for SidebarSeparator {
     }
 }
 
-impl SidebarSeparatorTrait for SidebarSeparator {
-
-}
-
-
+impl SidebarSeparatorTrait for SidebarSeparator {}
 
 pub struct SidebarItem;
 
-pub trait SidebarItemTrait: BoxTrait {
-
-}
+pub trait SidebarItemTrait: BoxTrait {}
 
 impl BoxTrait for SidebarItem {}
 
@@ -57,16 +51,11 @@ impl ViewBase for SidebarItem {
     }
 }
 
-impl SidebarItemTrait for SidebarItem {
-
-}
-
+impl SidebarItemTrait for SidebarItem {}
 
 pub struct Sidebar;
 
-pub trait SidebarTrait: ScrollingFrameTrait {
-
-}
+pub trait SidebarTrait: ScrollingFrameTrait {}
 
 impl ScrollingFrameTrait for Sidebar {}
 
@@ -88,6 +77,4 @@ impl ViewBase for Sidebar {
     }
 }
 
-impl SidebarTrait for Sidebar {
-
-}
+impl SidebarTrait for Sidebar {}

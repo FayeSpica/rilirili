@@ -1,8 +1,3 @@
-use std::cell::RefCell;
-use std::collections::HashMap;
-use std::rc::Rc;
-use yoga_sys::{YGNodeGetChildCount, YGNodeInsertChild, YGNodeRemoveChild, YGNodeStyleGetPadding, YGNodeStyleSetPadding};
-use yoga_sys::YGEdge::{YGEdgeBottom, YGEdgeLeft, YGEdgeRight, YGEdgeTop};
 use crate::core::frame_context::FrameContext;
 use crate::core::view_base::{View, ViewBase, ViewData};
 use crate::core::view_drawer::{ViewDrawer, ViewTrait};
@@ -24,6 +19,14 @@ use crate::views::scrolling_frame::ScrollingFrame;
 use crate::views::slider::Slider;
 use crate::views::tab_frame::TabFrame;
 use crate::views::video::{Video, VideoTrait};
+use std::cell::RefCell;
+use std::collections::HashMap;
+use std::rc::Rc;
+use yoga_sys::YGEdge::{YGEdgeBottom, YGEdgeLeft, YGEdgeRight, YGEdgeTop};
+use yoga_sys::{
+    YGNodeGetChildCount, YGNodeInsertChild, YGNodeRemoveChild, YGNodeStyleGetPadding,
+    YGNodeStyleSetPadding,
+};
 
 pub enum JustifyContent {
     FlexStart,
@@ -71,7 +74,7 @@ impl BoxView {
                 last_focused_view: None,
                 forwarded_attributes: Default::default(),
                 box_view: None,
-            }
+            },
         };
         s.set_width(width);
         s.set_height(height);
@@ -135,7 +138,6 @@ pub enum BoxEnum {
 impl ViewTrait for BoxEnum {}
 
 impl ViewDrawer for BoxEnum {
-
     /// manually dispatch
     fn draw(&mut self, ctx: &FrameContext, x: f32, y: f32, width: f32, height: f32) {
         match self {
@@ -200,7 +202,6 @@ impl BoxTrait for BoxEnum {
 
 // Generic FlexBox layout
 pub trait BoxTrait: ViewDrawer {
-
     fn box_view_data(&self) -> &BoxViewData {
         todo!()
     }
@@ -214,9 +215,7 @@ pub trait BoxTrait: ViewDrawer {
      * Returns the position the view was added at.
      */
     fn add_view(&mut self, view: Rc<RefCell<View>>) {
-        let position = unsafe {
-            YGNodeGetChildCount(self.data().yg_node)
-        };
+        let position = unsafe { YGNodeGetChildCount(self.data().yg_node) };
         self.add_view_position(view, position as usize);
     }
 
@@ -226,15 +225,26 @@ pub trait BoxTrait: ViewDrawer {
      */
     fn add_view_position(&mut self, view: Rc<RefCell<View>>, position: usize) {
         if position > self.box_view_data().children.len() {
-            panic!("cannot insert view at {}:{}/{}", self.describe(), self.box_view_data().children.len(), position);
+            panic!(
+                "cannot insert view at {}:{}/{}",
+                self.describe(),
+                self.box_view_data().children.len(),
+                position
+            );
         }
 
         // Add the view to our children and YGNode
-        self.box_view_data_mut().children.insert(position, view.clone());
+        self.box_view_data_mut()
+            .children
+            .insert(position, view.clone());
 
         if !view.borrow().is_detached() {
             unsafe {
-                YGNodeInsertChild(self.data().yg_node, view.borrow().data().yg_node, position as u32);
+                YGNodeInsertChild(
+                    self.data().yg_node,
+                    view.borrow().data().yg_node,
+                    position as u32,
+                );
             }
         }
 
@@ -251,7 +261,7 @@ pub trait BoxTrait: ViewDrawer {
      */
     fn remove_view(&mut self, to_remove: Rc<RefCell<View>>, free: bool) {
         let mut delete_index = None;
-        for (index, view)in self.box_view_data().children.iter().enumerate() {
+        for (index, view) in self.box_view_data().children.iter().enumerate() {
             if Rc::ptr_eq(view, &to_remove) {
                 delete_index = Some(index)
             }
@@ -297,7 +307,9 @@ pub trait BoxTrait: ViewDrawer {
         ViewBase::on_focus_gained(self);
 
         for child in &self.box_view_data().children {
-            child.borrow().on_parent_focus_gained(self.view().as_ref().unwrap().clone())
+            child
+                .borrow()
+                .on_parent_focus_gained(self.view().as_ref().unwrap().clone())
         }
     }
 
@@ -305,7 +317,9 @@ pub trait BoxTrait: ViewDrawer {
         ViewBase::on_focus_lost(self);
 
         for child in &self.box_view_data().children {
-            child.borrow().on_parent_focus_lost(self.view().as_ref().unwrap().clone())
+            child
+                .borrow()
+                .on_parent_focus_lost(self.view().as_ref().unwrap().clone())
         }
     }
 
@@ -313,7 +327,9 @@ pub trait BoxTrait: ViewDrawer {
         ViewBase::on_parent_focus_gained(self, focused_view);
 
         for child in &self.box_view_data().children {
-            child.borrow().on_parent_focus_gained(self.view().as_ref().unwrap().clone())
+            child
+                .borrow()
+                .on_parent_focus_gained(self.view().as_ref().unwrap().clone())
         }
     }
 
@@ -321,21 +337,35 @@ pub trait BoxTrait: ViewDrawer {
         ViewBase::on_parent_focus_lost(self, focused_view);
 
         for child in &self.box_view_data().children {
-            child.borrow().on_parent_focus_lost(self.view().as_ref().unwrap().clone())
+            child
+                .borrow()
+                .on_parent_focus_lost(self.view().as_ref().unwrap().clone())
         }
     }
 
-    fn on_child_focus_gained(&mut self, direct_child: Rc<RefCell<View>>, focused_view: Rc<RefCell<View>>) {
+    fn on_child_focus_gained(
+        &mut self,
+        direct_child: Rc<RefCell<View>>,
+        focused_view: Rc<RefCell<View>>,
+    ) {
         self.box_view_data_mut().last_focused_view = Some(direct_child);
         if let Some(parent) = self.parent() {
-            parent.borrow_mut().on_child_focus_gained(self.view().unwrap().clone(), focused_view);
+            parent
+                .borrow_mut()
+                .on_child_focus_gained(self.view().unwrap().clone(), focused_view);
         }
     }
 
-    fn on_child_focus_lost(&mut self, direct_child: Rc<RefCell<View>>, focused_view: Rc<RefCell<View>>) {
+    fn on_child_focus_lost(
+        &mut self,
+        direct_child: Rc<RefCell<View>>,
+        focused_view: Rc<RefCell<View>>,
+    ) {
         self.box_view_data_mut().last_focused_view = Some(direct_child);
         if let Some(parent) = self.parent() {
-            parent.borrow_mut().on_child_focus_lost(self.view().unwrap().clone(), focused_view);
+            parent
+                .borrow_mut()
+                .on_child_focus_lost(self.view().unwrap().clone(), focused_view);
         }
     }
 
@@ -382,27 +412,19 @@ pub trait BoxTrait: ViewDrawer {
     }
 
     fn padding_top(&self) -> f32 {
-        unsafe {
-            YGNodeStyleGetPadding(self.data().yg_node, YGEdgeTop).value
-        }
+        unsafe { YGNodeStyleGetPadding(self.data().yg_node, YGEdgeTop).value }
     }
 
     fn padding_right(&self) -> f32 {
-        unsafe {
-            YGNodeStyleGetPadding(self.data().yg_node, YGEdgeRight).value
-        }
+        unsafe { YGNodeStyleGetPadding(self.data().yg_node, YGEdgeRight).value }
     }
 
     fn padding_bottom(&self) -> f32 {
-        unsafe {
-            YGNodeStyleGetPadding(self.data().yg_node, YGEdgeBottom).value
-        }
+        unsafe { YGNodeStyleGetPadding(self.data().yg_node, YGEdgeBottom).value }
     }
 
     fn padding_left(&self) -> f32 {
-        unsafe {
-            YGNodeStyleGetPadding(self.data().yg_node, YGEdgeLeft).value
-        }
+        unsafe { YGNodeStyleGetPadding(self.data().yg_node, YGEdgeLeft).value }
     }
 
     fn default_focus(&self) -> Option<Rc<RefCell<View>>> {
@@ -424,6 +446,3 @@ pub trait BoxTrait: ViewDrawer {
         }
     }
 }
-
-
-

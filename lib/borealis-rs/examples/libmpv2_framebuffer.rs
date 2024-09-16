@@ -1,14 +1,25 @@
-extern crate sdl2;
 extern crate gl;
+extern crate sdl2;
 
 use gl::types::*;
+use libmpv2_sys::{
+    mpv_command_string, mpv_create, mpv_destroy, mpv_handle, mpv_initialize, mpv_opengl_fbo,
+    mpv_opengl_init_params, mpv_render_context, mpv_render_context_create,
+    mpv_render_context_render, mpv_render_context_report_swap, mpv_render_param,
+    mpv_render_param_type_MPV_RENDER_PARAM_API_TYPE, mpv_render_param_type_MPV_RENDER_PARAM_FLIP_Y,
+    mpv_render_param_type_MPV_RENDER_PARAM_OPENGL_FBO,
+    mpv_render_param_type_MPV_RENDER_PARAM_OPENGL_INIT_PARAMS, mpv_set_option_string,
+    MPV_RENDER_API_TYPE_OPENGL,
+};
+use nanovg_sys::{
+    nvgBeginFrame, nvgBeginPath, nvgEndFrame, nvgFill, nvgFillColor, nvgRGB, nvgRect, nvgReset,
+    nvgResetTransform, nvgRestore, nvgSave, nvgScale,
+};
 use sdl2::event::Event;
 use sdl2::keyboard::Keycode;
 use std::ffi::{c_float, c_int, c_void, CStr, CString};
 use std::ptr;
 use std::str;
-use libmpv2_sys::{mpv_command_string, mpv_create, mpv_destroy, mpv_handle, mpv_initialize, mpv_opengl_fbo, mpv_opengl_init_params, MPV_RENDER_API_TYPE_OPENGL, mpv_render_context, mpv_render_context_create, mpv_render_context_render, mpv_render_context_report_swap, mpv_render_param, mpv_render_param_type_MPV_RENDER_PARAM_API_TYPE, mpv_render_param_type_MPV_RENDER_PARAM_FLIP_Y, mpv_render_param_type_MPV_RENDER_PARAM_OPENGL_FBO, mpv_render_param_type_MPV_RENDER_PARAM_OPENGL_INIT_PARAMS, mpv_set_option_string};
-use nanovg_sys::{nvgBeginFrame, nvgBeginPath, nvgEndFrame, nvgFill, nvgFillColor, nvgRect, nvgReset, nvgResetTransform, nvgRestore, nvgRGB, nvgSave, nvgScale};
 
 const SCREEN_WIDTH: u32 = 1920;
 const SCREEN_HEIGHT: u32 = 1080;
@@ -71,16 +82,11 @@ fn main() {
     // Set up vertices for a full-screen quad
     let vertices: [f32; 20] = [
         // (x, y, z) positions   // (x, y) texture coords
-         0.5,  0.5,  0.0,  1.0,  1.0,
-         0.5, -0.5,  0.0,  1.0,  0.0,
-        -0.5, -0.5,  0.0,  0.0,  0.0,
-        -0.5,  0.5,  0.0,  0.0,  1.0,
+        0.5, 0.5, 0.0, 1.0, 1.0, 0.5, -0.5, 0.0, 1.0, 0.0, -0.5, -0.5, 0.0, 0.0, 0.0, -0.5, 0.5,
+        0.0, 0.0, 1.0,
     ];
 
-    let indices: [u32; 6] = [
-        0, 1, 3,
-        1, 2, 3,
-    ];
+    let indices: [u32; 6] = [0, 1, 3, 1, 2, 3];
 
     let (mut vao, mut vbo, mut ebo) = (0, 0, 0);
 
@@ -208,7 +214,6 @@ fn main() {
             },
         ];
 
-
         if mpv_render_context_create(&mut mpv_gl_ctx, mpv_handle, render_params.as_mut_ptr()) < 0 {
             eprintln!("Failed to create MPV render context");
             mpv_destroy(mpv_handle);
@@ -216,10 +221,10 @@ fn main() {
         }
     }
 
-    let context =
-    unsafe {
+    let context = unsafe {
         nanovg_sys::gladLoadGL();
-        let f = nanovg_sys::NVGcreateFlags::NVG_STENCIL_STROKES | nanovg_sys::NVGcreateFlags::NVG_ANTIALIAS;
+        let f = nanovg_sys::NVGcreateFlags::NVG_STENCIL_STROKES
+            | nanovg_sys::NVGcreateFlags::NVG_ANTIALIAS;
         nanovg_sys::nvgCreateGL3(f.bits())
     };
     // Main loop
@@ -341,8 +346,7 @@ unsafe fn compile_shader(src: &str, shader_type: GLenum) -> GLuint {
         );
         panic!(
             "{}",
-            str::from_utf8(&buffer)
-                .expect("ShaderInfoLog not valid utf8")
+            str::from_utf8(&buffer).expect("ShaderInfoLog not valid utf8")
         );
     }
 
@@ -369,8 +373,7 @@ unsafe fn link_program(vertex_shader: GLuint, fragment_shader: GLuint) -> GLuint
         );
         panic!(
             "{}",
-            str::from_utf8(&buffer)
-                .expect("ProgramInfoLog not valid utf8")
+            str::from_utf8(&buffer).expect("ProgramInfoLog not valid utf8")
         );
     }
 
@@ -389,7 +392,7 @@ const VIDEO_URL: &str = "test-data/test-video.mp4";
 
 unsafe extern "C" fn get_proc_address(ctx: *mut c_void, name: *const i8) -> *mut c_void {
     let cname = CStr::from_ptr(name);
-    let sdl_video_subsystem =  &*(ctx as *mut sdl2::VideoSubsystem);
+    let sdl_video_subsystem = &*(ctx as *mut sdl2::VideoSubsystem);
     let fn_name = cname.to_str().unwrap();
     sdl_video_subsystem.gl_get_proc_address(fn_name) as *mut _
 }

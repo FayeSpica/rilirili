@@ -7,9 +7,7 @@ use crate::views::recycler::RecyclerDataSource;
 
 pub struct Dropdown;
 
-pub trait DropdownTrait: BoxTrait + RecyclerDataSource {
-
-}
+pub trait DropdownTrait: BoxTrait + RecyclerDataSource {}
 
 impl BoxTrait for Dropdown {}
 

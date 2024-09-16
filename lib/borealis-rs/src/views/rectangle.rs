@@ -5,9 +5,7 @@ use crate::core::view_style::ViewStyle;
 
 pub struct Rectangle;
 
-pub trait RectangleTrait: ViewTrait {
-
-}
+pub trait RectangleTrait: ViewTrait {}
 
 impl ViewTrait for Rectangle {}
 
@@ -27,6 +25,4 @@ impl ViewBase for Rectangle {
     }
 }
 
-impl RectangleTrait for Rectangle {
-
-}
+impl RectangleTrait for Rectangle {}

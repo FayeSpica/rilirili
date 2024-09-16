@@ -9,34 +9,27 @@ pub fn get_time_usec() -> i64 {
     chrono::Local::now().timestamp_micros()
 }
 
-
 pub type TickingGenericCallback = Box<dyn Fn()>;
 
 pub type TickingEndCallback = Box<dyn Fn(bool)>;
 pub type TickingTickCallback = TickingGenericCallback;
-
 
 /// Interface representing something that "ticks" every frame for a certain amount of frames,
 /// like a timer, an animation, a background task...
 /// The library manages a list of running tickings. Each ticking is reponsible for managing its own
 /// lifetime by returning true or false in onUpdate.
 pub trait Ticking {
-
     /**
      * Starts the ticking, pushing it to the list of running tickings.
      * If the ticking is finished, it will be restarted.
      * If the ticking is already running, this method will have no effect.
      */
-    fn start(&self) {
-
-    }
+    fn start(&self) {}
 
     /**
      * Stops the ticking if it was running, and executes the end callback.
      */
-    fn stop(&self) {
-
-    }
+    fn stop(&self) {}
 
     /**
      * Sets a callback to be executed when the
@@ -44,9 +37,7 @@ pub trait Ticking {
      * The callback argument will be set to true if the ticking stopped
      * on its own, false if it was stopped early by the user.
      */
-    fn set_end_callback(&mut self, end_callback: TickingEndCallback) {
-
-    }
+    fn set_end_callback(&mut self, end_callback: TickingEndCallback) {}
 
     /**
      * Sets a callback to be executed at every tick
@@ -55,9 +46,7 @@ pub trait Ticking {
      * The last animation tick will execute the tick callback
      * then the end callback.
      */
-    fn set_tick_callback(&mut self, tick_callback: TickingTickCallback) {
-
-    }
+    fn set_tick_callback(&mut self, tick_callback: TickingTickCallback) {}
 
     /**
      * Returns true if the ticking is currently running.
@@ -73,7 +62,6 @@ pub trait Ticking {
     fn update_tickings(&self) {
         todo!()
     }
-
 
     /**
      * Executed every frame while the ticking lives.

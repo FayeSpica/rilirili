@@ -5,5 +5,4 @@ pub struct FrameContext {
     pub window_height: u32,
 }
 
-impl FrameContext {
-}
+impl FrameContext {}

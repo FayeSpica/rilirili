@@ -6,9 +6,7 @@ use crate::core::view_style::ViewStyle;
 
 pub struct HScrollingFrame;
 
-pub trait HScrollingFrameTrait: BoxTrait {
-
-}
+pub trait HScrollingFrameTrait: BoxTrait {}
 
 impl BoxTrait for HScrollingFrame {}
 

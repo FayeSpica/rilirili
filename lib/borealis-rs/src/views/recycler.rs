@@ -7,9 +7,7 @@ use crate::views::scrolling_frame::ScrollingFrameTrait;
 
 pub struct RecyclerCell;
 
-pub trait RecyclerCellTrait: BoxTrait {
-
-}
+pub trait RecyclerCellTrait: BoxTrait {}
 
 impl BoxTrait for RecyclerCell {}
 
@@ -29,15 +27,11 @@ impl ViewBase for RecyclerCell {
     }
 }
 
-impl RecyclerCellTrait for RecyclerCell {
-
-}
+impl RecyclerCellTrait for RecyclerCell {}
 
 pub struct RecyclerHeader;
 
-pub trait RecyclerHeaderTrait: RecyclerCellTrait {
-
-}
+pub trait RecyclerHeaderTrait: RecyclerCellTrait {}
 
 impl RecyclerCellTrait for RecyclerHeader {}
 
@@ -59,19 +53,13 @@ impl ViewBase for RecyclerHeader {
     }
 }
 
-impl RecyclerHeaderTrait for RecyclerHeader {
+impl RecyclerHeaderTrait for RecyclerHeader {}
 
-}
-
-pub trait RecyclerDataSource {
-
-}
+pub trait RecyclerDataSource {}
 
 pub struct RecyclerContentBox;
 
-pub trait RecyclerContentBoxTrait: BoxTrait {
-
-}
+pub trait RecyclerContentBoxTrait: BoxTrait {}
 
 impl BoxTrait for RecyclerContentBox {}
 
@@ -91,17 +79,11 @@ impl ViewBase for RecyclerContentBox {
     }
 }
 
-impl RecyclerContentBoxTrait for RecyclerContentBox {
-
-}
-
-
+impl RecyclerContentBoxTrait for RecyclerContentBox {}
 
 pub struct RecyclerFrame;
 
-pub trait RecyclerFrameTrait: ScrollingFrameTrait {
-
-}
+pub trait RecyclerFrameTrait: ScrollingFrameTrait {}
 
 impl ScrollingFrameTrait for RecyclerFrame {}
 
@@ -123,6 +105,4 @@ impl ViewBase for RecyclerFrame {
     }
 }
 
-impl RecyclerFrameTrait for RecyclerFrame {
-
-}
+impl RecyclerFrameTrait for RecyclerFrame {}

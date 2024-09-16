@@ -1,22 +1,13 @@
-use std::any::{Any, type_name};
-use std::cell::RefCell;
-use crate::core::theme;
-use crate::core::view_box::{BoxEnum, BoxTrait, BoxView};
-use nanovg_sys::{
-    nvgBeginFrame, nvgBeginPath, nvgEndFrame, nvgFill, nvgFillColor, nvgRect, NVGcolor,
-};
-use std::cmp::PartialEq;
-use std::ffi::c_float;
-use std::rc::Rc;
-use yoga_sys::{YGNodeFree, YGNodeNew, YGNodeRef};
 use crate::core::activity::Activity;
 use crate::core::animation::{Animatable, Animating};
 use crate::core::audio::Sound;
 use crate::core::frame_context::FrameContext;
 use crate::core::geometry::Point;
 use crate::core::style::style;
+use crate::core::theme;
 use crate::core::time::{FiniteTicking, Ticking};
 use crate::core::tweening::EasingFunction;
+use crate::core::view_box::{BoxEnum, BoxTrait, BoxView};
 use crate::core::view_drawer::{ViewDrawer, ViewTrait};
 use crate::core::view_layout::ViewLayout;
 use crate::core::view_style::ViewStyle;
@@ -24,6 +15,15 @@ use crate::views::image::Image;
 use crate::views::label::Label;
 use crate::views::progress_spinner::ProgressSpinner;
 use crate::views::rectangle::Rectangle;
+use nanovg_sys::{
+    nvgBeginFrame, nvgBeginPath, nvgEndFrame, nvgFill, nvgFillColor, nvgRect, NVGcolor,
+};
+use std::any::{type_name, Any};
+use std::cell::RefCell;
+use std::cmp::PartialEq;
+use std::ffi::c_float;
+use std::rc::Rc;
+use yoga_sys::{YGNodeFree, YGNodeNew, YGNodeRef};
 
 // common ViewData
 pub struct ViewData {
@@ -178,13 +178,19 @@ pub trait ViewBase {
         self.data_mut().focused = true;
 
         self.data_mut().highlight_alpha.reset();
-        self.data_mut().highlight_alpha.add_step_easing(1.0, style("brls/animations/highlight"), EasingFunction::QuadraticOut);
+        self.data_mut().highlight_alpha.add_step_easing(
+            1.0,
+            style("brls/animations/highlight"),
+            EasingFunction::QuadraticOut,
+        );
         self.data_mut().highlight_alpha.start();
 
         if let Some(parent) = self.parent() {
-            parent.borrow_mut().on_child_focus_gained(parent.borrow().view().unwrap().clone(), parent.borrow().view().unwrap().clone());
+            parent.borrow_mut().on_child_focus_gained(
+                parent.borrow().view().unwrap().clone(),
+                parent.borrow().view().unwrap().clone(),
+            );
         }
-
     }
 
     fn on_focus_lost(&mut self) {
@@ -192,11 +198,18 @@ pub trait ViewBase {
         self.data_mut().focused = false;
 
         self.data_mut().highlight_alpha.reset();
-        self.data_mut().highlight_alpha.add_step_easing(0.0, style("brls/animations/highlight"), EasingFunction::QuadraticOut);
+        self.data_mut().highlight_alpha.add_step_easing(
+            0.0,
+            style("brls/animations/highlight"),
+            EasingFunction::QuadraticOut,
+        );
         self.data_mut().highlight_alpha.start();
 
         if let Some(parent) = self.parent() {
-            parent.borrow_mut().on_child_focus_lost(parent.borrow().view().unwrap().clone(), parent.borrow().view().unwrap().clone());
+            parent.borrow_mut().on_child_focus_lost(
+                parent.borrow().view().unwrap().clone(),
+                parent.borrow().view().unwrap().clone(),
+            );
         }
     }
 
@@ -343,13 +356,9 @@ pub trait ViewBase {
         self.set_view(None);
     }
 
-    fn on_parent_focus_gained(&self, view: Rc<RefCell<View>>) {
+    fn on_parent_focus_gained(&self, view: Rc<RefCell<View>>) {}
 
-    }
-
-    fn on_parent_focus_lost(&self, view: Rc<RefCell<View>>) {
-
-    }
+    fn on_parent_focus_lost(&self, view: Rc<RefCell<View>>) {}
 
     fn describe(&self) -> String {
         String::new()
@@ -442,7 +451,6 @@ impl ViewBase for View {
     fn describe(&self) -> String {
         format!("[{}({})]", self.variant_name(), &self.data().id)
     }
-
 }
 
 impl ViewTrait for View {}

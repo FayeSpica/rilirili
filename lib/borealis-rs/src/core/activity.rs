@@ -1,14 +1,14 @@
 use crate::core::global::{content_height, content_width};
 use crate::core::view_base::{View, ViewBase};
+use crate::core::view_box::{BoxEnum, BoxTrait, BoxView};
 use crate::core::view_creator::ViewCreator;
+use crate::core::view_drawer::ViewDrawer;
 use crate::core::view_layout::ViewLayout;
+use crate::views::video::Video;
+use sdl2::VideoSubsystem;
 use std::cell::RefCell;
 use std::path::PathBuf;
 use std::rc::Rc;
-use sdl2::VideoSubsystem;
-use crate::core::view_box::{BoxEnum, BoxTrait, BoxView};
-use crate::core::view_drawer::ViewDrawer;
-use crate::views::video::Video;
 
 pub struct ActivityViewData {
     pub xml_path: PathBuf,
@@ -47,13 +47,32 @@ pub trait ActivityDyn: ViewCreator {
         // self.create_from_xml_resource(self.view_data().xml_path.clone())
         let box_view = BoxView::new(0.0, 0.0, 0.0, 0.0);
         let mut box_enum = BoxEnum::Box(box_view);
-        box_enum.add_view(Rc::new(RefCell::new(View::Box(BoxEnum::Box(BoxView::new(100.0, 100.0, 80.0, 80.0))))));
-        box_enum.add_view(Rc::new(RefCell::new(View::Box(BoxEnum::Box(BoxView::new(200.0, 100.0, 80.0, 80.0))))));
-        box_enum.add_view(Rc::new(RefCell::new(View::Box(BoxEnum::Box(BoxView::new(300.0, 100.0, 80.0, 80.0))))));
-        box_enum.add_view(Rc::new(RefCell::new(View::Box(BoxEnum::Box(BoxView::new(400.0, 100.0, 80.0, 80.0))))));
-        box_enum.add_view(Rc::new(RefCell::new(View::Box(BoxEnum::Box(BoxView::new(500.0, 100.0, 80.0, 80.0))))));
 
-        box_enum.add_view(Rc::new(RefCell::new(View::Box(BoxEnum::Video(Video::new(100.0, 200.0, 640.0, 360.0, self.view_data().video_subsystem.clone()))))));
+        box_enum.add_view(Rc::new(RefCell::new(View::Box(BoxEnum::Video(
+            Video::new(
+                20.0,
+                20.0,
+                960.0,
+                540.0,
+                self.view_data().video_subsystem.clone(),
+            ),
+        )))));
+
+        box_enum.add_view(Rc::new(RefCell::new(View::Box(BoxEnum::Box(
+            BoxView::new(0.0, 0.0, 80.0, 80.0),
+        )))));
+        box_enum.add_view(Rc::new(RefCell::new(View::Box(BoxEnum::Box(
+            BoxView::new(0.0, 0.0, 80.0, 80.0),
+        )))));
+        box_enum.add_view(Rc::new(RefCell::new(View::Box(BoxEnum::Box(
+            BoxView::new(0.0, 0.0, 80.0, 80.0),
+        )))));
+        box_enum.add_view(Rc::new(RefCell::new(View::Box(BoxEnum::Box(
+            BoxView::new(0.0, 0.0, 80.0, 80.0),
+        )))));
+        box_enum.add_view(Rc::new(RefCell::new(View::Box(BoxEnum::Box(
+            BoxView::new(0.0, 0.0, 80.0, 80.0),
+        )))));
 
         let view = Rc::new(RefCell::new(View::Box(box_enum)));
         let view_self = view.clone();
@@ -95,36 +114,36 @@ pub trait ActivityDyn: ViewCreator {
 
     fn set_in_fade_animation(&self, in_fade_animation: bool) {
         if let Some(content_view) = &self.view_data().content_view {
-            content_view.borrow_mut().set_in_fade_animation(in_fade_animation);
+            content_view
+                .borrow_mut()
+                .set_in_fade_animation(in_fade_animation);
         }
     }
 
     fn show(&self, cb: Box<dyn Fn()>, animate: bool, animation_duration: f32) {
         if let Some(content_view) = &self.view_data().content_view {
-            content_view.borrow_mut().show_animated(cb, animate, animation_duration);
+            content_view
+                .borrow_mut()
+                .show_animated(cb, animate, animation_duration);
         }
     }
 
     fn hide(&self, cb: Box<dyn Fn()>, animate: bool, animation_duration: f32) {
         if let Some(content_view) = &self.view_data().content_view {
-            content_view.borrow_mut().show_animated(cb, animate, animation_duration);
+            content_view
+                .borrow_mut()
+                .show_animated(cb, animate, animation_duration);
         }
     }
 
-    fn on_pause(&self) {
+    fn on_pause(&self) {}
 
-    }
-
-    fn on_resume(&self) {
-
-    }
+    fn on_resume(&self) {}
 
     fn default_focus(&self) -> Option<Rc<RefCell<View>>> {
         match &self.view_data().content_view {
             None => None,
-            Some(content_view) => {
-                content_view.borrow().default_focus()
-            }
+            Some(content_view) => content_view.borrow().default_focus(),
         }
     }
 }

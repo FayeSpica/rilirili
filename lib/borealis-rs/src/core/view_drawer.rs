@@ -1,24 +1,28 @@
+use crate::core::animation::Animating;
 use crate::core::application::{get_input_type, InputType};
 use crate::core::frame_context::FrameContext;
 use crate::core::geometry::Rect;
 use crate::core::style::style;
 use crate::core::theme::{theme, transparent_color};
 use crate::core::view_base;
-use crate::core::view_base::{ShadowType, TransitionAnimation, View, ViewBackground, ViewBase, Visibility};
+use crate::core::view_base::{
+    ShadowType, TransitionAnimation, View, ViewBackground, ViewBase, Visibility,
+};
+use crate::core::view_box::BoxTrait;
 use crate::core::view_layout::ViewLayout;
-use nanovg_sys::{nvgBeginPath, nvgBoxGradient, nvgClosePath, nvgFill, nvgFillColor, nvgFillPaint, nvgIntersectScissor, nvgLineTo, nvgLinearGradient, nvgMoveTo, nvgPathWinding, nvgRGB, nvgRGBA, nvgRect, nvgRestore, nvgRoundedRect, nvgRoundedRectVarying, nvgSave, nvgStroke, nvgStrokeColor, nvgStrokeWidth, NVGcolor, NVGsolidity, nvgResetScissor, nvgRGBAf};
+use nanovg_sys::{
+    nvgBeginPath, nvgBoxGradient, nvgClosePath, nvgFill, nvgFillColor, nvgFillPaint,
+    nvgIntersectScissor, nvgLineTo, nvgLinearGradient, nvgMoveTo, nvgPathWinding, nvgRGB, nvgRGBA,
+    nvgRGBAf, nvgRect, nvgResetScissor, nvgRestore, nvgRoundedRect, nvgRoundedRectVarying, nvgSave,
+    nvgStroke, nvgStrokeColor, nvgStrokeWidth, NVGcolor, NVGsolidity,
+};
 use std::ffi::{c_float, c_uchar};
 use yoga_sys::YGEdge::{YGEdgeBottom, YGEdgeLeft, YGEdgeRight, YGEdgeTop};
 use yoga_sys::{YGNodeLayoutGetMargin, YGNodeLayoutGetPadding};
-use crate::core::animation::Animating;
-use crate::core::view_box::BoxTrait;
 
-pub trait ViewTrait: ViewDrawer {
-
-}
+pub trait ViewTrait: ViewDrawer {}
 
 pub trait ViewDrawer: ViewLayout {
-
     /**
      * Called each frame
      * Do not override it to draw your view,
@@ -34,7 +38,7 @@ pub trait ViewDrawer: ViewLayout {
         }
 
         let rect = self.rect();
-        // trace!("rect: {:?}", rect);
+        trace!("{} rect: {:?}", self.describe(), rect);
         let x = rect.min_x();
         let y = rect.min_y();
         let width = rect.width();
@@ -129,7 +133,7 @@ pub trait ViewDrawer: ViewLayout {
      * already appeared, so be careful.
      */
     fn will_appear(&self, reset_state: bool) {
-       // Nothing to do
+        // Nothing to do
     }
 
     /**
@@ -153,7 +157,11 @@ pub trait ViewDrawer: ViewLayout {
      * Shows the view with a fade in animation.
      */
     fn show(&mut self, cb: Box<dyn Fn()>) {
-        self.show_animated(cb, true, self.show_animation_duration(TransitionAnimation::Fade));
+        self.show_animated(
+            cb,
+            true,
+            self.show_animation_duration(TransitionAnimation::Fade),
+        );
     }
 
     /**
@@ -173,7 +181,6 @@ pub trait ViewDrawer: ViewLayout {
         self.data_mut().fade_in = true;
 
         if animate {
-
         } else {
             self.data_mut().alpha.current_value = 1.0;
             self.data_mut().fade_in = false;
@@ -186,7 +193,9 @@ pub trait ViewDrawer: ViewLayout {
      * Returns the duration of the view show / hide animation.
      */
     fn show_animation_duration(&self, animation: TransitionAnimation) -> f32 {
-        if animation == TransitionAnimation::SlideLeft || animation == TransitionAnimation::SlideRight {
+        if animation == TransitionAnimation::SlideLeft
+            || animation == TransitionAnimation::SlideRight
+        {
             panic!("Slide animation is not supported on views");
         }
 
@@ -197,7 +206,11 @@ pub trait ViewDrawer: ViewLayout {
      * Hides the view with a fade out animation.
      */
     fn hide(&mut self, cb: Box<dyn Fn()>) {
-        self.hide_animated(cb, true, self.show_animation_duration(TransitionAnimation::Fade));
+        self.hide_animated(
+            cb,
+            true,
+            self.show_animation_duration(TransitionAnimation::Fade),
+        );
     }
 
     /**
@@ -215,7 +228,6 @@ pub trait ViewDrawer: ViewLayout {
         self.data_mut().fade_in = false;
 
         if animate {
-
         } else {
             self.data_mut().alpha.current_value = 0.0;
             cb();
@@ -372,7 +384,12 @@ pub trait ViewDrawer: ViewLayout {
                 rect.height(),
                 self.data().corner_radius * 2.0,
                 shadow_feather,
-                nvgRGBA(0, 0, 0, (shadow_opacity * self.data().alpha.current_value) as c_uchar),
+                nvgRGBA(
+                    0,
+                    0,
+                    0,
+                    (shadow_opacity * self.data().alpha.current_value) as c_uchar,
+                ),
                 transparent_color(),
             );
 
@@ -437,13 +454,20 @@ pub trait ViewDrawer: ViewLayout {
         let width = self.width() + padding * 2.0 + stroke_width;
         let height = self.height() + padding * 2.0 + stroke_width;
 
-
         // Draw
         if background {
             // Background
             let highlight_background_color = theme("brls/highlight/background");
             unsafe {
-                nvgFillColor(vg, nvgRGBAf(highlight_background_color.rgba[0], highlight_background_color.rgba[1], highlight_background_color.rgba[2], self.data().highlight_alpha.value()));
+                nvgFillColor(
+                    vg,
+                    nvgRGBAf(
+                        highlight_background_color.rgba[0],
+                        highlight_background_color.rgba[1],
+                        highlight_background_color.rgba[2],
+                        self.data().highlight_alpha.value(),
+                    ),
+                );
                 nvgBeginPath(vg);
                 nvgRoundedRect(vg, x, y, width, height, corner_radius);
                 nvgFill(vg);

@@ -1,6 +1,3 @@
-use std::cell::RefCell;
-use std::rc::Rc;
-use nanovg_sys::NVGcolor;
 use crate::core::bind::BoundView;
 use crate::core::style::style;
 use crate::core::theme::{nvg_rgb, theme};
@@ -10,6 +7,9 @@ use crate::core::view_drawer::ViewDrawer;
 use crate::core::view_layout::ViewLayout;
 use crate::core::view_style::ViewStyle;
 use crate::views::label::{Label, LabelTrait};
+use nanovg_sys::NVGcolor;
+use std::cell::RefCell;
+use std::rc::Rc;
 
 /// Style and colors of different buttons styles
 /// Border color entries can be empty if thickness is 0
@@ -115,10 +115,9 @@ pub fn button_style_borderless() -> ButtonStyle {
     }
 }
 
-pub enum ButtonState
-{
+pub enum ButtonState {
     Enabled = 0, // the user can select and click on the button
-    Disabled, // the user can select but not click on the button (greyed out)
+    Disabled,    // the user can select but not click on the button (greyed out)
 }
 
 /// A button
@@ -146,7 +145,6 @@ impl Button {
 }
 
 pub trait ButtonTrait: BoxTrait {
-
     fn this(&self) -> &Button;
 
     fn this_mut(&mut self) -> &mut Button;
@@ -168,8 +166,16 @@ pub trait ButtonTrait: BoxTrait {
         }
 
         let (background_color, text_color, border_color) = match self.this().state {
-            ButtonState::Enabled => (self.this().style.enabled_background_color.clone(), self.this().style.enabled_label_color.clone(), self.this().style.enabled_border_color.clone()),
-            ButtonState::Disabled => (self.this().style.disabled_background_color.clone(), self.this().style.disabled_label_color.clone(), self.this().style.disabled_border_color.clone()),
+            ButtonState::Enabled => (
+                self.this().style.enabled_background_color.clone(),
+                self.this().style.enabled_label_color.clone(),
+                self.this().style.enabled_border_color.clone(),
+            ),
+            ButtonState::Disabled => (
+                self.this().style.disabled_background_color.clone(),
+                self.this().style.disabled_label_color.clone(),
+                self.this().style.disabled_border_color.clone(),
+            ),
         };
 
         if !background_color.is_empty() {

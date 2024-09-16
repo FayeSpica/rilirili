@@ -1,26 +1,29 @@
 use crate::core::activity::{Activity, ActivityDyn};
 use crate::core::frame_context::FrameContext;
-use crate::core::global::{set_content_height, set_content_width, set_window_height, set_window_scale, set_window_width, window_height, window_scale, window_width};
+use crate::core::global::{
+    borealis_scale, set_borealis_scale, set_content_height, set_content_width, set_window_height,
+    set_window_width, window_height, window_width,
+};
+use crate::core::sdl_context::{SdlContext, ORIGINAL_WINDOW_HEIGHT, ORIGINAL_WINDOW_WIDTH};
+use crate::core::time::get_time_usec;
 use crate::core::view_base::{BaseView, View, ViewBase};
 use crate::core::view_box::BoxView;
 use crate::core::view_drawer::ViewDrawer;
+use crate::demo::activity::main_activity::MainActivity;
+use gl::{ClearColor, FRAMEBUFFER};
 use nanovg_sys::{
-    nvgBeginFrame, nvgBeginPath, nvgEndFrame, nvgFill, nvgFillColor, nvgRect, nvgRGB, nvgRGBA,
+    nvgBeginFrame, nvgBeginPath, nvgEndFrame, nvgFill, nvgFillColor, nvgRGB, nvgRGBA, nvgRect,
 };
+use sdl2::event::{Event, WindowEvent};
+use sdl2::keyboard::Keycode;
+use sdl2::video::{GLContext, Window};
+use sdl2::{Sdl, VideoSubsystem};
 use std::cell::RefCell;
 use std::ffi::c_float;
 use std::num::NonZeroU32;
 use std::ptr::eq;
 use std::rc::Rc;
 use std::sync::Arc;
-use gl::{ClearColor, FRAMEBUFFER};
-use sdl2::{Sdl, VideoSubsystem};
-use sdl2::event::{Event, WindowEvent};
-use sdl2::keyboard::Keycode;
-use sdl2::video::{GLContext, Window};
-use crate::core::sdl_context::{ORIGINAL_WINDOW_HEIGHT, ORIGINAL_WINDOW_WIDTH, SdlContext};
-use crate::core::time::get_time_usec;
-use crate::demo::activity::main_activity::MainActivity;
 
 pub type XMLViewCreator = Box<dyn Fn() -> BaseView>;
 
@@ -53,22 +56,21 @@ impl Application {
     pub fn init(title: &str) -> anyhow::Result<Self> {
         let mut sdl_context = SdlContext::new(title);
         let now_us = get_time_usec();
-        Ok(
-            Application {
-                title: title.into(),
-                current_focus: None,
-                start_time_us: now_us,
-                limited_frame_time_us: 0,
-                frame_start_time_us: now_us,
-                frame_index: 0,
-                global_fps: 0,
-                views_to_draw: vec![],
-                activities_stack: vec![],
-                focus_stack: vec![],
-                sdl_context,
-                deletion_pool: vec![],
-            },
-        )
+        let application = Application {
+            title: title.into(),
+            current_focus: None,
+            start_time_us: now_us,
+            limited_frame_time_us: 0,
+            frame_start_time_us: now_us,
+            frame_index: 0,
+            global_fps: 0,
+            views_to_draw: vec![],
+            activities_stack: vec![],
+            focus_stack: vec![],
+            sdl_context,
+            deletion_pool: vec![],
+        };
+        Ok(application)
     }
 
     pub fn main_loop(mut self) {
@@ -89,21 +91,27 @@ impl Application {
                     Event::AppDidEnterBackground { .. } => {}
                     Event::AppWillEnterForeground { .. } => {}
                     Event::AppDidEnterForeground { .. } => {}
-                    Event::Display { display_event,.. } => {
+                    Event::Display { display_event, .. } => {
                         info!("Event::Display: {:?}", display_event);
                     }
-                    Event::Window { win_event,.. } => {
+                    Event::Window { win_event, .. } => {
                         info!("Event::Window: {:?}", win_event);
                         match win_event {
                             WindowEvent::None => {}
-                            WindowEvent::Shown => {}
+                            WindowEvent::Shown => {
+                                let (window_width, window_height) =
+                                    self.sdl_context.window().size();
+                                self.on_window_size_changed(
+                                    window_width as i32,
+                                    window_height as i32,
+                                );
+                            }
                             WindowEvent::Hidden => {}
                             WindowEvent::Exposed => {}
                             WindowEvent::Moved(_, _) => {}
                             // logical size: 3840*2160 DPI 150% => 2560*1440
                             WindowEvent::Resized(window_width, window_height) => {
-                                self.sdl_context.sdl_window_framebuffer_size_callback(window_width, window_height);
-                                self.set_window_size(window_width as u32, window_height as u32);
+                                self.on_window_size_changed(window_width, window_height);
                             }
                             WindowEvent::SizeChanged(_, _) => {}
                             WindowEvent::Minimized => {}
@@ -118,25 +126,24 @@ impl Application {
                             WindowEvent::HitTest => {}
                         }
                     }
-                    Event::KeyDown { keycode,.. } => {
+                    Event::KeyDown { keycode, .. } => {
                         // info!("Event::KeyDown: {:?}", keycode);
                         match keycode {
                             None => {}
-                            Some(code) => {
-                                match code {
-                                    Keycode::Equals => {
-                                        self.push_activity(Activity::MainActivity(MainActivity::new(self.sdl_context.video_subsystem().clone())));
-                                    }
-                                    Keycode::Minus => {
-                                        self.pop_activity();
-                                    }
-                                    _ => {}
+                            Some(code) => match code {
+                                Keycode::Equals => {
+                                    self.push_activity(Activity::MainActivity(MainActivity::new(
+                                        self.sdl_context.video_subsystem().clone(),
+                                    )));
                                 }
-                            }
+                                Keycode::Minus => {
+                                    self.pop_activity();
+                                }
+                                _ => {}
+                            },
                         }
-
                     }
-                    Event::KeyUp { keycode,.. } => {
+                    Event::KeyUp { keycode, .. } => {
                         // info!("Event::KeyUp: {:?}", keycode);
                     }
                     Event::TextEditing { .. } => {}
@@ -192,7 +199,8 @@ impl Application {
 
             // Free views deletion pool.
             // A view deletion might inserts other views to deletionPool
-            self.deletion_pool.retain(|view|!view.borrow().ptr_locked());
+            self.deletion_pool
+                .retain(|view| !view.borrow().ptr_locked());
 
             if self.limited_frame_time_us > 0 {
                 let delta_time_us = get_time_usec() - self.frame_start_time_us;
@@ -278,8 +286,11 @@ impl Application {
         trace!("push activity");
 
         // Focus
-        if let Some(current_focus) =  &self.current_focus {
-            debug!("Pushing {} to the focus stack", current_focus.borrow().describe());
+        if let Some(current_focus) = &self.current_focus {
+            debug!(
+                "Pushing {} to the focus stack",
+                current_focus.borrow().describe()
+            );
             self.focus_stack.push(current_focus.clone());
         }
 
@@ -316,16 +327,19 @@ impl Application {
 
         // Animate the old activity immediately
         let top_activity = self.activities_stack.last().unwrap();
-        top_activity.borrow().hide(Box::new(||{}), false, 0.0);
+        top_activity.borrow().hide(Box::new(|| {}), false, 0.0);
         top_activity.borrow().on_resume();
-        top_activity.borrow().show(Box::new(||{}), false, 0.0);
+        top_activity.borrow().show(Box::new(|| {}), false, 0.0);
 
         // Focus
-        if let Some(new_focus) = self.focus_stack.last() {
-
-        }
+        if let Some(new_focus) = self.focus_stack.last() {}
     }
 
+    pub fn on_window_size_changed(&mut self, width: i32, height: i32) {
+        self.sdl_context
+            .sdl_window_framebuffer_size_callback(width, height);
+        self.set_window_size(width as u32, height as u32);
+    }
     pub fn set_window_size(&self, width: u32, height: u32) {
         set_window_width(width);
         set_window_height(height);
@@ -333,7 +347,7 @@ impl Application {
         let scale = width as f32 / ORIGINAL_WINDOW_WIDTH as f32;
 
         // Rescale UI
-        set_window_scale(scale);
+        set_borealis_scale(scale);
         set_content_width(ORIGINAL_WINDOW_WIDTH as f32 * scale);
         set_content_height(ORIGINAL_WINDOW_HEIGHT as f32 * scale);
 

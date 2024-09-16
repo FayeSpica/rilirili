@@ -21,7 +21,7 @@ pub struct Animatable {
 impl Animatable {
     pub fn new(value: f32) -> Self {
         Self {
-            current_value: value
+            current_value: value,
         }
     }
 }
@@ -41,7 +41,6 @@ impl Animating for Animatable {
 }
 
 pub trait Animating: FiniteTicking {
-
     /**
      * Returns the current animatable value.
      */
@@ -91,10 +90,6 @@ pub trait Animating: FiniteTicking {
     }
 }
 
-pub fn update_highlight_animation() {
+pub fn update_highlight_animation() {}
 
-}
-
-pub fn highlight_animation(gradient_x: &mut f32, gradient_y: &mut f32, gradient_z: &mut f32) {
-
-}
+pub fn highlight_animation(gradient_x: &mut f32, gradient_y: &mut f32, gradient_z: &mut f32) {}

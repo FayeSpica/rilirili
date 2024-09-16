@@ -6,9 +6,7 @@ use crate::core::view_style::ViewStyle;
 
 pub struct AppletFrame;
 
-pub trait AppletFrameTrait: BoxTrait {
-
-}
+pub trait AppletFrameTrait: BoxTrait {}
 
 impl BoxTrait for AppletFrame {}
 
@@ -28,4 +26,4 @@ impl ViewBase for AppletFrame {
     }
 }
 
-impl AppletFrameTrait for AppletFrame{}
+impl AppletFrameTrait for AppletFrame {}

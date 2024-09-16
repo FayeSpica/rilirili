@@ -6,9 +6,7 @@ use crate::core::view_style::ViewStyle;
 
 pub struct BottomBar;
 
-pub trait BottomBarTrait: BoxTrait {
-
-}
+pub trait BottomBarTrait: BoxTrait {}
 
 impl BoxTrait for BottomBar {}
 

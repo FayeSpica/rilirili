@@ -26,6 +26,4 @@ impl ViewBase for TabFrame {
     }
 }
 
-impl TabFrameTrait for TabFrame {
-
-}
+impl TabFrameTrait for TabFrame {}
