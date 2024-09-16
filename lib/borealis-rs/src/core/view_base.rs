@@ -125,7 +125,7 @@ impl Default for ViewData {
             click_alpha: Animatable::new(0.0),
             collapse_state: Animatable::new(1.0),
             clips_to_bounds: false,
-            wireframe_enabled: true,
+            wireframe_enabled: false,
             parent: None,
             parent_activity: None,
             view: None,
