@@ -53,32 +53,6 @@ pub struct Application {
     deletion_pool: Vec<Rc<RefCell<View>>>,
 }
 
-fn create_sdl2_context(title: &str, width: u32, height: u32) -> (
-    sdl2::video::Window,
-    sdl2::EventPump,
-    sdl2::EventSubsystem,
-    sdl2::VideoSubsystem,
-    sdl2::video::GLContext,
-) {
-    let sdl = sdl2::init().unwrap();
-    let video = sdl.video().unwrap();
-    let event_subsystem = sdl.event().unwrap();
-    let gl_attr = video.gl_attr();
-    gl_attr.set_context_profile(sdl2::video::GLProfile::Core);
-    gl_attr.set_context_version(3, 3);
-    gl_attr.set_context_flags().forward_compatible().set();
-    let window = video
-        .window(title, width, height)
-        .opengl()
-        .resizable()
-        .build()
-        .unwrap();
-    let gl_context = window.gl_create_context().unwrap();
-    let event_loop = sdl.event_pump().unwrap();
-
-    (window, event_loop, event_subsystem, video, gl_context)
-}
-
 impl Application {
     /**
      * Inits the borealis application.
@@ -99,6 +73,16 @@ impl Application {
             .resizable()
             .build()
             .unwrap();
+
+        #[cfg(not(target_os = "android"))]
+        {
+            // set OpenGL 3.2 Core Profile
+            let gl_attr = video_subsystem.gl_attr();
+            gl_attr.set_context_profile(sdl2::video::GLProfile::Core);
+            gl_attr.set_context_version(3, 2);
+            gl_attr.set_context_flags().forward_compatible().set();
+        }
+
         let gl_context = window.gl_create_context().unwrap();
 
         // let (window, events_loop, event_subsystem, video_subsystem, gl_context) = create_sdl2_context(title, 1280, 720);
