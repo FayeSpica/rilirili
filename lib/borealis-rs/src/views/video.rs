@@ -1,5 +1,5 @@
 use crate::core::frame_context::FrameContext;
-use crate::core::global::{content_height, content_width, window_height, window_width};
+use crate::core::global::{window_height, window_width};
 use crate::core::theme::theme;
 use crate::core::view_base::{ViewBase, ViewData};
 use crate::core::view_box::{Axis, BoxTrait, BoxViewData};
@@ -281,6 +281,8 @@ impl Video {
             libmpv_set_option_string(mpv_handle, "vo", "libmpv");
 
             libmpv_set_option_string(mpv_handle, "hwdec", "auto");
+            libmpv_set_option_string(mpv_handle, "video-unscaled", "no");
+            libmpv_set_option_string(mpv_handle, "keepaspect", "yes");
 
             // Create MPV render context for OpenGL
             let mut render_params: [mpv_render_param; 3] = [
@@ -388,36 +390,34 @@ pub trait VideoTrait: BoxTrait {
     fn video_data_mut(&mut self) -> &mut Video;
 
     fn set_frame_size(&mut self, ctx: &FrameContext, x: f32, y: f32, width: f32, height: f32) {
-        let content_width = ctx.window_width as f32;
-        let content_height = ctx.window_height as f32;
-        unsafe {
-            let draw_width = width * ctx.pixel_ratio;
-            let draw_height = height * ctx.pixel_ratio;
+        let window_width = ctx.window_width as f32;
+        let window_height = ctx.window_height as f32;
 
+        let x = x * ctx.pixel_ratio;
+        let y = y * ctx.pixel_ratio;
+        let width = width * ctx.pixel_ratio;
+        let height = height * ctx.pixel_ratio;
+
+        unsafe {
             gl::BindTexture(gl::TEXTURE_2D, self.video_data().media_texture);
             gl::TexImage2D(
                 gl::TEXTURE_2D,
                 0,
                 gl::RGBA as GLint,
-                draw_width as GLsizei,
-                draw_height as GLsizei,
+                ctx.window_width as GLsizei,
+                ctx.window_height as GLsizei,
                 0,
                 gl::RGBA,
                 gl::UNSIGNED_BYTE,
                 ptr::null(),
             );
-            self.video_data_mut().mpv_opengl_fbo.w = draw_width as c_int;
-            self.video_data_mut().mpv_opengl_fbo.h = draw_height as c_int;
+            self.video_data_mut().mpv_opengl_fbo.w = ctx.window_width as c_int;
+            self.video_data_mut().mpv_opengl_fbo.h = ctx.window_height as c_int;
 
-            let new_min_x = x / content_width * 2.0 - 1.0;
-            let new_min_y = 1.0 - y / content_height * 2.0;
-            let new_max_x = (x + width) / content_width * 2.0 - 1.0;
-            let new_max_y = 1.0 - (y + height) / content_height * 2.0;
-            info!("win: {} {}, pos: {} {}, rect: {} {}", content_width, content_height, x, y, width, height);
-            info!(
-                "MPVCore::setFrameSize: {}/{} min({},{}) max({},{})",
-                draw_width, draw_height, new_min_x, new_min_y, new_max_x, new_max_y
-            );
+            let new_min_x = x / window_width * 2.0 - 1.0;
+            let new_min_y = 1.0 - y / window_height * 2.0;
+            let new_max_x = (x + width) / window_width * 2.0 - 1.0;
+            let new_max_y = 1.0 - (y + height) / window_height * 2.0;
 
             self.video_data_mut().vertices[0] = new_max_x;
             self.video_data_mut().vertices[1] = new_min_y;
@@ -454,7 +454,7 @@ pub trait VideoTrait: BoxTrait {
             gl::BindFramebuffer(gl::FRAMEBUFFER, self.video_data().media_framebuffer);
             gl::Viewport(0, 0, ctx.window_width as GLsizei, ctx.window_height as GLsizei);
             gl::ClearColor(0.2, 0.0, 0.0, 0.5);
-            gl::Clear(gl::COLOR_BUFFER_BIT);
+            gl::Clear(COLOR_BUFFER_BIT);
 
             let mut mpv_params = [
                 mpv_render_param {

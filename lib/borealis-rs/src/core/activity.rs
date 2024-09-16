@@ -1,4 +1,4 @@
-use crate::core::global::{content_height, content_width};
+use crate::core::global::{window_height, window_width};
 use crate::core::view_base::{View, ViewBase};
 use crate::core::view_box::{BoxEnum, BoxTrait, BoxView};
 use crate::core::view_creator::ViewCreator;
@@ -83,7 +83,7 @@ pub trait ActivityDyn: ViewCreator {
             None => {}
             Some(view) => {
                 view.borrow()
-                    .set_dimensions(content_width(), content_height());
+                    .set_dimensions(window_width() as f32, window_height() as f32);
             }
         }
     }

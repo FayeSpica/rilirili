@@ -3,9 +3,7 @@ use gl::ClearColor;
 use nanovg_sys::NVGcontext;
 use sdl2::video::{GLContext, Window};
 use sdl2::{EventPump, Sdl, VideoSubsystem};
-
-pub const ORIGINAL_WINDOW_WIDTH: u32 = 1280;
-pub const ORIGINAL_WINDOW_HEIGHT: u32 = 720;
+use crate::core::global::{BASE_WINDOW_WIDTH, set_borealis_scale, set_window_height, set_window_width, window_height, window_width};
 
 pub struct SdlContext {
     sdl: Sdl,
@@ -29,8 +27,11 @@ impl SdlContext {
         }
         let sdl = sdl2::init().unwrap();
         let video_subsystem = sdl.video().unwrap();
+        let (window_width, window_height) = (window_width(), window_height());
+        debug!("create window: ({}, {})", window_width, window_height);
         let window = video_subsystem
-            .window(title, ORIGINAL_WINDOW_WIDTH, ORIGINAL_WINDOW_HEIGHT)
+            .window(title, window_width, window_height)
+            // .window(title, window_width(), window_height())
             // .borderless()
             // .fullscreen_desktop()
             .opengl()
@@ -113,6 +114,10 @@ impl SdlContext {
         &self.frame_context
     }
 
+    pub fn frame_context_mut(&mut self) -> &mut FrameContext {
+        &mut self.frame_context
+    }
+
     pub fn sdl_window_framebuffer_size_callback(&mut self, width: i32, height: i32) {
         unsafe {
             gl::Viewport(0, 0, width, height);
@@ -120,6 +125,16 @@ impl SdlContext {
 
         self.size_w = width;
         self.size_h = height;
+
+        let scale = width as f32 / BASE_WINDOW_WIDTH as f32;
+        // sdl window size eg: 1920*1080 => scale = 1.5
+        set_window_width(width as u32);
+        set_window_height(height as u32);
+        set_borealis_scale(scale);
+
+        self.frame_context_mut().window_width = width as u32;
+        self.frame_context_mut().window_height = height as u32;
+        self.frame_context_mut().pixel_ratio = scale;
     }
 
     fn get_fullscreen_bound(&mut self) {

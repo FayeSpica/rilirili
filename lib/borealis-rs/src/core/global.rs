@@ -1,11 +1,12 @@
 use std::sync::Mutex;
 
+pub const BASE_WINDOW_WIDTH: u32 = 1280;
+pub const BASE_WINDOW_HEIGHT: u32 = 720;
+
 lazy_static! {
     static ref BOREALIS_SCALE: Mutex<f32> = Mutex::new(1.0);
-    static ref CONTENT_WIDTH: Mutex<f32> = Mutex::new(1280.0);
-    static ref CONTENT_HEIGHT: Mutex<f32> = Mutex::new(720.0);
-    static ref WINDOW_WIDTH: Mutex<u32> = Mutex::new(1280);
-    static ref WINDOW_HEIGHT: Mutex<u32> = Mutex::new(720);
+    static ref WINDOW_WIDTH: Mutex<u32> = Mutex::new(BASE_WINDOW_WIDTH);
+    static ref WINDOW_HEIGHT: Mutex<u32> = Mutex::new(BASE_WINDOW_HEIGHT);
     static ref WINDOW_X_POS: Mutex<i32> = Mutex::new(0);
     static ref WINDOW_Y_POS: Mutex<i32> = Mutex::new(0);
 }
@@ -18,26 +19,6 @@ pub fn borealis_scale() -> f32 {
 pub fn set_borealis_scale(value: f32) {
     trace!("set_borealis_scale: {}", value);
     let mut map = BOREALIS_SCALE.lock().unwrap();
-    *map = value
-}
-
-pub fn content_width() -> f32 {
-    let map = CONTENT_WIDTH.lock().unwrap();
-    *map
-}
-
-pub fn set_content_width(value: f32) {
-    let mut map = CONTENT_WIDTH.lock().unwrap();
-    *map = value
-}
-
-pub fn content_height() -> f32 {
-    let map = CONTENT_HEIGHT.lock().unwrap();
-    *map
-}
-
-pub fn set_content_height(value: f32) {
-    let mut map = CONTENT_HEIGHT.lock().unwrap();
     *map = value
 }
 

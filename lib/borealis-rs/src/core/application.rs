@@ -1,19 +1,14 @@
 use crate::core::activity::{Activity, ActivityDyn};
 use crate::core::frame_context::FrameContext;
-use crate::core::global::{
-    borealis_scale, set_borealis_scale, set_content_height, set_content_width, set_window_height,
-    set_window_width, window_height, window_width,
-};
-use crate::core::sdl_context::{SdlContext, ORIGINAL_WINDOW_HEIGHT, ORIGINAL_WINDOW_WIDTH};
+use crate::core::global::{BASE_WINDOW_WIDTH, borealis_scale, set_borealis_scale, set_window_height, set_window_width, window_height, window_width};
+use crate::core::sdl_context::{SdlContext};
 use crate::core::time::get_time_usec;
 use crate::core::view_base::{BaseView, View, ViewBase};
 use crate::core::view_box::BoxView;
 use crate::core::view_drawer::ViewDrawer;
 use crate::demo::activity::main_activity::MainActivity;
 use gl::{ClearColor, FRAMEBUFFER};
-use nanovg_sys::{
-    nvgBeginFrame, nvgBeginPath, nvgEndFrame, nvgFill, nvgFillColor, nvgRGB, nvgRGBA, nvgRect,
-};
+use nanovg_sys::{nvgBeginFrame, nvgBeginPath, nvgEndFrame, nvgFill, nvgFillColor, nvgRGB, nvgRGBA, nvgRect, nvgScale};
 use sdl2::event::{Event, WindowEvent};
 use sdl2::keyboard::Keycode;
 use sdl2::video::{GLContext, Window};
@@ -229,6 +224,9 @@ impl Application {
                 ctx.window_height as c_float,
                 ctx.pixel_ratio as c_float,
             );
+            let scale = borealis_scale();
+            info!("scale: {}", scale);
+            nvgScale(ctx.context, scale, scale);
         }
         for view in &self.views_to_draw {
             view.borrow_mut().frame(ctx);
@@ -338,18 +336,6 @@ impl Application {
     pub fn on_window_size_changed(&mut self, width: i32, height: i32) {
         self.sdl_context
             .sdl_window_framebuffer_size_callback(width, height);
-        self.set_window_size(width as u32, height as u32);
-    }
-    pub fn set_window_size(&self, width: u32, height: u32) {
-        set_window_width(width);
-        set_window_height(height);
-
-        let scale = width as f32 / ORIGINAL_WINDOW_WIDTH as f32;
-
-        // Rescale UI
-        set_borealis_scale(scale);
-        set_content_width(ORIGINAL_WINDOW_WIDTH as f32 * scale);
-        set_content_height(ORIGINAL_WINDOW_HEIGHT as f32 * scale);
 
         for activity in &self.activities_stack {
             activity.borrow().on_window_size_changed();
