@@ -34,12 +34,12 @@ pub mod animation;
 pub mod time;
 pub mod tweening;
 pub mod bind;
-
+pub mod sdl_context;
 
 pub fn main() {
     let mut application = application::Application::init("rilirili").unwrap();
 
-    let activity = MainActivity::new(application.video_subsystem.clone());
+    let activity = MainActivity::new(application.video_subsystem().clone());
 
     application.push_activity(Activity::MainActivity(activity));
     application.set_limited_fps(60);

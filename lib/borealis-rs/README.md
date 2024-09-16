@@ -45,7 +45,7 @@ export ANDROID_NDK_HOME=/root/Android/Sdk/ndk/21.4.7075529
 export ANDROID_NDK_ROOT=/root/Android/Sdk/ndk/21.4.7075529
 export PATH=JAVA_HOME/bin:$PATH
 export SDL=/root/git/SDL
-
+export PATH=/root/Android/Sdk/ndk/21.4.7075529/toolchains/aarch64-linux-android-4.9/prebuilt/linux-x86_64/bin:$PATH
 
 # tested on linux
 cargo sdl-apk build --release --example android_borealis

@@ -5,7 +5,7 @@ use crate::core::view_base::{BaseView, View, ViewBase};
 use crate::core::view_box::BoxView;
 use crate::core::view_drawer::ViewDrawer;
 use nanovg_sys::{
-    nvgBeginFrame, nvgBeginPath, nvgEndFrame, nvgFill, nvgFillColor, nvgRGB, nvgRGBA, nvgRect,
+    nvgBeginFrame, nvgBeginPath, nvgEndFrame, nvgFill, nvgFillColor, nvgRect, nvgRGB, nvgRGBA,
 };
 use std::cell::RefCell;
 use std::ffi::c_float;
@@ -18,11 +18,9 @@ use sdl2::{Sdl, VideoSubsystem};
 use sdl2::event::{Event, WindowEvent};
 use sdl2::keyboard::Keycode;
 use sdl2::video::{GLContext, Window};
+use crate::core::sdl_context::{ORIGINAL_WINDOW_HEIGHT, ORIGINAL_WINDOW_WIDTH, SdlContext};
 use crate::core::time::get_time_usec;
 use crate::demo::activity::main_activity::MainActivity;
-
-const ORIGINAL_WINDOW_WIDTH: u32 = 1280;
-const ORIGINAL_WINDOW_HEIGHT: u32 = 720;
 
 pub type XMLViewCreator = Box<dyn Fn() -> BaseView>;
 
@@ -43,13 +41,7 @@ pub struct Application {
     views_to_draw: Vec<Rc<RefCell<View>>>,
     activities_stack: Vec<Rc<RefCell<Activity>>>,
     focus_stack: Vec<Rc<RefCell<View>>>,
-    sdl: Sdl,
-    pub video_subsystem: VideoSubsystem,
-    window: Window,
-    gl_context: GLContext,
-    window_width: i32,
-    window_height: i32,
-    context: FrameContext,
+    sdl_context: SdlContext,
     deletion_pool: Vec<Rc<RefCell<View>>>,
 }
 
@@ -59,50 +51,7 @@ impl Application {
      * Returns Ok if it succeeded, Err otherwise.
      */
     pub fn init(title: &str) -> anyhow::Result<Self> {
-        unsafe {
-            // Init yoga
-            let default_config = yoga_sys::YGConfigGetDefault();
-            yoga_sys::YGConfigSetUseWebDefaults(default_config, true);
-        }
-        let sdl = sdl2::init().unwrap();
-        let video_subsystem = sdl.video().unwrap();
-        let window = video_subsystem
-            .window(title, 1280, 720)
-            .opengl()
-            .position_centered()
-            .resizable()
-            .build()
-            .unwrap();
-
-        #[cfg(not(target_os = "android"))]
-        {
-            // set OpenGL 3.2 Core Profile
-            let gl_attr = video_subsystem.gl_attr();
-            gl_attr.set_context_profile(sdl2::video::GLProfile::Core);
-            gl_attr.set_context_version(3, 2);
-            gl_attr.set_context_flags().forward_compatible().set();
-        }
-
-        let gl_context = window.gl_create_context().unwrap();
-
-        // let (window, events_loop, event_subsystem, video_subsystem, gl_context) = create_sdl2_context(title, 1280, 720);
-        //
-        gl::load_with(|s|video_subsystem.gl_get_proc_address(s) as *const std::os::raw::c_void);
-        unsafe {
-            gl::Enable(gl::BLEND);
-            gl::BlendFunc(gl::SRC_ALPHA, gl::ONE_MINUS_SRC_ALPHA);
-            ClearColor(0.0, 0.0, 0.0, 0.0);
-        }
-
-        let context =
-            unsafe {
-                #[cfg(target_os = "windows")]
-                nanovg_sys::gladLoadGL();
-                let f = nanovg_sys::NVGcreateFlags::NVG_STENCIL_STROKES | nanovg_sys::NVGcreateFlags::NVG_ANTIALIAS;
-                nanovg_sys::nvgCreateGL3(f.bits())
-            };
-
-        window.gl_swap_window();
+        let mut sdl_context = SdlContext::new(title);
         let now_us = get_time_usec();
         Ok(
             Application {
@@ -116,20 +65,14 @@ impl Application {
                 views_to_draw: vec![],
                 activities_stack: vec![],
                 focus_stack: vec![],
-                sdl,
-                video_subsystem,
-                window,
-                gl_context,
-                window_width: 1280,
-                window_height: 720,
-                context: FrameContext{ context, pixel_ratio: 1.5},
+                sdl_context,
                 deletion_pool: vec![],
             },
         )
     }
 
     pub fn main_loop(mut self) {
-        let mut event_pump = self.sdl.event_pump().unwrap();
+        let mut event_pump = self.sdl_context.event_pump();
         let mut exit = false;
         while !exit {
             self.update_fps();
@@ -157,15 +100,10 @@ impl Application {
                             WindowEvent::Hidden => {}
                             WindowEvent::Exposed => {}
                             WindowEvent::Moved(_, _) => {}
-                            WindowEvent::Resized(width, height) => {
-                                self.window_width = width;
-                                self.window_height = height;
-                                self.set_window_size(width as u32, height as u32);
-                                unsafe {
-                                    gl::Viewport(0, 0, width, height);
-                                    // ClearColor(0.75, 0.5, 0.1, 0.0);
-                                    // gl::Clear(gl::COLOR_BUFFER_BIT);
-                                }
+                            // logical size: 3840*2160 DPI 150% => 2560*1440
+                            WindowEvent::Resized(window_width, window_height) => {
+                                self.sdl_context.sdl_window_framebuffer_size_callback(window_width, window_height);
+                                self.set_window_size(window_width as u32, window_height as u32);
                             }
                             WindowEvent::SizeChanged(_, _) => {}
                             WindowEvent::Minimized => {}
@@ -187,7 +125,7 @@ impl Application {
                             Some(code) => {
                                 match code {
                                     Keycode::Equals => {
-                                        self.push_activity(Activity::MainActivity(MainActivity::new(self.video_subsystem.clone())));
+                                        self.push_activity(Activity::MainActivity(MainActivity::new(self.sdl_context.video_subsystem().clone())));
                                     }
                                     Keycode::Minus => {
                                         self.pop_activity();
@@ -244,7 +182,7 @@ impl Application {
             // Ticking::updateTickings();
 
             // Render
-            self.frame(&self.context, self.window_width, self.window_height, self.context.pixel_ratio);
+            self.frame(&self.frame_context());
 
             // Run sync functions
             // Threading::performSyncTasks();
@@ -267,9 +205,10 @@ impl Application {
         }
     }
 
-    pub fn frame(&self, ctx: &FrameContext, width: i32, height: i32, scale: f32) {
+    pub fn frame(&self, ctx: &FrameContext) {
         // trace!("gl_window.window.inner_size(): {:?}", gl_window.window.inner_size());
         // trace!("gl_window.window.scale_factor(): {} {}", gl_window.window.scale_factor(), window_scale());
+        self.sdl_context.begin_frame();
         unsafe {
             gl::BindFramebuffer(FRAMEBUFFER, 0);
             gl::ClearColor(0.0, 0.0, 0.0, 0.0); // Transparent background
@@ -278,25 +217,18 @@ impl Application {
         unsafe {
             nvgBeginFrame(
                 ctx.context,
-                width as c_float,
-                height as c_float,
-                scale as c_float,
+                ctx.window_width as c_float,
+                ctx.window_height as c_float,
+                ctx.pixel_ratio as c_float,
             );
         }
-        // unsafe {
-        //     nvgBeginPath(ctx.vg().raw());
-        //     nvgRect(ctx.vg().raw(), 100.0, 100.0, 100.0, 100.0);
-        //     nvgFillColor(ctx.vg().raw(), nvgRGB(255, 100, 0));
-        //     nvgFill(ctx.vg().raw());
-        // }
         for view in &self.views_to_draw {
             view.borrow_mut().frame(ctx);
         }
         unsafe {
             nvgEndFrame(ctx.context);
         }
-        // will vsync depends on driver/graphics card
-        self.window.gl_swap_window();
+        self.sdl_context.end_frame();
     }
 
     /// manually limit fps
@@ -408,6 +340,14 @@ impl Application {
         for activity in &self.activities_stack {
             activity.borrow().on_window_size_changed();
         }
+    }
+
+    pub fn video_subsystem(&self) -> &VideoSubsystem {
+        &self.sdl_context.video_subsystem()
+    }
+
+    pub fn frame_context(&self) -> &FrameContext {
+        &self.sdl_context.frame_context()
     }
 }
 
