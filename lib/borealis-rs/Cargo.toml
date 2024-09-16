@@ -16,7 +16,7 @@ quick-xml = "0.36.1"
 sdl2 = "0.35.2"
 gl = "0.14.0"
 env_logger = { version = "0.10", default-features = false }
-libmpv2-sys = { git = "https://github.com/FayeSpica/libmpv2-rs.git", tag = "v0.0.1" }
+libmpv2-sys = { git = "https://github.com/FayeSpica/libmpv2-rs.git", tag = "v0.0.2" }
 
 [target.'cfg(not(target_os = "android"))'.dependencies]
 nanovg-sys = { git = "https://github.com/FayeSpica/nanovg-rs.git", tag = "v1.0.2glesv3", default-features = false, features = ["gl3"] }
