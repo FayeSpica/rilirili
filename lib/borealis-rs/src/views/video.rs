@@ -262,15 +262,6 @@ impl Video {
                 panic!("Failed to initialize MPV");
             }
 
-            let raw = CString::new(format!("{} {} {}", "loadfile", VIDEO_URL, "replace")).unwrap();
-
-            // Send the command to MPV to load the file
-            if mpv_command_string(mpv_handle, raw.as_ptr()) < 0 {
-                eprintln!("Failed to load file");
-                mpv_destroy(mpv_handle);
-                panic!("Failed to load file");
-            }
-
             libmpv_set_option_string(mpv_handle, "ytdl", "no");
             libmpv_set_option_string(mpv_handle, "audio-channels", "stereo");
             libmpv_set_option_string(mpv_handle, "idle", "yes");
@@ -317,6 +308,15 @@ impl Video {
                 eprintln!("Failed to create MPV render context");
                 mpv_destroy(mpv_handle);
                 panic!("Failed to create MPV render context");
+            }
+
+            let raw = CString::new(format!("{} {} {}", "loadfile", VIDEO_URL, "replace")).unwrap();
+
+            // Send the command to MPV to load the file
+            if mpv_command_string(mpv_handle, raw.as_ptr()) < 0 {
+                eprintln!("Failed to load file");
+                mpv_destroy(mpv_handle);
+                panic!("Failed to load file");
             }
 
             mpv_handle
