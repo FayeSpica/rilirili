@@ -2,7 +2,7 @@ use crate::core::bind::BoundView;
 use crate::core::style::style;
 use crate::core::theme::{nvg_rgb, theme};
 use crate::core::view_base::{ShadowType, View, ViewBackground, ViewBase, ViewData};
-use crate::core::view_box::{BoxEnum, BoxTrait};
+use crate::core::view_box::{BoxEnum, BoxTrait, BoxViewData};
 use crate::core::view_drawer::ViewDrawer;
 use crate::core::view_layout::ViewLayout;
 use crate::core::view_style::ViewStyle;
@@ -254,7 +254,15 @@ pub trait ButtonTrait: BoxTrait {
     }
 }
 
-impl BoxTrait for Button {}
+impl BoxTrait for Button {
+    fn box_view_data(&self) -> &BoxViewData {
+        todo!()
+    }
+
+    fn box_view_data_mut(&mut self) -> &mut BoxViewData {
+        todo!()
+    }
+}
 
 impl ViewDrawer for Button {}
 

@@ -1,9 +1,11 @@
+use crate::core::actions::ActionIdentifier;
+use crate::core::application::ViewCreatorRegistry;
 use crate::core::global::{window_height, window_width};
 use crate::core::view_base::{View, ViewBase};
 use crate::core::view_box::{BoxEnum, BoxTrait, BoxView};
-use crate::core::view_creator::ViewCreator;
 use crate::core::view_drawer::ViewDrawer;
 use crate::core::view_layout::ViewLayout;
+use crate::demo::activity::main_activity::MainActivity;
 use crate::views::video::Video;
 use sdl2::VideoSubsystem;
 use std::cell::RefCell;
@@ -39,11 +41,15 @@ impl ActivityViewData {
     }
 }
 
-pub trait ActivityDyn: ViewCreator {
+pub trait ActivityDyn {
     fn view_data(&self) -> &ActivityViewData;
     fn view_data_mut(&mut self) -> &mut ActivityViewData;
 
-    fn create_content_view(&self) -> Rc<RefCell<View>> {
+    fn create_content_view(
+        &self,
+        view_creator_registry: &Rc<RefCell<ViewCreatorRegistry>>,
+    ) -> Rc<RefCell<View>> {
+        info!("ActivityDyn::create_content_view");
         // self.create_from_xml_resource(self.view_data().xml_path.clone())
         let box_view = BoxView::new(0.0, 0.0, 0.0, 0.0);
         let mut box_enum = BoxEnum::Box(box_view);
@@ -140,6 +146,12 @@ pub trait ActivityDyn: ViewCreator {
             Some(content_view) => content_view.borrow().default_focus(),
         }
     }
+
+    fn register_exit_action(&mut self) -> ActionIdentifier {
+        0
+    }
+
+    fn unregister_action(&mut self, identifier: ActionIdentifier) {}
 }
 
 pub enum Activity {
@@ -149,13 +161,24 @@ pub enum Activity {
 impl ActivityDyn for Activity {
     fn view_data(&self) -> &ActivityViewData {
         match self {
-            Activity::MainActivity(a) => a.view_data(),
+            Activity::MainActivity(activity) => activity.view_data(),
         }
     }
 
     fn view_data_mut(&mut self) -> &mut ActivityViewData {
         match self {
-            Activity::MainActivity(a) => a.view_data_mut(),
+            Activity::MainActivity(activity) => activity.view_data_mut(),
+        }
+    }
+
+    fn create_content_view(
+        &self,
+        view_creator_registry: &Rc<RefCell<ViewCreatorRegistry>>,
+    ) -> Rc<RefCell<View>> {
+        match self {
+            Activity::MainActivity(activity) => {
+                MainActivity::create_content_view(activity, view_creator_registry)
+            }
         }
     }
 }

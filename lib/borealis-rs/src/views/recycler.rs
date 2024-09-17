@@ -1,5 +1,5 @@
 use crate::core::view_base::{ViewBase, ViewData};
-use crate::core::view_box::BoxTrait;
+use crate::core::view_box::{BoxTrait, BoxViewData};
 use crate::core::view_drawer::ViewDrawer;
 use crate::core::view_layout::ViewLayout;
 use crate::core::view_style::ViewStyle;
@@ -9,7 +9,15 @@ pub struct RecyclerCell;
 
 pub trait RecyclerCellTrait: BoxTrait {}
 
-impl BoxTrait for RecyclerCell {}
+impl BoxTrait for RecyclerCell {
+    fn box_view_data(&self) -> &BoxViewData {
+        todo!()
+    }
+
+    fn box_view_data_mut(&mut self) -> &mut BoxViewData {
+        todo!()
+    }
+}
 
 impl ViewDrawer for RecyclerCell {}
 
@@ -35,7 +43,15 @@ pub trait RecyclerHeaderTrait: RecyclerCellTrait {}
 
 impl RecyclerCellTrait for RecyclerHeader {}
 
-impl BoxTrait for RecyclerHeader {}
+impl BoxTrait for RecyclerHeader {
+    fn box_view_data(&self) -> &BoxViewData {
+        todo!()
+    }
+
+    fn box_view_data_mut(&mut self) -> &mut BoxViewData {
+        todo!()
+    }
+}
 
 impl ViewDrawer for RecyclerHeader {}
 
@@ -61,7 +77,15 @@ pub struct RecyclerContentBox;
 
 pub trait RecyclerContentBoxTrait: BoxTrait {}
 
-impl BoxTrait for RecyclerContentBox {}
+impl BoxTrait for RecyclerContentBox {
+    fn box_view_data(&self) -> &BoxViewData {
+        todo!()
+    }
+
+    fn box_view_data_mut(&mut self) -> &mut BoxViewData {
+        todo!()
+    }
+}
 
 impl ViewDrawer for RecyclerContentBox {}
 
@@ -87,7 +111,15 @@ pub trait RecyclerFrameTrait: ScrollingFrameTrait {}
 
 impl ScrollingFrameTrait for RecyclerFrame {}
 
-impl BoxTrait for RecyclerFrame {}
+impl BoxTrait for RecyclerFrame {
+    fn box_view_data(&self) -> &BoxViewData {
+        todo!()
+    }
+
+    fn box_view_data_mut(&mut self) -> &mut BoxViewData {
+        todo!()
+    }
+}
 
 impl ViewDrawer for RecyclerFrame {}
 

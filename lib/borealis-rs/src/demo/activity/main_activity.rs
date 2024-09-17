@@ -1,6 +1,10 @@
 use crate::core::activity::{ActivityDyn, ActivityViewData};
-use crate::core::view_creator::ViewCreator;
+use crate::core::application::ViewCreatorRegistry;
+use crate::core::view_base::View;
+use crate::core::view_creator::{create_from_xml_file, create_from_xml_string};
 use sdl2::VideoSubsystem;
+use std::cell::RefCell;
+use std::rc::Rc;
 
 pub struct MainActivity {
     activity_view_data: ActivityViewData,
@@ -22,8 +26,6 @@ impl Drop for MainActivity {
     }
 }
 
-impl ViewCreator for MainActivity {}
-
 impl ActivityDyn for MainActivity {
     fn view_data(&self) -> &ActivityViewData {
         &self.activity_view_data
@@ -31,5 +33,19 @@ impl ActivityDyn for MainActivity {
 
     fn view_data_mut(&mut self) -> &mut ActivityViewData {
         &mut self.activity_view_data
+    }
+
+    fn create_content_view(
+        &self,
+        view_creator_registry: &Rc<RefCell<ViewCreatorRegistry>>,
+    ) -> Rc<RefCell<View>> {
+        // create_from_xml_file("resources/xml/activity/main.xml".parse().unwrap())
+        create_from_xml_string(
+            r#"
+            <brls:View xml="@res/xml/tabs/layout.xml" />
+        "#
+            .into(),
+            &view_creator_registry,
+        )
     }
 }

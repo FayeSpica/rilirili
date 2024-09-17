@@ -1,9 +1,12 @@
 use crate::core::frame_context::FrameContext;
+use crate::core::global::{
+    set_borealis_scale, set_window_height, set_window_width, window_height, window_width,
+    BASE_WINDOW_WIDTH,
+};
 use gl::ClearColor;
 use nanovg_sys::NVGcontext;
 use sdl2::video::{GLContext, Window};
 use sdl2::{EventPump, Sdl, VideoSubsystem};
-use crate::core::global::{BASE_WINDOW_WIDTH, set_borealis_scale, set_window_height, set_window_width, window_height, window_width};
 
 pub struct SdlContext {
     sdl: Sdl,

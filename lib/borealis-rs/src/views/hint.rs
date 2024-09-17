@@ -1,5 +1,5 @@
 use crate::core::view_base::{ViewBase, ViewData};
-use crate::core::view_box::BoxTrait;
+use crate::core::view_box::{BoxTrait, BoxViewData};
 use crate::core::view_drawer::ViewDrawer;
 use crate::core::view_layout::ViewLayout;
 use crate::core::view_style::ViewStyle;
@@ -8,7 +8,15 @@ pub struct Hint;
 
 pub trait HintTrait: BoxTrait {}
 
-impl BoxTrait for Hint {}
+impl BoxTrait for Hint {
+    fn box_view_data(&self) -> &BoxViewData {
+        todo!()
+    }
+
+    fn box_view_data_mut(&mut self) -> &mut BoxViewData {
+        todo!()
+    }
+}
 
 impl ViewDrawer for Hint {}
 
@@ -32,7 +40,15 @@ pub struct Hints;
 
 pub trait HintsTrait: BoxTrait {}
 
-impl BoxTrait for Hints {}
+impl BoxTrait for Hints {
+    fn box_view_data(&self) -> &BoxViewData {
+        todo!()
+    }
+
+    fn box_view_data_mut(&mut self) -> &mut BoxViewData {
+        todo!()
+    }
+}
 
 impl ViewDrawer for Hints {}
 

@@ -1,6 +1,6 @@
 use std::time::{SystemTime, UNIX_EPOCH};
 
-pub type Time = u128;
+pub type Time = i64;
 
 /**
  * Returns the current CPU time in microseconds.

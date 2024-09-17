@@ -17,6 +17,11 @@ pub fn nvg_rgba(r: c_uchar, g: c_uchar, b: c_uchar, a: c_uchar) -> NVGcolor {
     return unsafe { nanovg_sys::nvgRGBA(r, g, b, a) };
 }
 
+pub enum ThemeVariant {
+    LIGHT,
+    DARK,
+}
+
 lazy_static! {
     static ref GLOBAL_THEME_SELECTED: Mutex<String> = Mutex::new("DARK".into());
     static ref GLOBAL_THEME: Mutex<HashMap<String, HashMap<String, NVGcolor>>> = Mutex::new(HashMap::from(
@@ -151,6 +156,13 @@ pub fn theme(key: &str) -> NVGcolor {
 pub fn add_theme(key: &str, value: NVGcolor) {
     let mut map = GLOBAL_THEME.lock().unwrap();
     map.get_mut(&theme_selected())
+        .unwrap()
+        .insert(key.parse().unwrap(), value);
+}
+
+pub fn add_theme_color(theme: &str, key: &str, value: NVGcolor) {
+    let mut map = GLOBAL_THEME.lock().unwrap();
+    map.get_mut(theme)
         .unwrap()
         .insert(key.parse().unwrap(), value);
 }

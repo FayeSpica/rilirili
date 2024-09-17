@@ -12,5 +12,5 @@ extern crate log;
 pub fn SDL_main() {
     android_log::init("borealis").unwrap();
     info!("borealisborealis");
-    borealis_rs::core::main();
+    borealis_rs::demo::main();
 }

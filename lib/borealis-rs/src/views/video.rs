@@ -452,7 +452,12 @@ pub trait VideoTrait: BoxTrait {
         unsafe {
             nvgSave(ctx.context);
             gl::BindFramebuffer(gl::FRAMEBUFFER, self.video_data().media_framebuffer);
-            gl::Viewport(0, 0, ctx.window_width as GLsizei, ctx.window_height as GLsizei);
+            gl::Viewport(
+                0,
+                0,
+                ctx.window_width as GLsizei,
+                ctx.window_height as GLsizei,
+            );
             gl::ClearColor(0.2, 0.0, 0.0, 0.5);
             gl::Clear(COLOR_BUFFER_BIT);
 
@@ -494,7 +499,15 @@ pub trait VideoTrait: BoxTrait {
     }
 }
 
-impl BoxTrait for Video {}
+impl BoxTrait for Video {
+    fn box_view_data(&self) -> &BoxViewData {
+        todo!()
+    }
+
+    fn box_view_data_mut(&mut self) -> &mut BoxViewData {
+        todo!()
+    }
+}
 
 impl ViewDrawer for Video {}
 

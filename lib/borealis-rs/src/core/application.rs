@@ -1,31 +1,63 @@
+use crate::core::actions::ActionIdentifier;
 use crate::core::activity::{Activity, ActivityDyn};
 use crate::core::frame_context::FrameContext;
-use crate::core::global::{BASE_WINDOW_WIDTH, borealis_scale, set_borealis_scale, set_window_height, set_window_width, window_height, window_width};
-use crate::core::sdl_context::{SdlContext};
+use crate::core::global::{
+    borealis_scale, set_borealis_scale, set_window_height, set_window_width, window_height,
+    window_width, BASE_WINDOW_WIDTH,
+};
+use crate::core::platform::Platform;
+use crate::core::sdl_context::SdlContext;
 use crate::core::time::get_time_usec;
 use crate::core::view_base::{BaseView, View, ViewBase};
 use crate::core::view_box::BoxView;
 use crate::core::view_drawer::ViewDrawer;
 use crate::demo::activity::main_activity::MainActivity;
+use crate::demo::tab::captioned_image::CaptionedImage;
+use crate::views::scrolling_frame::{BaseScrollingFrame, ScrollingFrame};
 use gl::{ClearColor, FRAMEBUFFER};
-use nanovg_sys::{nvgBeginFrame, nvgBeginPath, nvgEndFrame, nvgFill, nvgFillColor, nvgRGB, nvgRGBA, nvgRect, nvgScale};
+use nanovg_sys::{
+    nvgBeginFrame, nvgBeginPath, nvgEndFrame, nvgFill, nvgFillColor, nvgRGB, nvgRGBA, nvgRect,
+    nvgScale,
+};
 use sdl2::event::{Event, WindowEvent};
 use sdl2::keyboard::Keycode;
 use sdl2::video::{GLContext, Window};
 use sdl2::{Sdl, VideoSubsystem};
 use std::cell::RefCell;
+use std::collections::HashMap;
 use std::ffi::c_float;
 use std::num::NonZeroU32;
 use std::ptr::eq;
 use std::rc::Rc;
 use std::sync::Arc;
 
-pub type XMLViewCreator = Box<dyn Fn() -> BaseView>;
+pub type XMLViewCreator = Box<dyn Fn() -> Rc<RefCell<View>>>;
 
 #[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
 pub enum InputType {
     GAMEPAD, // Gamepad or keyboard
     TOUCH,   // Touch screen
+}
+
+pub struct ViewCreatorRegistry {
+    creators: HashMap<String, XMLViewCreator>,
+}
+
+impl ViewCreatorRegistry {
+    pub fn new() -> Self {
+        Self {
+            creators: HashMap::new(),
+        }
+    }
+
+    pub fn xml_view_creator(&self, view_name: &str) -> Option<&XMLViewCreator> {
+        trace!("xml_view_creator {:?}", self.creators.keys());
+        self.creators.get(view_name)
+    }
+
+    pub fn add_xml_view_creator(&mut self, view_name: &str, xml_view_creator: XMLViewCreator) {
+        self.creators.insert(view_name.into(), xml_view_creator);
+    }
 }
 
 pub struct Application {
@@ -41,6 +73,10 @@ pub struct Application {
     focus_stack: Vec<Rc<RefCell<View>>>,
     sdl_context: SdlContext,
     deletion_pool: Vec<Rc<RefCell<View>>>,
+    global_quit_enabled: bool,
+    global_quit_identifier: ActionIdentifier,
+    platform: Platform,
+    view_creator_registry: Rc<RefCell<ViewCreatorRegistry>>,
 }
 
 impl Application {
@@ -48,10 +84,10 @@ impl Application {
      * Inits the borealis application.
      * Returns Ok if it succeeded, Err otherwise.
      */
-    pub fn init(title: &str) -> anyhow::Result<Self> {
+    pub fn create_window(title: &str) -> Self {
         let mut sdl_context = SdlContext::new(title);
         let now_us = get_time_usec();
-        let application = Application {
+        let mut application = Application {
             title: title.into(),
             current_focus: None,
             start_time_us: now_us,
@@ -64,8 +100,26 @@ impl Application {
             focus_stack: vec![],
             sdl_context,
             deletion_pool: vec![],
+            global_quit_enabled: false,
+            global_quit_identifier: 0,
+            platform: Platform::SDL2,
+            view_creator_registry: Rc::new(RefCell::new(ViewCreatorRegistry::new())),
         };
-        Ok(application)
+
+        application.register_xml_view("ScrollingFrame", Box::new(BaseScrollingFrame::create));
+        application.register_xml_view("Box", Box::new(BaseScrollingFrame::create));
+        application.register_xml_view("Rectangle", Box::new(BaseScrollingFrame::create));
+        application.register_xml_view("Label", Box::new(BaseScrollingFrame::create));
+
+        application
+    }
+
+    pub fn platform(&self) -> &Platform {
+        &self.platform
+    }
+
+    pub fn platform_mut(&mut self) -> &mut Platform {
+        &mut self.platform
     }
 
     pub fn main_loop(mut self) {
@@ -278,7 +332,11 @@ impl Application {
         }
     }
 
-    pub fn register_xml_view(&self, name: &str, creator: XMLViewCreator) {}
+    pub fn register_xml_view(&mut self, name: &str, creator: XMLViewCreator) {
+        self.view_creator_registry
+            .borrow_mut()
+            .add_xml_view_creator(name.into(), creator);
+    }
 
     pub fn push_activity(&mut self, mut activity: Activity) {
         trace!("push activity");
@@ -293,7 +351,7 @@ impl Application {
         }
 
         // Create the activity content view
-        activity.set_content_view(activity.create_content_view());
+        activity.set_content_view(activity.create_content_view(&self.view_creator_registry));
         activity.on_content_available();
         activity.resize_to_fit_window();
 
@@ -348,6 +406,20 @@ impl Application {
 
     pub fn frame_context(&self) -> &FrameContext {
         &self.sdl_context.frame_context()
+    }
+
+    pub fn set_global_quit(&mut self, enabled: bool) {
+        self.global_quit_enabled = enabled;
+
+        for activity in &self.activities_stack {
+            if enabled {
+                self.global_quit_identifier = activity.borrow_mut().register_exit_action();
+            } else {
+                activity
+                    .borrow_mut()
+                    .unregister_action(self.global_quit_identifier);
+            }
+        }
     }
 }
 

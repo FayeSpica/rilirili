@@ -1,6 +1,8 @@
+use crate::core::theme::{set_theme_selected, ThemeVariant};
+
 /// Interface to provide everything platform specific required to run borealis: graphics context, inputs, audio...
 /// The best platform is automatically selected when the application starts, and cannot be changed by the user at the moment
-pub trait Platform {
+pub trait PlatformDyn {
     /**
      * Called on startup, right after instanciation, to create and open a window
      * with the given title and size.
@@ -81,4 +83,71 @@ pub trait Platform {
     }
 
     fn get_video_context();
+
+    fn set_theme_variant(&self, theme: ThemeVariant) {
+        let theme_selected = match theme {
+            ThemeVariant::LIGHT => "LIGHT",
+            ThemeVariant::DARK => "DARK",
+        };
+        set_theme_selected(theme_selected);
+    }
+}
+
+pub enum Platform {
+    SDL2,
+}
+
+impl PlatformDyn for Platform {
+    fn create_window(
+        &self,
+        title: &str,
+        width: u32,
+        height: u32,
+        window_x_pos: f32,
+        window_y_pos: f32,
+    ) {
+        todo!()
+    }
+
+    fn restore_window() {
+        todo!()
+    }
+
+    fn set_window_size(window_width: u32, window_height: u32) {
+        todo!()
+    }
+
+    fn set_window_size_limits(
+        window_min_width: u32,
+        window_min_height: u32,
+        window_max_width: u32,
+        window_max_height: u32,
+    ) {
+        todo!()
+    }
+
+    fn set_window_position(window_x_pos: i32, window_y_pos: i32) {
+        todo!()
+    }
+
+    fn set_window_state(
+        window_width: u32,
+        window_height: u32,
+        window_x_pos: i32,
+        window_y_pos: i32,
+    ) {
+        todo!()
+    }
+
+    fn get_name() -> String {
+        todo!()
+    }
+
+    fn main_loop_iteration() -> bool {
+        todo!()
+    }
+
+    fn get_video_context() {
+        todo!()
+    }
 }

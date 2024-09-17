@@ -1,5 +1,6 @@
 use crate::core::activity::Activity;
 use crate::core::animation::{Animatable, Animating};
+use crate::core::application::ViewCreatorRegistry;
 use crate::core::audio::Sound;
 use crate::core::frame_context::FrameContext;
 use crate::core::geometry::Point;
@@ -18,6 +19,7 @@ use crate::views::rectangle::Rectangle;
 use nanovg_sys::{
     nvgBeginFrame, nvgBeginPath, nvgEndFrame, nvgFill, nvgFillColor, nvgRect, NVGcolor,
 };
+use roxmltree::Node;
 use std::any::{type_name, Any};
 use std::cell::RefCell;
 use std::cmp::PartialEq;
@@ -477,7 +479,21 @@ impl ViewDrawer for View {
     }
 }
 
-impl ViewLayout for View {}
+impl ViewLayout for View {
+    fn handle_xml_attributes(
+        &mut self,
+        element: Node,
+        view_creator_registry: &Rc<RefCell<ViewCreatorRegistry>>,
+    ) {
+        match self {
+            View::Box(v) => BoxTrait::handle_xml_attributes(v, element, view_creator_registry),
+            View::Image(_) => todo!(),
+            View::Label(_) => todo!(),
+            View::ProgressSpinner(_) => todo!(),
+            View::Rectangle(_) => todo!(),
+        }
+    }
+}
 
 impl ViewStyle for View {}
 

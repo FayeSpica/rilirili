@@ -1,5 +1,5 @@
 use crate::core::view_base::{ViewBase, ViewData};
-use crate::core::view_box::BoxTrait;
+use crate::core::view_box::{BoxTrait, BoxViewData};
 use crate::core::view_drawer::{ViewDrawer, ViewTrait};
 use crate::core::view_layout::ViewLayout;
 use crate::core::view_style::ViewStyle;
@@ -33,7 +33,15 @@ pub struct SidebarItem;
 
 pub trait SidebarItemTrait: BoxTrait {}
 
-impl BoxTrait for SidebarItem {}
+impl BoxTrait for SidebarItem {
+    fn box_view_data(&self) -> &BoxViewData {
+        todo!()
+    }
+
+    fn box_view_data_mut(&mut self) -> &mut BoxViewData {
+        todo!()
+    }
+}
 
 impl ViewDrawer for SidebarItem {}
 
@@ -59,7 +67,15 @@ pub trait SidebarTrait: ScrollingFrameTrait {}
 
 impl ScrollingFrameTrait for Sidebar {}
 
-impl BoxTrait for Sidebar {}
+impl BoxTrait for Sidebar {
+    fn box_view_data(&self) -> &BoxViewData {
+        todo!()
+    }
+
+    fn box_view_data_mut(&mut self) -> &mut BoxViewData {
+        todo!()
+    }
+}
 
 impl ViewDrawer for Sidebar {}
 

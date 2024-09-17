@@ -1,3 +1,4 @@
+use crate::core::application::ViewCreatorRegistry;
 use crate::core::geometry::{Point, Rect, Size};
 use crate::core::theme::{AUTO, YG_UNDEFINED};
 use crate::core::view_base::{
@@ -628,5 +629,27 @@ pub trait ViewLayout: ViewStyle {
             }
         }
         self.invalidate();
+    }
+
+    fn apply_xml_attributes(
+        &mut self,
+        element: roxmltree::Node,
+        view_creator_registry: &Rc<RefCell<ViewCreatorRegistry>>,
+    ) {
+        for attribute in element.attributes() {
+            info!(
+                "apply_xml_attributes: {} {}",
+                attribute.name(),
+                attribute.value()
+            );
+        }
+    }
+
+    fn handle_xml_attributes(
+        &mut self,
+        element: roxmltree::Node,
+        view_creator_registry: &Rc<RefCell<ViewCreatorRegistry>>,
+    ) {
+        panic!("Raw views cannot have child XML tags");
     }
 }

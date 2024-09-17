@@ -1,5 +1,7 @@
+use crate::core::application::ViewCreatorRegistry;
 use crate::core::frame_context::FrameContext;
 use crate::core::view_base::{View, ViewBase, ViewData};
+use crate::core::view_creator::create_from_xml_element;
 use crate::core::view_drawer::{ViewDrawer, ViewTrait};
 use crate::core::view_layout::ViewLayout;
 use crate::core::view_style::ViewStyle;
@@ -19,6 +21,7 @@ use crate::views::scrolling_frame::ScrollingFrame;
 use crate::views::slider::Slider;
 use crate::views::tab_frame::TabFrame;
 use crate::views::video::{Video, VideoTrait};
+use roxmltree::Node;
 use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
@@ -158,6 +161,7 @@ impl ViewBase for BoxEnum {
             BoxEnum::Box(v) => v.data(),
             BoxEnum::AppletFrame(v) => v.data(),
             BoxEnum::Video(v) => v.data(),
+            BoxEnum::ScrollingFrame(v) => v.data(),
             _ => todo!(),
         }
     }
@@ -167,6 +171,7 @@ impl ViewBase for BoxEnum {
             BoxEnum::Box(v) => v.data_mut(),
             BoxEnum::AppletFrame(v) => v.data_mut(),
             BoxEnum::Video(v) => v.data_mut(),
+            BoxEnum::ScrollingFrame(v) => v.data_mut(),
             _ => todo!(),
         }
     }
@@ -184,17 +189,33 @@ pub struct BoxViewData {
     pub box_view: Option<Rc<RefCell<BoxEnum>>>,
 }
 
+impl Default for BoxViewData {
+    fn default() -> Self {
+        Self {
+            view_data: Default::default(),
+            axis: Axis::Row,
+            children: vec![],
+            default_focused_index: 0,
+            last_focused_view: None,
+            forwarded_attributes: Default::default(),
+            box_view: None,
+        }
+    }
+}
+
 impl BoxTrait for BoxEnum {
     fn box_view_data(&self) -> &BoxViewData {
         match self {
-            BoxEnum::Box(b) => &b.box_view_data,
+            BoxEnum::Box(v) => BoxView::box_view_data(v),
+            BoxEnum::ScrollingFrame(v) => ScrollingFrame::box_view_data(v),
             _ => todo!(),
         }
     }
 
     fn box_view_data_mut(&mut self) -> &mut BoxViewData {
         match self {
-            BoxEnum::Box(b) => &mut b.box_view_data,
+            BoxEnum::Box(v) => BoxView::box_view_data_mut(v),
+            BoxEnum::ScrollingFrame(v) => ScrollingFrame::box_view_data_mut(v),
             _ => todo!(),
         }
     }
@@ -202,13 +223,9 @@ impl BoxTrait for BoxEnum {
 
 // Generic FlexBox layout
 pub trait BoxTrait: ViewDrawer {
-    fn box_view_data(&self) -> &BoxViewData {
-        todo!()
-    }
+    fn box_view_data(&self) -> &BoxViewData;
 
-    fn box_view_data_mut(&mut self) -> &mut BoxViewData {
-        todo!()
-    }
+    fn box_view_data_mut(&mut self) -> &mut BoxViewData;
 
     /**
      * Adds a view to this Box.
@@ -443,6 +460,16 @@ pub trait BoxTrait: ViewDrawer {
         // trace!("box draw {} {} {} {}, childs: {}", x, y, width, height,  &self.box_view_data().children.len());
         for child in &self.box_view_data().children {
             child.borrow_mut().frame(ctx);
+        }
+    }
+
+    fn handle_xml_attributes(
+        &mut self,
+        element: roxmltree::Node,
+        view_creator_registry: &Rc<RefCell<ViewCreatorRegistry>>,
+    ) {
+        if element.is_element() {
+            self.add_view(create_from_xml_element(element, view_creator_registry));
         }
     }
 }
