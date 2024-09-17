@@ -132,6 +132,9 @@ pub fn create_from_xml_element(
             .handle_xml_attributes(child, view_creator_registry);
     }
 
+    // Register common XML attributes
+    view.borrow_mut().set_view(Some(view.clone()));
+    view.borrow_mut().register_common_attributes(view.clone());
     view
 }
 

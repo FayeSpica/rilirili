@@ -20,6 +20,7 @@ use yoga_sys::{
     YGNodeStyleSetMinWidthPercent, YGNodeStyleSetPosition, YGNodeStyleSetPositionPercent,
     YGNodeStyleSetPositionType, YGNodeStyleSetWidth, YGNodeStyleSetWidthAuto,
 };
+use crate::core::attribute::{AutoAttributeHandler, FloatAttributeHandler};
 
 pub trait ViewLayout: ViewStyle {
     fn shake_highlight(&self, direction: FocusDirection) {
@@ -642,7 +643,12 @@ pub trait ViewLayout: ViewStyle {
                 attribute.name(),
                 attribute.value()
             );
+            self.apply_xml_attribute(attribute.name(), attribute.value());
         }
+    }
+
+    fn apply_xml_attribute(&mut self, name: &str, value: &str) {
+        //
     }
 
     fn handle_xml_attributes(
@@ -651,5 +657,97 @@ pub trait ViewLayout: ViewStyle {
         view_creator_registry: &Rc<RefCell<ViewCreatorRegistry>>,
     ) {
         panic!("Raw views cannot have child XML tags");
+    }
+
+    fn register_common_attributes(&mut self, view: Rc<RefCell<View>>) {
+        // Width
+        let view_clone = view.clone();
+        self.register_auto_xml_attribute("width", Box::new(move || {
+            view_clone.borrow_mut().set_width(AUTO);
+        }));
+
+        let view_clone = view.clone();
+        self.register_float_xml_attribute("width", Box::new(move |value| {
+            view_clone.borrow_mut().set_width(value);
+        }));
+
+        let view_clone = view.clone();
+        self.register_percentage_xml_attribute("width", Box::new(move |value| {
+            view_clone.borrow_mut().set_width_percentage(value);
+        }));
+
+        // Height
+        let view_clone = view.clone();
+        self.register_auto_xml_attribute("height", Box::new(move || {
+            view_clone.borrow_mut().set_height(AUTO);
+        }));
+
+        let view_clone = view.clone();
+        self.register_float_xml_attribute("height", Box::new(move |value| {
+            view_clone.borrow_mut().set_height(AUTO);
+        }));
+
+        let view_clone = view.clone();
+        self.register_percentage_xml_attribute("height", Box::new(move |value| {
+            view_clone.borrow_mut().set_height_percentage(AUTO);
+        }));
+
+        // Max width
+        let view_clone = view.clone();
+        self.register_auto_xml_attribute("maxWidth", Box::new(move || {
+            view_clone.borrow_mut().set_max_width(AUTO);
+        }));
+
+        let view_clone = view.clone();
+        self.register_float_xml_attribute("maxWidth", Box::new(move |value| {
+            view_clone.borrow_mut().set_max_width(value);
+        }));
+
+        let view_clone = view.clone();
+        self.register_percentage_xml_attribute("maxWidth", Box::new(move |value| {
+            view_clone.borrow_mut().set_max_width_percentage(value);
+        }));
+
+        // Height
+        let view_clone = view.clone();
+        self.register_auto_xml_attribute("maxHeight", Box::new(move || {
+            view_clone.borrow_mut().set_max_height(AUTO);
+        }));
+
+        let view_clone = view.clone();
+        self.register_float_xml_attribute("maxHeight", Box::new(move |value| {
+            view_clone.borrow_mut().set_max_height(value);
+        }));
+
+        let view_clone = view.clone();
+        self.register_percentage_xml_attribute("maxHeight", Box::new(move |value| {
+            view_clone.borrow_mut().set_max_height_percentage(value);
+        }));
+
+        // Grow and shrink
+        let view_clone = view.clone();
+        self.register_float_xml_attribute("grow", Box::new(move |value| {
+            view_clone.borrow_mut().set_grow(value);
+        }));
+
+        let view_clone = view.clone();
+        self.register_percentage_xml_attribute("shrink", Box::new(move |value| {
+            view_clone.borrow_mut().set_shrink(value);
+        }));
+    }
+
+    fn register_auto_xml_attribute(&mut self, name: &str, handler: AutoAttributeHandler) {
+        self.data_mut().auto_attributes.insert(name.into(), handler);
+        self.data_mut().known_attributes.push(name.into());
+    }
+
+    fn register_float_xml_attribute(&mut self, name: &str, handler: FloatAttributeHandler) {
+        self.data_mut().float_attributes.insert(name.into(), handler);
+        self.data_mut().known_attributes.push(name.into());
+    }
+
+    fn register_percentage_xml_attribute(&mut self, name: &str, handler: FloatAttributeHandler) {
+        self.data_mut().percentage_attributes.insert(name.into(), handler);
+        self.data_mut().known_attributes.push(name.into());
     }
 }

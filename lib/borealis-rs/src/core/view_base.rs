@@ -23,9 +23,11 @@ use roxmltree::Node;
 use std::any::{type_name, Any};
 use std::cell::RefCell;
 use std::cmp::PartialEq;
+use std::collections::HashMap;
 use std::ffi::c_float;
 use std::rc::Rc;
-use yoga_sys::{YGNodeFree, YGNodeNew, YGNodeRef};
+use yoga_sys::{YGNodeFree, YGNodeNew, YGNodeRef, YGNodeSetContext, YGNodeStyleSetHeightAuto, YGNodeStyleSetWidthAuto};
+use crate::core::attribute::{AutoAttributeHandler, BoolAttributeHandler, ColorAttributeHandler, FilePathAttributeHandler, FloatAttributeHandler, StringAttributeHandler};
 
 // common ViewData
 pub struct ViewData {
@@ -70,6 +72,14 @@ pub struct ViewData {
     pub parent_activity: Option<Rc<RefCell<Activity>>>,
     pub view: Option<Rc<RefCell<View>>>,
     pub ptr_lock_counter: i32,
+    pub auto_attributes: HashMap<String, AutoAttributeHandler>,
+    pub percentage_attributes: HashMap<String, FloatAttributeHandler>,
+    pub float_attributes: HashMap<String, FloatAttributeHandler>,
+    pub string_attributes: HashMap<String, StringAttributeHandler>,
+    pub color_attributes: HashMap<String, ColorAttributeHandler>,
+    pub bool_attributes: HashMap<String, BoolAttributeHandler>,
+    pub file_path_attributes: HashMap<String, FilePathAttributeHandler>,
+    pub known_attributes: Vec<String>,
 }
 
 impl Drop for ViewData {
@@ -90,7 +100,7 @@ impl Drop for ViewData {
 
 impl Default for ViewData {
     fn default() -> Self {
-        Self {
+        let mut s = Self {
             id: "fake_id".to_string(),
             background: ViewBackground::None,
             background_color: theme::theme("brls/background"),
@@ -100,7 +110,7 @@ impl Default for ViewData {
             corner_radius: 0.0,
             fade_in: false,
             hidden: false,
-            yg_node: unsafe { YGNodeNew() },
+            yg_node: unsafe {YGNodeNew()},
             alpha: Animatable::new(1.0),
             detached: false,
             detached_origin: Default::default(),
@@ -132,7 +142,22 @@ impl Default for ViewData {
             parent_activity: None,
             view: None,
             ptr_lock_counter: 0,
+            auto_attributes: Default::default(),
+            percentage_attributes: Default::default(),
+            float_attributes: Default::default(),
+            string_attributes: Default::default(),
+            color_attributes: Default::default(),
+            bool_attributes: Default::default(),
+            file_path_attributes: Default::default(),
+            known_attributes: vec![],
+        };
+
+        unsafe {
+            YGNodeStyleSetWidthAuto(s.yg_node);
+            YGNodeStyleSetHeightAuto(s.yg_node);
         }
+
+        s
     }
 }
 
