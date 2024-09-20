@@ -134,3 +134,30 @@ pub fn add_style(key: &str, value: f32) {
     let mut map = GLOBAL_STYLE.lock().unwrap();
     map.insert(key.parse().unwrap(), value);
 }
+
+/// #RRGGBB format
+pub fn hex_to_rgb(hex: &str) -> Option<(u8, u8, u8)> {
+    if hex.len() != 7 || !hex.starts_with('#') {
+        return None;
+    }
+
+    let r = u8::from_str_radix(&hex[1..3], 16).ok()?;
+    let g = u8::from_str_radix(&hex[3..5], 16).ok()?;
+    let b = u8::from_str_radix(&hex[5..7], 16).ok()?;
+
+    Some((r, g, b))
+}
+
+/// #RRGGBBAA format
+pub fn hex_to_rgba(hex: &str) -> Option<(u8, u8, u8, u8)> {
+    if hex.len() != 9 || !hex.starts_with('#') {
+        return None;
+    }
+
+    let r = u8::from_str_radix(&hex[1..3], 16).ok()?;
+    let g = u8::from_str_radix(&hex[3..5], 16).ok()?;
+    let b = u8::from_str_radix(&hex[5..7], 16).ok()?;
+    let a = u8::from_str_radix(&hex[7..9], 16).ok()?;
+
+    Some((r, g, b, a))
+}

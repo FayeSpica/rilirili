@@ -119,22 +119,22 @@ pub fn create_from_xml_element(
         let r = view_creator_registry.borrow();
         let view_creator = r.xml_view_creator(view_name);
         let viw_creator = view_creator.expect(&format!("view {} not found", view_name));
-        let tmp_view = viw_creator();
+        let mut tmp_view = viw_creator();
+        // Register common XML attributes
+        tmp_view.borrow_mut().set_view(Some(tmp_view.clone()));
+        tmp_view.borrow_mut().register_common_attributes(tmp_view.clone());
         tmp_view
-            .borrow_mut()
+            .borrow()
             .apply_xml_attributes(element, view_creator_registry);
 
         tmp_view
     };
-
     for child in element.children() {
         view.borrow_mut()
             .handle_xml_attributes(child, view_creator_registry);
     }
 
-    // Register common XML attributes
-    view.borrow_mut().set_view(Some(view.clone()));
-    view.borrow_mut().register_common_attributes(view.clone());
+
     view
 }
 

@@ -279,7 +279,6 @@ impl Application {
                 ctx.pixel_ratio as c_float,
             );
             let scale = borealis_scale();
-            info!("scale: {}", scale);
             nvgScale(ctx.context, scale, scale);
         }
         for view in &self.views_to_draw {

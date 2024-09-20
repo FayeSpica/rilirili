@@ -1,7 +1,10 @@
+use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Mutex;
 
 pub const BASE_WINDOW_WIDTH: u32 = 1280;
 pub const BASE_WINDOW_HEIGHT: u32 = 720;
+
+static VIEW_ID_SEQ: AtomicU64 = AtomicU64::new(0);
 
 lazy_static! {
     static ref BOREALIS_SCALE: Mutex<f32> = Mutex::new(1.0);
@@ -9,6 +12,11 @@ lazy_static! {
     static ref WINDOW_HEIGHT: Mutex<u32> = Mutex::new(BASE_WINDOW_HEIGHT);
     static ref WINDOW_X_POS: Mutex<i32> = Mutex::new(0);
     static ref WINDOW_Y_POS: Mutex<i32> = Mutex::new(0);
+}
+
+pub fn gen_new_view_id() -> String {
+    VIEW_ID_SEQ.fetch_add(1, Ordering::SeqCst);
+    format!("{}", VIEW_ID_SEQ.load(Ordering::SeqCst))
 }
 
 pub fn borealis_scale() -> f32 {

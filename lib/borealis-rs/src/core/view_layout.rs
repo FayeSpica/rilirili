@@ -1,12 +1,11 @@
 use crate::core::application::ViewCreatorRegistry;
 use crate::core::geometry::{Point, Rect, Size};
-use crate::core::theme::{AUTO, YG_UNDEFINED};
-use crate::core::view_base::{
-    AlignSelf, FocusDirection, PositionType, View, ViewBackground, ViewBase, Visibility,
-};
+use crate::core::theme::{AUTO, nvg_rgb, nvg_rgba, theme, YG_UNDEFINED};
+use crate::core::view_base::{AlignSelf, FocusDirection, PositionType, ShadowType, View, ViewBackground, ViewBase, Visibility};
 use crate::core::view_style::ViewStyle;
 use std::cell::RefCell;
 use std::rc::Rc;
+use std::str::FromStr;
 use yoga_sys::YGAlign::{
     YGAlignAuto, YGAlignBaseline, YGAlignCenter, YGAlignFlexEnd, YGAlignFlexStart,
     YGAlignSpaceAround, YGAlignSpaceBetween, YGAlignStretch,
@@ -20,7 +19,9 @@ use yoga_sys::{
     YGNodeStyleSetMinWidthPercent, YGNodeStyleSetPosition, YGNodeStyleSetPositionPercent,
     YGNodeStyleSetPositionType, YGNodeStyleSetWidth, YGNodeStyleSetWidthAuto,
 };
-use crate::core::attribute::{AutoAttributeHandler, FloatAttributeHandler};
+use crate::core::attribute::{AutoAttributeHandler, BoolAttributeHandler, ColorAttributeHandler, FloatAttributeHandler, StringAttributeHandler};
+use crate::core::style::{hex_to_rgb, hex_to_rgba, style};
+use crate::core::view_creator::get_file_path_xml_attribute_value;
 
 pub trait ViewLayout: ViewStyle {
     fn shake_highlight(&self, direction: FocusDirection) {
@@ -633,7 +634,7 @@ pub trait ViewLayout: ViewStyle {
     }
 
     fn apply_xml_attributes(
-        &mut self,
+        &self,
         element: roxmltree::Node,
         view_creator_registry: &Rc<RefCell<ViewCreatorRegistry>>,
     ) {
@@ -647,8 +648,171 @@ pub trait ViewLayout: ViewStyle {
         }
     }
 
-    fn apply_xml_attribute(&mut self, name: &str, value: &str) {
-        //
+    fn apply_xml_attribute(&self, name: &str, value: &str) -> bool {
+        // String -> string
+        if let Some(handler) = self.data().string_attributes.get(name) {
+            if value.starts_with("@i18n/") {
+                todo!();
+                return true;
+            }
+
+            handler(value);
+            return true;
+        }
+
+        // File path -> file path
+        if value.starts_with("@res/") {
+            let path = get_file_path_xml_attribute_value(value);
+
+            if let Some(handler) = self.data().file_path_attributes.get(name) {
+                handler(value);
+                return true;
+            } else {
+                return false; // unknown res
+            }
+        } else {
+            if let Some(handler) = self.data().file_path_attributes.get(name) {
+                handler(value);
+                return true;
+            }
+
+            // don't return false as it can be anything else
+        }
+
+        // Auto -> auto
+        if "auto" == value {
+            if let Some(handler) = self.data().auto_attributes.get(name) {
+                handler();
+                return true;
+            } else {
+                info!("{:?}", self.data().auto_attributes.keys());
+                return false;
+            }
+        }
+
+        // Ends with px -> float
+        if value.ends_with("px") {
+            // Strip the px and parse the float value
+            let new_float = &value[..value.len() - 2];
+
+            if let Ok(float_value) = f32::from_str(new_float) {
+                if let Some(handler) = self.data().float_attributes.get(name) {
+                    handler(float_value);
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
+
+        // Ends with % -> percentage
+        if value.ends_with("%") {
+            // Strip the % and parse the float value
+            let new_float = &value[..value.len() - 1];
+
+            if let Ok(float_value) = f32::from_str(new_float) {
+
+                if float_value < -100.0 || float_value > 100.0 {
+                    return false;
+                }
+
+                if let Some(handler) = self.data().float_attributes.get(name) {
+                    handler(float_value);
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
+        // Starts with @style -> float
+        else if value.starts_with("@style/") {
+            // Parse the style name
+            let style_name = &value[7..]; // length of "@style/"
+            let float_value = style(style_name);
+
+            if let Some(handler) = self.data().float_attributes.get(name) {
+                handler(float_value);
+                return true;
+            } else {
+                return false;
+            }
+        }
+        // Starts with with # -> color
+        else if value.starts_with("#") {
+            // Parse the color
+            // #RRGGBB format
+            if value.len() == 7 {
+                if let Some((r, g, b)) = hex_to_rgb(value) {
+                    if let Some(handler) = self.data().color_attributes.get(name) {
+                        handler(nvg_rgb(r, g, b));
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } else {
+                    return false;
+                }
+            }
+            // #RRGGBBAA format
+            else if value.len() == 9 {
+                if let Some((r, g, b, a)) = hex_to_rgba(value) {
+                    if let Some(handler) = self.data().color_attributes.get(name) {
+                        handler(nvg_rgba(r, g, b, a));
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
+        // Starts with @theme -> color
+        else if value.starts_with("@theme/") {
+            // Parse the color name
+            let style_name = &value[7..]; // length of "@style/"
+            let value = theme(style_name);
+
+            if let Some(handler) = self.data().color_attributes.get(name) {
+                handler(value);
+                return true;
+            } else {
+                return false;
+            }
+        }
+        // Equals true or false -> bool
+        else if value == "true" || value == "false" {
+            let bool_value = if value == "true" {
+                true
+            } else {
+                false
+            };
+
+            if let Some(handler) = self.data().bool_attributes.get(name) {
+                handler(bool_value);
+                return true;
+            } else {
+                return false;
+            }
+        }
+
+        // Valid float -> float, otherwise unknown attribute
+        if let Ok(float_value) = f32::from_str(value) {
+            if let Some(handler) = self.data().float_attributes.get(name) {
+                handler(float_value);
+                return true;
+            } else {
+                return false;
+            }
+        } else {
+            return false;
+        }
     }
 
     fn handle_xml_attributes(
@@ -663,7 +827,9 @@ pub trait ViewLayout: ViewStyle {
         // Width
         let view_clone = view.clone();
         self.register_auto_xml_attribute("width", Box::new(move || {
-            view_clone.borrow_mut().set_width(AUTO);
+            // view_clone.borrow_mut().set_width(AUTO);
+            let _ = view_clone.borrow().data();
+            debug!("apply success");
         }));
 
         let view_clone = view.clone();
@@ -684,12 +850,12 @@ pub trait ViewLayout: ViewStyle {
 
         let view_clone = view.clone();
         self.register_float_xml_attribute("height", Box::new(move |value| {
-            view_clone.borrow_mut().set_height(AUTO);
+            view_clone.borrow_mut().set_height(value);
         }));
 
         let view_clone = view.clone();
         self.register_percentage_xml_attribute("height", Box::new(move |value| {
-            view_clone.borrow_mut().set_height_percentage(AUTO);
+            view_clone.borrow_mut().set_height_percentage(value);
         }));
 
         // Max width
@@ -708,7 +874,7 @@ pub trait ViewLayout: ViewStyle {
             view_clone.borrow_mut().set_max_width_percentage(value);
         }));
 
-        // Height
+        // Max Height
         let view_clone = view.clone();
         self.register_auto_xml_attribute("maxHeight", Box::new(move || {
             view_clone.borrow_mut().set_max_height(AUTO);
@@ -734,6 +900,245 @@ pub trait ViewLayout: ViewStyle {
         self.register_percentage_xml_attribute("shrink", Box::new(move |value| {
             view_clone.borrow_mut().set_shrink(value);
         }));
+
+        // Alignment
+        let view_clone = view.clone();
+        self.register_string_xml_attribute("alignSelf", Box::new(move |value| {
+            view_clone.borrow_mut().set_align_self( match value {
+                "auto" => AlignSelf::Auto,
+                "flexStart" => AlignSelf::FlexStart,
+                "center" => AlignSelf::Center,
+                "flexEnd" => AlignSelf::FlexEnd,
+                "stretch" => AlignSelf::Stretch,
+                "baseline" => AlignSelf::Baseline,
+                "spaceBetween" => AlignSelf::SpaceBetween,
+                "spaceAround" => AlignSelf::SpaceAround,
+                &_ => AlignSelf::Auto,
+            });
+        }));
+
+        // Margins top
+        let view_clone = view.clone();
+        self.register_float_xml_attribute("marginTop", Box::new(move |value| {
+            view_clone.borrow_mut().set_margin_top(value);
+        }));
+
+        let view_clone = view.clone();
+        self.register_auto_xml_attribute("marginTop", Box::new(move || {
+            view_clone.borrow_mut().set_margin_top(AUTO);
+        }));
+
+        // Margins right
+        let view_clone = view.clone();
+        self.register_float_xml_attribute("marginRight", Box::new(move |value| {
+            view_clone.borrow_mut().set_margin_right(value);
+        }));
+
+        let view_clone = view.clone();
+        self.register_auto_xml_attribute("marginRight", Box::new(move || {
+            view_clone.borrow_mut().set_margin_right(AUTO);
+        }));
+
+        // Margins bottom
+        let view_clone = view.clone();
+        self.register_float_xml_attribute("marginBottom", Box::new(move |value| {
+            view_clone.borrow_mut().set_margin_bottom(value);
+        }));
+
+        let view_clone = view.clone();
+        self.register_auto_xml_attribute("marginBottom", Box::new(move || {
+            view_clone.borrow_mut().set_margin_bottom(AUTO);
+        }));
+
+        // Margins left
+        let view_clone = view.clone();
+        self.register_float_xml_attribute("marginLeft", Box::new(move |value| {
+            view_clone.borrow_mut().set_margin_left(value);
+        }));
+
+        let view_clone = view.clone();
+        self.register_auto_xml_attribute("marginLeft", Box::new(move || {
+            view_clone.borrow_mut().set_margin_left(AUTO);
+        }));
+
+        // Line
+        let view_clone = view.clone();
+        self.register_color_xml_attribute("lineColor", Box::new(move |value| {
+            view_clone.borrow_mut().set_line_color(value);
+        }));
+
+        let view_clone = view.clone();
+        self.register_float_xml_attribute("lineTop", Box::new(move |value| {
+            view_clone.borrow_mut().set_line_top(value);
+        }));
+
+        let view_clone = view.clone();
+        self.register_float_xml_attribute("lineRight", Box::new(move |value| {
+            view_clone.borrow_mut().set_line_right(value);
+        }));
+
+        let view_clone = view.clone();
+        self.register_float_xml_attribute("lineBottom", Box::new(move |value| {
+            view_clone.borrow_mut().set_line_bottom(value);
+        }));
+
+        let view_clone = view.clone();
+        self.register_float_xml_attribute("lineLeft", Box::new(move |value| {
+            view_clone.borrow_mut().set_line_left(value);
+        }));
+
+        // Position
+        let view_clone = view.clone();
+        self.register_float_xml_attribute("positionTop", Box::new(move |value| {
+            view_clone.borrow_mut().set_position_top(value);
+        }));
+
+        let view_clone = view.clone();
+        self.register_float_xml_attribute("positionRight", Box::new(move |value| {
+            view_clone.borrow_mut().set_position_right(value);
+        }));
+
+        let view_clone = view.clone();
+        self.register_float_xml_attribute("positionBottom", Box::new(move |value| {
+            view_clone.borrow_mut().set_position_bottom(value);
+        }));
+
+        let view_clone = view.clone();
+        self.register_float_xml_attribute("positionLeft", Box::new(move |value| {
+            view_clone.borrow_mut().set_position_left(value);
+        }));
+
+        let view_clone = view.clone();
+        self.register_percentage_xml_attribute("positionTop", Box::new(move |value| {
+            view_clone.borrow_mut().set_position_top_percentage(value);
+        }));
+
+        let view_clone = view.clone();
+        self.register_percentage_xml_attribute("positionRight", Box::new(move |value| {
+            view_clone.borrow_mut().set_position_right_percentage(value);
+        }));
+
+        let view_clone = view.clone();
+        self.register_percentage_xml_attribute("positionBottom", Box::new(move |value| {
+            view_clone.borrow_mut().set_position_bottom_percentage(value);
+        }));
+
+        let view_clone = view.clone();
+        self.register_percentage_xml_attribute("positionLeft", Box::new(move |value| {
+            view_clone.borrow_mut().set_position_left_percentage(value);
+        }));
+
+        let view_clone = view.clone();
+        self.register_string_xml_attribute("positionType", Box::new(move |value| {
+            view_clone.borrow_mut().set_position_type( match value {
+                "relative" => PositionType::Relative,
+                "absolute" => PositionType::Absolute,
+                &_ => PositionType::Relative,
+            });
+        }));
+
+        // Custom focus routes
+        let view_clone = view.clone();
+        self.register_string_xml_attribute("focusUp", Box::new(move |value| {
+            view_clone.borrow_mut().set_custom_navigation_route_by_id(FocusDirection::Up, value);
+        }));
+
+        let view_clone = view.clone();
+        self.register_string_xml_attribute("focusRight", Box::new(move |value| {
+            view_clone.borrow_mut().set_custom_navigation_route_by_id(FocusDirection::Right, value);
+        }));
+
+        let view_clone = view.clone();
+        self.register_string_xml_attribute("focusDown", Box::new(move |value| {
+            view_clone.borrow_mut().set_custom_navigation_route_by_id(FocusDirection::Down, value);
+        }));
+
+        let view_clone = view.clone();
+        self.register_string_xml_attribute("focusLeft", Box::new(move |value| {
+            view_clone.borrow_mut().set_custom_navigation_route_by_id(FocusDirection::Left, value);
+        }));
+
+        // Shape
+        let view_clone = view.clone();
+        self.register_color_xml_attribute("backgroundColor", Box::new(move |value| {
+            view_clone.borrow_mut().set_background_color(value);
+        }));
+
+        let view_clone = view.clone();
+        self.register_color_xml_attribute("borderColor", Box::new(move |value| {
+            view_clone.borrow_mut().set_border_color(value);
+        }));
+
+        let view_clone = view.clone();
+        self.register_float_xml_attribute("borderThickness", Box::new(move |value| {
+            view_clone.borrow_mut().set_border_thickness(value);
+        }));
+
+        let view_clone = view.clone();
+        self.register_float_xml_attribute("cornerRadius", Box::new(move |value| {
+            view_clone.borrow_mut().set_corner_radius(value);
+        }));
+
+        let view_clone = view.clone();
+        self.register_string_xml_attribute("shadowType", Box::new(move |value| {
+            view_clone.borrow_mut().set_shadow_type( match value {
+                "none" => ShadowType::None,
+                "generic" => ShadowType::Generic,
+                "custom" => ShadowType::Custom,
+                &_ => ShadowType::None,
+            });
+        }));
+
+        // Misc
+        let view_clone = view.clone();
+        self.register_string_xml_attribute("visibility", Box::new(move |value| {
+            view_clone.borrow_mut().set_visibility( match value {
+                "visible" => Visibility::Visible,
+                "invisible" => Visibility::Invisible,
+                "gone" => Visibility::Gone,
+                &_ => Visibility::Visible,
+            });
+        }));
+
+        let view_clone = view.clone();
+        self.register_string_xml_attribute("id", Box::new(move |value| {
+            view_clone.borrow_mut().set_id(value);
+        }));
+
+        let view_clone = view.clone();
+        self.register_string_xml_attribute("background", Box::new(move |value| {
+            view_clone.borrow_mut().set_background( match value {
+                "sidebar" => ViewBackground::SideBar,
+                "backdrop" => ViewBackground::BackDrop,
+                &_ => ViewBackground::None,
+            });
+        }));
+
+        let view_clone = view.clone();
+        self.register_bool_xml_attribute("focusable", Box::new(move |value| {
+            view_clone.borrow_mut().set_focusable(value);
+        }));
+
+        let view_clone = view.clone();
+        self.register_bool_xml_attribute("wireframe", Box::new(move |value| {
+            view_clone.borrow_mut().set_wireframe_enabled(value);
+        }));
+
+        // Highlight
+        let view_clone = view.clone();
+        self.register_bool_xml_attribute("hideHighlightBackground", Box::new(move |value| {
+            view_clone.borrow_mut().set_hide_highlight_background(value);
+        }));
+
+        let view_clone = view.clone();
+        self.register_float_xml_attribute("highlightPadding", Box::new(move |value| {
+            view_clone.borrow_mut().set_highlight_padding(value);
+        }));
+
+        let view_clone = view.clone();
+        self.register_float_xml_attribute("highlightCornerRadius", Box::new(move |value| {
+            view_clone.borrow_mut().set_highlight_corner_radius(value);
+        }));
     }
 
     fn register_auto_xml_attribute(&mut self, name: &str, handler: AutoAttributeHandler) {
@@ -749,5 +1154,28 @@ pub trait ViewLayout: ViewStyle {
     fn register_percentage_xml_attribute(&mut self, name: &str, handler: FloatAttributeHandler) {
         self.data_mut().percentage_attributes.insert(name.into(), handler);
         self.data_mut().known_attributes.push(name.into());
+    }
+
+    fn register_string_xml_attribute(&mut self, name: &str, handler: StringAttributeHandler) {
+        self.data_mut().string_attributes.insert(name.into(), handler);
+        self.data_mut().known_attributes.push(name.into());
+    }
+
+    fn register_color_xml_attribute(&mut self, name: &str, handler: ColorAttributeHandler) {
+        self.data_mut().color_attributes.insert(name.into(), handler);
+        self.data_mut().known_attributes.push(name.into());
+    }
+
+    fn register_bool_xml_attribute(&mut self, name: &str, handler: BoolAttributeHandler) {
+        self.data_mut().bool_attributes.insert(name.into(), handler);
+        self.data_mut().known_attributes.push(name.into());
+    }
+
+    fn set_wireframe_enabled(&mut self, wireframe: bool) {
+        self.data_mut().wireframe_enabled = wireframe;
+    }
+
+    fn is_wireframe_enabled(&self) -> bool {
+        self.data().wireframe_enabled
     }
 }

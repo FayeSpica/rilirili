@@ -1,5 +1,8 @@
-use crate::core::view_base::{ShadowType, ViewBackground, ViewBase};
+use std::cell::RefCell;
+use std::rc::Rc;
+use crate::core::view_base::{FocusDirection, ShadowType, View, ViewBackground, ViewBase};
 use nanovg_sys::NVGcolor;
+use crate::core::view_box::Direction;
 
 /// -----------------------------------------------------------
 /// Styling and view shape properties
@@ -147,5 +150,47 @@ pub trait ViewStyle: ViewBase {
      */
     fn set_highlight_corner_radius(&mut self, radius: f32) {
         self.data_mut().highlight_corner_radius = radius;
+    }
+
+    /**
+     * Sets a custom navigation route from this view to the target one.
+     */
+    fn set_custom_navigation_route_by_ptr(&mut self, direction: FocusDirection, target: Rc<RefCell<View>>) {
+        if !self.is_focusable() {
+            panic!("Only focusable views can have a custom navigation route")
+        }
+
+        self.data_mut().custom_focus_by_ptr.insert(direction, target);
+    }
+
+    /**
+     * Sets a custom navigation route from this view to the target one, by ID.
+     * The final target view will be the "nearest" with the given ID.
+     *
+     * Resolution of the ID to View is made when the navigation event occurs, not when the
+     * route is registered.
+     */
+    fn set_custom_navigation_route_by_id(&mut self, direction: FocusDirection, target_id: &str) {
+        if !self.is_focusable() {
+            panic!("Only focusable views can have a custom navigation route")
+        }
+
+        self.data_mut().custom_focus_by_id.insert(direction, String::from(target_id));
+    }
+
+    fn has_custom_navigation_route_by_ptr(&self, direction: FocusDirection) -> bool {
+        !self.data().custom_focus_by_ptr.is_empty()
+    }
+
+    fn has_custom_navigation_route_by_id(&self, direction: FocusDirection) -> bool {
+        !self.data().custom_focus_by_id.is_empty()
+    }
+
+    fn custom_navigation_route_by_ptr(&self, direction: FocusDirection) -> Option<&Rc<RefCell<View>>> {
+        self.data().custom_focus_by_ptr.get(&direction)
+    }
+
+    fn custom_navigation_route_by_id(&self, direction: FocusDirection) -> Option<&String> {
+        self.data().custom_focus_by_id.get(&direction)
     }
 }

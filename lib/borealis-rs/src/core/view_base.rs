@@ -80,6 +80,8 @@ pub struct ViewData {
     pub bool_attributes: HashMap<String, BoolAttributeHandler>,
     pub file_path_attributes: HashMap<String, FilePathAttributeHandler>,
     pub known_attributes: Vec<String>,
+    pub custom_focus_by_id: HashMap<FocusDirection, String>,
+    pub custom_focus_by_ptr: HashMap<FocusDirection, Rc<RefCell<View>>>,
 }
 
 impl Drop for ViewData {
@@ -101,7 +103,7 @@ impl Drop for ViewData {
 impl Default for ViewData {
     fn default() -> Self {
         let mut s = Self {
-            id: "fake_id".to_string(),
+            id: crate::core::global::gen_new_view_id(),
             background: ViewBackground::None,
             background_color: theme::theme("brls/background"),
             background_start_color: theme::theme("brls/background"),
@@ -150,6 +152,8 @@ impl Default for ViewData {
             bool_attributes: Default::default(),
             file_path_attributes: Default::default(),
             known_attributes: vec![],
+            custom_focus_by_id: Default::default(),
+            custom_focus_by_ptr: Default::default(),
         };
 
         unsafe {
@@ -476,7 +480,7 @@ impl ViewBase for View {
     }
 
     fn describe(&self) -> String {
-        format!("[{}({})]", self.variant_name(), &self.data().id)
+        format!("View[{}({})]", self.variant_name(), &self.data().id)
     }
 }
 
@@ -484,6 +488,7 @@ impl ViewTrait for View {}
 
 impl ViewDrawer for View {
     fn frame(&mut self, ctx: &FrameContext) {
+        trace!("frame {}", self.describe());
         match self {
             View::Box(v) => ViewDrawer::frame(v, ctx),
             View::Image(v) => ViewDrawer::frame(v, ctx),
@@ -522,7 +527,7 @@ impl ViewLayout for View {
 
 impl ViewStyle for View {}
 
-#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq)]
+#[derive(Debug, Copy, Clone, Ord, PartialOrd, Eq, PartialEq, Hash)]
 pub enum FocusDirection {
     Up,
     Down,

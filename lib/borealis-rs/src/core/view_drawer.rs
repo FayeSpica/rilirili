@@ -38,7 +38,6 @@ pub trait ViewDrawer: ViewLayout {
         }
 
         let rect = self.rect();
-        trace!("{} rect: {:?}", self.describe(), rect);
         let x = rect.min_x();
         let y = rect.min_y();
         let width = rect.width();
