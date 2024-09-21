@@ -32,6 +32,8 @@ impl SdlContext {
         let video_subsystem = sdl.video().unwrap();
         let (window_width, window_height) = (window_width(), window_height());
         debug!("create window: ({}, {})", window_width, window_height);
+
+        #[cfg(not(target_os = "android"))]
         let window = video_subsystem
             .window(title, window_width, window_height)
             // .window(title, window_width(), window_height())
@@ -42,6 +44,19 @@ impl SdlContext {
             .resizable()
             .build()
             .unwrap();
+
+        #[cfg(target_os = "android")]
+        let window = video_subsystem
+            .window(title, window_width, window_height)
+            // .window(title, window_width(), window_height())
+            // .borderless()
+            .fullscreen()
+            .opengl()
+            .position_centered()
+            .resizable()
+            .build()
+            .unwrap();
+
 
         #[cfg(not(target_os = "android"))]
         {
