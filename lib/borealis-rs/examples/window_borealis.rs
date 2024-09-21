@@ -11,11 +11,21 @@ fn main() -> anyhow::Result<()> {
     env_logger::Builder::from_default_env()
         .filter_level(Trace)
         .format(|buf, record| {
+            let level = record.level();
+            let mut style = buf.style();
+            // Apply color based on log level
+            style.set_color(match level {
+                log::Level::Error => env_logger::fmt::Color::Red,
+                log::Level::Warn => env_logger::fmt::Color::Yellow,
+                log::Level::Info => env_logger::fmt::Color::Green,
+                log::Level::Debug => env_logger::fmt::Color::Blue,
+                log::Level::Trace => env_logger::fmt::Color::Cyan,
+            });
             writeln!(
                 buf,
-                "[{}:{}] - {}",
-                record.file().unwrap_or("unknown"),
-                record.line().unwrap_or(0),
+                "{:40} {} {}",
+                format!("{}:{}", record.file().unwrap_or("unknown"), record.line().unwrap_or(0)),
+                style.value(level),
                 record.args()
             )
         })

@@ -1,0 +1,12 @@
+<brls:Box
+        width="auto"
+        height="auto">
+
+    <brls:Label
+            id="label"
+            height="auto"
+            width="auto"
+            wireframe="true"
+            text="text 123456 qwe"/>
+
+</brls:Box>

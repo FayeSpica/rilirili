@@ -43,19 +43,12 @@ impl ViewLayout for ScrollingFrame {}
 impl ViewStyle for ScrollingFrame {}
 
 impl ViewBase for ScrollingFrame {
-    fn data(&self) -> &ViewData {
-        match self {
-            ScrollingFrame::BaseScrollingFrame(v) => v.data(),
-            ScrollingFrame::RecyclerFrame(v) => v.data(),
-            ScrollingFrame::Sidebar(v) => v.data(),
-        }
-    }
 
-    fn data_mut(&mut self) -> &mut ViewData {
+    fn view_data(&self) -> &Rc<RefCell<ViewData>> {
         match self {
-            ScrollingFrame::BaseScrollingFrame(v) => v.data_mut(),
-            ScrollingFrame::RecyclerFrame(v) => v.data_mut(),
-            ScrollingFrame::Sidebar(v) => v.data_mut(),
+            ScrollingFrame::BaseScrollingFrame(v) => v.view_data(),
+            ScrollingFrame::RecyclerFrame(v) => v.view_data(),
+            ScrollingFrame::Sidebar(v) => v.view_data(),
         }
     }
 }
@@ -91,12 +84,8 @@ impl ViewLayout for BaseScrollingFrame {}
 impl ViewStyle for BaseScrollingFrame {}
 
 impl ViewBase for BaseScrollingFrame {
-    fn data(&self) -> &ViewData {
-        &self.box_view_data.view_data
-    }
-
-    fn data_mut(&mut self) -> &mut ViewData {
-        &mut self.box_view_data.view_data
+    fn view_data(&self) -> &Rc<RefCell<ViewData>> {
+        todo!()
     }
 }
 

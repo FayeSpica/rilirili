@@ -18,6 +18,8 @@ use sdl2::{EventSubsystem, VideoSubsystem};
 use std::collections::HashMap;
 use std::ffi::{c_float, c_int, c_void, CStr, CString};
 use std::{env, ptr};
+use std::cell::RefCell;
+use std::rc::Rc;
 
 pub struct GLShader {
     prog: GLuint,
@@ -516,12 +518,8 @@ impl ViewLayout for Video {}
 impl ViewStyle for Video {}
 
 impl ViewBase for Video {
-    fn data(&self) -> &ViewData {
-        &self.box_view_data.view_data
-    }
-
-    fn data_mut(&mut self) -> &mut ViewData {
-        &mut self.box_view_data.view_data
+    fn view_data(&self) -> &Rc<RefCell<ViewData>> {
+        todo!()
     }
 }
 

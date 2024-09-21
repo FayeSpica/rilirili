@@ -14,7 +14,7 @@ chrono = "0.4.38"
 lazy_static = "1.5.0"
 sdl2 = "0.35.2"
 gl = "0.14.0"
-env_logger = { version = "0.10", default-features = false }
+env_logger = { version = "0.10", default-features = false, features = ["auto-color"] }
 libmpv2-sys = { git = "https://github.com/FayeSpica/libmpv2-rs.git", tag = "v0.0.2" }
 roxmltree = "0.20.0"
 

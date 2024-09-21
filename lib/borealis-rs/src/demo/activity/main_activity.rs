@@ -40,12 +40,15 @@ impl ActivityDyn for MainActivity {
         view_creator_registry: &Rc<RefCell<ViewCreatorRegistry>>,
     ) -> Rc<RefCell<View>> {
         // create_from_xml_file("resources/xml/activity/main.xml".parse().unwrap())
-        create_from_xml_string(
-            r#"
-            <brls:View xml="@res/xml/tabs/layout.xml" />
-        "#
-            .into(),
-            &view_creator_registry,
-        )
+        // create_from_xml_file("resources/xml/tabs/text_test_v0.xml".parse().unwrap(), &view_creator_registry)
+        // create_from_xml_file("resources/xml/tabs/text_test_v1.xml".parse().unwrap(), &view_creator_registry)
+        create_from_xml_file("resources/xml/tabs/test_applet_frame.xml".parse().unwrap(), &view_creator_registry)
+        // create_from_xml_string(
+        //     r#"
+        //     <brls:View xml="@res/xml/tabs/layout.xml" />
+        // "#
+        //     .into(),
+        //     &view_creator_registry,
+        // )
     }
 }

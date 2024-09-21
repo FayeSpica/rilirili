@@ -28,6 +28,7 @@ use std::ffi::c_float;
 use std::rc::Rc;
 use yoga_sys::{YGNodeFree, YGNodeNew, YGNodeRef, YGNodeSetContext, YGNodeStyleSetHeightAuto, YGNodeStyleSetWidthAuto};
 use crate::core::attribute::{AutoAttributeHandler, BoolAttributeHandler, ColorAttributeHandler, FilePathAttributeHandler, FloatAttributeHandler, StringAttributeHandler};
+use crate::core::theme::transparent_color;
 
 // common ViewData
 pub struct ViewData {
@@ -74,6 +75,7 @@ pub struct ViewData {
     pub ptr_lock_counter: i32,
     pub custom_focus_by_id: HashMap<FocusDirection, String>,
     pub custom_focus_by_ptr: HashMap<FocusDirection, Rc<RefCell<View>>>,
+    pub culled: bool,
 }
 
 impl Drop for ViewData {
@@ -97,9 +99,9 @@ impl Default for ViewData {
         let mut s = Self {
             id: crate::core::global::gen_new_view_id(),
             background: ViewBackground::None,
-            background_color: theme::theme("brls/background"),
-            background_start_color: theme::theme("brls/background"),
-            background_end_color: theme::theme("brls/background"),
+            background_color: transparent_color(),
+            background_start_color: transparent_color(),
+            background_end_color: transparent_color(),
             background_radius: vec![0.0, 0.0, 0.0, 0.0],
             corner_radius: 0.0,
             fade_in: false,
@@ -108,25 +110,25 @@ impl Default for ViewData {
             alpha: Animatable::new(1.0),
             detached: false,
             detached_origin: Default::default(),
-            focusable: true,
-            focused: true,
+            focusable: false,
+            focused: false,
             focus_sound: Sound::SoundNone,
-            shadow_type: ShadowType::Generic,
+            shadow_type: ShadowType::None,
             show_shadow: true,
-            border_color: theme::theme("brls/header/border"),
-            border_thickness: 1.0,
+            border_color: transparent_color(),
+            border_thickness: 0.0,
             visibility: Visibility::Visible,
-            line_color: theme::theme("brls/slider/line_filled"),
-            line_top: 4.1,
-            line_left: 4.1,
-            line_bottom: 4.1,
-            line_right: 4.1,
+            line_color: transparent_color(),
+            line_top: 0.0,
+            line_left: 0.0,
+            line_bottom: 0.0,
+            line_right: 0.0,
             highlight_alpha: Animatable::new(0.0),
             highlight_corner_radius: 0.0,
             highlight_padding: 0.0,
             hide_click_animation: false,
-            hide_highlight_background: true,
-            hide_highlight_border: true,
+            hide_highlight_background: false,
+            hide_highlight_border: false,
             hide_highlight: false,
             click_alpha: Animatable::new(0.0),
             collapse_state: Animatable::new(1.0),
@@ -138,6 +140,7 @@ impl Default for ViewData {
             ptr_lock_counter: 0,
             custom_focus_by_id: Default::default(),
             custom_focus_by_ptr: Default::default(),
+            culled: true,
         };
 
         unsafe {
@@ -185,20 +188,20 @@ impl BaseView {
 }
 
 pub trait ViewBase {
-    fn data(&self) -> &ViewData;
-    fn data_mut(&mut self) -> &mut ViewData;
+    fn view_data(&self) -> &Rc<RefCell<ViewData>>;
 
     fn on_focus_gained(&mut self) {
         trace!("on_focus_gained {}", self.describe());
-        self.data_mut().focused = true;
+        let mut view_data_mut = self.view_data().borrow_mut();
+        view_data_mut.focused = true;
 
-        self.data_mut().highlight_alpha.reset();
-        self.data_mut().highlight_alpha.add_step_easing(
+        view_data_mut.highlight_alpha.reset();
+        view_data_mut.highlight_alpha.add_step_easing(
             1.0,
             style("brls/animations/highlight"),
             EasingFunction::QuadraticOut,
         );
-        self.data_mut().highlight_alpha.start();
+        view_data_mut.highlight_alpha.start();
 
         if let Some(parent) = self.parent() {
             parent.borrow_mut().on_child_focus_gained(
@@ -210,15 +213,16 @@ pub trait ViewBase {
 
     fn on_focus_lost(&mut self) {
         trace!("on_focus_lost {}", self.describe());
-        self.data_mut().focused = false;
+        let mut view_data_mut = self.view_data().borrow_mut();
+        view_data_mut.focused = false;
 
-        self.data_mut().highlight_alpha.reset();
-        self.data_mut().highlight_alpha.add_step_easing(
+        view_data_mut.highlight_alpha.reset();
+        view_data_mut.highlight_alpha.add_step_easing(
             0.0,
             style("brls/animations/highlight"),
             EasingFunction::QuadraticOut,
         );
-        self.data_mut().highlight_alpha.start();
+        view_data_mut.highlight_alpha.start();
 
         if let Some(parent) = self.parent() {
             parent.borrow_mut().on_child_focus_lost(
@@ -262,18 +266,20 @@ pub trait ViewBase {
      * focus on that view (such as an A press).
      */
     fn set_focusable(&mut self, focusable: bool) {
-        self.data_mut().focusable = focusable;
+        let mut view_data_mut = self.view_data().borrow_mut();
+        view_data_mut.focusable = focusable;
     }
 
     fn is_focusable(&self) -> bool {
-        self.data().focusable && self.data().visibility == Visibility::Visible
+        let view_data = self.view_data().borrow();
+        view_data.focusable && view_data.visibility == Visibility::Visible
     }
 
     /**
      * Removes view from it's parent
      */
     fn remove_from_super_view(&self, free: bool) {
-        if let Some(parent) = &self.data().parent {
+        if let Some(parent) = &self.view_data().borrow_mut().parent {
             if let Some(self_ref) = self.view() {
                 parent.borrow_mut().remove_view(self_ref, free);
             }
@@ -284,11 +290,13 @@ pub trait ViewBase {
      * Sets the sound to play when this view gets focused.
      */
     fn set_focus_sound(&mut self, sound: Sound) {
-        self.data_mut().focus_sound = sound;
+        let mut view_data_mut = self.view_data().borrow_mut();
+        view_data_mut.focus_sound = sound;
     }
 
     fn focus_sound(&self) -> Sound {
-        self.data().focus_sound
+        let view_data = self.view_data().borrow();
+        view_data.focus_sound
     }
 
     /**
@@ -302,61 +310,72 @@ pub trait ViewBase {
      * detach() must be called before adding the view to the parent.
      */
     fn detach(&mut self) {
-        self.data_mut().detached = true;
+        let mut view_data_mut = self.view_data().borrow_mut();
+        view_data_mut.detached = true;
     }
 
     fn is_detached(&self) -> bool {
-        self.data().detached
+        let view_data = self.view_data().borrow();
+        view_data.detached
     }
 
     /**
      * Sets the position of the view, if detached.
      */
     fn set_detached_position(&mut self, x: f32, y: f32) {
-        self.data_mut().detached_origin.x = x;
-        self.data_mut().detached_origin.y = y;
+        let mut view_data_mut = self.view_data().borrow_mut();
+        view_data_mut.detached_origin.x = x;
+        view_data_mut.detached_origin.y = y;
     }
 
     /**
      * Sets the position X of the view, if detached.
      */
     fn set_detached_position_x(&mut self, x: f32) {
-        self.data_mut().detached_origin.x = x;
+        let mut view_data_mut = self.view_data().borrow_mut();
+        view_data_mut.detached_origin.x = x;
     }
 
     /**
      * Sets the position Y of the view, if detached.
      */
     fn set_detached_position_y(&mut self, y: f32) {
-        self.data_mut().detached_origin.y = y;
+        let mut view_data_mut = self.view_data().borrow_mut();
+        view_data_mut.detached_origin.y = y;
     }
 
     /**
      * Gets detached position of the view.
      */
-    fn detached_position(&self) -> &Point {
-        &self.data().detached_origin
+    fn detached_position(&self) -> Point {
+        let view_data = self.view_data().borrow();
+        view_data.detached_origin
     }
 
     fn has_parent(&self) -> bool {
-        self.data().parent.is_some()
+        let view_data = self.view_data().borrow();
+        view_data.parent.is_some()
     }
 
     fn set_parent(&mut self, parent: Option<Rc<RefCell<BoxEnum>>>) {
-        self.data_mut().parent = parent;
+        let mut view_data_mut = self.view_data().borrow_mut();
+        view_data_mut.parent = parent;
     }
 
-    fn parent(&self) -> &Option<Rc<RefCell<BoxEnum>>> {
-        &self.data().parent
+    fn parent(&self) -> Option<Rc<RefCell<BoxEnum>>> {
+        let view_data = self.view_data().borrow();
+        view_data.parent.clone()
     }
 
     /// ref to self
     fn view(&self) -> Option<Rc<RefCell<View>>> {
-        self.data().view.clone()
+        let view_data = self.view_data().borrow();
+        view_data.view.clone()
     }
 
     fn set_view(&mut self, self_ref: Option<Rc<RefCell<View>>>) {
-        self.data_mut().view = self_ref;
+        let mut view_data_mut = self.view_data().borrow_mut();
+        view_data_mut.view = self_ref;
     }
 
     /// free_view need two steps
@@ -380,15 +399,18 @@ pub trait ViewBase {
     }
 
     fn ptr_lock(&mut self) {
-        self.data_mut().ptr_lock_counter += 1;
+        let mut view_data_mut = self.view_data().borrow_mut();
+        view_data_mut.ptr_lock_counter += 1;
     }
 
     fn ptr_unlock(&mut self) {
-        self.data_mut().ptr_lock_counter -= 1;
+        let mut view_data_mut = self.view_data().borrow_mut();
+        view_data_mut.ptr_lock_counter -= 1;
     }
 
     fn ptr_locked(&self) -> bool {
-        self.data().ptr_lock_counter > 0
+        let view_data = self.view_data().borrow();
+        view_data.ptr_lock_counter > 0
     }
 
     fn default_focus(&self) -> Option<Rc<RefCell<View>>> {
@@ -399,11 +421,12 @@ pub trait ViewBase {
     }
 
     fn parent_activity(&self) -> Option<Rc<RefCell<Activity>>> {
-        if let Some(parent_activity) = &self.data().parent_activity {
+        let view_data = self.view_data().borrow();
+        if let Some(parent_activity) = &view_data.parent_activity {
             return Some(parent_activity.clone());
         }
 
-        if let Some(parent) = &self.data().parent {
+        if let Some(parent) = &view_data.parent {
             return parent.borrow().parent_activity();
         }
 
@@ -411,7 +434,8 @@ pub trait ViewBase {
     }
 
     fn set_parent_activity(&mut self, parent_activity: Option<Rc<RefCell<Activity>>>) {
-        self.data_mut().parent_activity = parent_activity;
+        let mut view_data_mut = self.view_data().borrow_mut();
+        view_data_mut.parent_activity = parent_activity;
     }
 }
 
@@ -449,22 +473,17 @@ impl View {
 }
 
 impl ViewBase for View {
-    fn data(&self) -> &ViewData {
+    fn view_data(&self) -> &Rc<RefCell<ViewData>> {
         match self {
-            View::Box(v) => v.data(),
-            _ => todo!(),
-        }
-    }
-
-    fn data_mut(&mut self) -> &mut ViewData {
-        match self {
-            View::Box(v) => v.data_mut(),
+            View::Box(v) => v.view_data(),
+            View::Label(v) => v.view_data(),
             _ => todo!(),
         }
     }
 
     fn describe(&self) -> String {
-        format!("View[{}({})]", self.variant_name(), &self.data().id)
+        let view_data = self.view_data().borrow();
+        format!("View[{}({})]", self.variant_name(), &view_data.id)
     }
 }
 
@@ -472,7 +491,6 @@ impl ViewTrait for View {}
 
 impl ViewDrawer for View {
     fn frame(&mut self, ctx: &FrameContext) {
-        trace!("frame {}", self.describe());
         match self {
             View::Box(v) => ViewDrawer::frame(v, ctx),
             View::Image(v) => ViewDrawer::frame(v, ctx),

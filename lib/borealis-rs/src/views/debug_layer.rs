@@ -1,3 +1,5 @@
+use std::cell::RefCell;
+use std::rc::Rc;
 use crate::core::view_base::{ViewBase, ViewData};
 use crate::core::view_box::{BoxTrait, BoxViewData};
 use crate::core::view_drawer::ViewDrawer;
@@ -13,11 +15,7 @@ impl ViewLayout for DebugLayer {}
 impl ViewStyle for DebugLayer {}
 
 impl ViewBase for DebugLayer {
-    fn data(&self) -> &ViewData {
-        todo!()
-    }
-
-    fn data_mut(&mut self) -> &mut ViewData {
+    fn view_data(&self) -> &Rc<RefCell<ViewData>> {
         todo!()
     }
 }

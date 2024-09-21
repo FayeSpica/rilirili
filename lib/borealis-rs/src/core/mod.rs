@@ -32,3 +32,4 @@ pub mod view_drawer;
 pub mod view_layout;
 pub mod view_style;
 pub mod attribute;
+pub mod views;

@@ -9,6 +9,7 @@ use crate::core::view_style::ViewStyle;
 use crate::views::label::{Label, LabelTrait};
 use nanovg_sys::NVGcolor;
 use std::cell::RefCell;
+use std::ffi::CString;
 use std::rc::Rc;
 
 /// Style and colors of different buttons styles
@@ -139,7 +140,7 @@ impl Button {
             state: ButtonState::Enabled,
             text_color: nvg_rgb(0, 0, 0),
             text_color_overwritten: false,
-            label: Label::new("brls/button/label"),
+            label: Label::default(),
         }
     }
 }
@@ -197,11 +198,11 @@ pub trait ButtonTrait: BoxTrait {
     }
 
     fn on_focus_gained(&mut self) {
-        self.data_mut().focused = true;
+        self.view_data().borrow_mut().focused = true;
         self.set_shadow_visibility(false);
     }
     fn on_focus_lost(&mut self) {
-        self.data_mut().focused = false;
+        self.view_data().borrow_mut().focused = false;
         self.set_shadow_visibility(true);
     }
 
@@ -249,7 +250,7 @@ pub trait ButtonTrait: BoxTrait {
     /**
      * Returns the text of the button
      */
-    fn text(&self) -> &String {
+    fn text(&self) -> CString {
         self.this().label.full_text()
     }
 }
@@ -271,12 +272,8 @@ impl ViewLayout for Button {}
 impl ViewStyle for Button {}
 
 impl ViewBase for Button {
-    fn data(&self) -> &ViewData {
-        &self.view_data
-    }
-
-    fn data_mut(&mut self) -> &mut ViewData {
-        &mut self.view_data
+    fn view_data(&self) -> &Rc<RefCell<ViewData>> {
+        todo!()
     }
 }
 

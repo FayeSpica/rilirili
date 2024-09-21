@@ -23,7 +23,7 @@ pub enum ThemeVariant {
 }
 
 lazy_static! {
-    static ref GLOBAL_THEME_SELECTED: Mutex<String> = Mutex::new("DARK".into());
+    static ref GLOBAL_THEME_SELECTED: Mutex<String> = Mutex::new("LIGHT".into());
     static ref GLOBAL_THEME: Mutex<HashMap<String, HashMap<String, NVGcolor>>> = Mutex::new(HashMap::from(
         [
             ("LIGHT".into(), HashMap::from([

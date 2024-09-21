@@ -16,7 +16,7 @@ pub fn main() {
 
     application
         .platform_mut()
-        .set_theme_variant(ThemeVariant::DARK);
+        .set_theme_variant(ThemeVariant::LIGHT);
 
     application.set_global_quit(true);
 

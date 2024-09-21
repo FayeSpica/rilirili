@@ -1,3 +1,5 @@
+use std::cell::RefCell;
+use std::rc::Rc;
 use crate::core::view_base::{ViewBase, ViewData};
 use crate::core::view_drawer::{ViewDrawer, ViewTrait};
 use crate::core::view_layout::ViewLayout;
@@ -16,11 +18,7 @@ impl ViewLayout for Rectangle {}
 impl ViewStyle for Rectangle {}
 
 impl ViewBase for Rectangle {
-    fn data(&self) -> &ViewData {
-        todo!()
-    }
-
-    fn data_mut(&mut self) -> &mut ViewData {
+    fn view_data(&self) -> &Rc<RefCell<ViewData>> {
         todo!()
     }
 }

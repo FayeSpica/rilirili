@@ -1,4 +1,21 @@
 use std::collections::HashMap;
+use std::ffi::c_int;
+use std::sync::Mutex;
+
+
+lazy_static! {
+    static ref FONT_STASH: Mutex<HashMap<String, c_int>> = Mutex::new(HashMap::new());
+}
+
+pub fn add_font_stash(name: &str, handle: c_int) {
+    let mut font_stash = FONT_STASH.lock().unwrap();
+    font_stash.insert(name.into(), handle);
+}
+
+pub fn font_stash(name: &str) -> Option<c_int> {
+    let mut font_stash = FONT_STASH.lock().unwrap();
+    font_stash.get(name).cloned()
+}
 
 pub type FontStash = HashMap<String, i64>;
 

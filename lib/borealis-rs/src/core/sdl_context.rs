@@ -1,10 +1,10 @@
-use crate::core::frame_context::FrameContext;
+use crate::core::frame_context::{FrameContext, set_frame_context};
 use crate::core::global::{
     set_borealis_scale, set_window_height, set_window_width, window_height, window_width,
     BASE_WINDOW_WIDTH,
 };
-use gl::ClearColor;
-use nanovg_sys::NVGcontext;
+use gl::{ClearColor, FRAMEBUFFER};
+use nanovg_sys::{NVGcolor, NVGcontext};
 use sdl2::video::{GLContext, Window};
 use sdl2::{EventPump, Sdl, VideoSubsystem};
 
@@ -70,6 +70,13 @@ impl SdlContext {
             nanovg_sys::nvgCreateGL3(f.bits())
         };
 
+        set_frame_context(FrameContext {
+            context: nvg_context.clone(),
+            pixel_ratio: 0.0,
+            window_width: 0,
+            window_height: 0,
+        });
+
         window.gl_swap_window();
 
         let (window_width, window_height) = window.size();
@@ -94,6 +101,14 @@ impl SdlContext {
 
     pub fn begin_frame(&self) {
         // nop
+    }
+
+    pub fn clear(&self, color: NVGcolor) {
+        unsafe {
+            gl::BindFramebuffer(FRAMEBUFFER, 0);
+            gl::ClearColor(color.rgba[0], color.rgba[1], color.rgba[2], color.rgba[3]); // Transparent background
+            gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
+        }
     }
 
     pub fn end_frame(&self) {

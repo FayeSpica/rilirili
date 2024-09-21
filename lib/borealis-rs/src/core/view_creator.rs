@@ -8,9 +8,9 @@ use std::fs::File;
 use std::io::BufReader;
 use std::path::PathBuf;
 use std::rc::Rc;
-use crate::core::attribute::AttributeSetter;
+use crate::core::attribute::{apply_xml_attributes, AttributeSetter};
 
-const CUSTOM_RESOURCES_PATH: &str = "resources";
+pub(crate) const CUSTOM_RESOURCES_PATH: &str = "resources";
 
 /**
  * Creates a view from the given XML file content.
@@ -25,7 +25,7 @@ pub fn create_from_xml_string(
     xml_data: String,
     view_creator_registry: &Rc<RefCell<ViewCreatorRegistry>>,
 ) -> Rc<RefCell<View>> {
-    trace!("create_from_xml_string: {}", xml_data);
+    // trace!("create_from_xml_string: {}", xml_data);
     let xml_data = xml_data.replace("brls:", "");
     let document = roxmltree::Document::parse(&xml_data).unwrap();
     let element = document.root_element();
@@ -50,28 +50,6 @@ pub fn create_from_xml_file(
         std::fs::read_to_string(name).unwrap(),
         view_creator_registry,
     )
-
-    // let box_view = BoxView::new(0.0, 0.0, 0.0, 0.0);
-    // let mut box_enum = BoxEnum::Box(box_view);
-    // box_enum.add_view(Rc::new(RefCell::new(View::Box(BoxEnum::Box(
-    //     BoxView::new(100.0, 100.0, 80.0, 80.0),
-    // )))));
-    // box_enum.add_view(Rc::new(RefCell::new(View::Box(BoxEnum::Box(
-    //     BoxView::new(200.0, 100.0, 80.0, 80.0),
-    // )))));
-    // box_enum.add_view(Rc::new(RefCell::new(View::Box(BoxEnum::Box(
-    //     BoxView::new(300.0, 100.0, 80.0, 80.0),
-    // )))));
-    // box_enum.add_view(Rc::new(RefCell::new(View::Box(BoxEnum::Box(
-    //     BoxView::new(400.0, 100.0, 80.0, 80.0),
-    // )))));
-    // box_enum.add_view(Rc::new(RefCell::new(View::Box(BoxEnum::Box(
-    //     BoxView::new(500.0, 100.0, 80.0, 80.0),
-    // )))));
-    // let view = Rc::new(RefCell::new(View::Box(box_enum)));
-    // let view_self = view.clone();
-    // view.borrow_mut().set_view(Some(view_self));
-    // view
 }
 
 /**
@@ -97,7 +75,7 @@ pub fn create_from_xml_element(
 ) -> Rc<RefCell<View>> {
     // 在此处理 XML 元素并返回 View 实例
     // 例如，解析节点，生成视图
-    info!("create_from_xml_element: {:?}", element);
+    // info!("create_from_xml_element: {:?}", element);
     let view_name = element.tag_name().name();
 
     // Special case where element name is brls:View: create from given XML file.
@@ -123,8 +101,7 @@ pub fn create_from_xml_element(
         let mut tmp_view = viw_creator();
         // Register common XML attributes
         tmp_view.borrow_mut().set_view(Some(tmp_view.clone()));
-        let setter = AttributeSetter::default(); // todo: performance
-        setter.apply_xml_attributes(tmp_view.clone(), element, view_creator_registry);
+        apply_xml_attributes(tmp_view.clone(), element, view_creator_registry);
 
         tmp_view
     };
@@ -132,7 +109,6 @@ pub fn create_from_xml_element(
         view.borrow_mut()
             .handle_xml_attributes(child, view_creator_registry);
     }
-
 
     view
 }

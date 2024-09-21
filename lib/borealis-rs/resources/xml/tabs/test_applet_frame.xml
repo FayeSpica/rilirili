@@ -1,0 +1,72 @@
+<brls:Box
+        width="auto"
+        height="auto"
+        axis="column"
+        justifyContent="spaceBetween">
+
+    <!-- Header -->
+    <brls:Box
+            width="auto"
+            height="@style/brls/applet_frame/header_height"
+            axis="row"
+            paddingTop="@style/brls/applet_frame/header_padding_top_bottom"
+            paddingBottom="@style/brls/applet_frame/header_padding_top_bottom"
+            paddingLeft="@style/brls/applet_frame/header_padding_sides"
+            paddingRight="@style/brls/applet_frame/header_padding_sides"
+            marginLeft="@style/brls/applet_frame/padding_sides"
+            marginRight="@style/brls/applet_frame/padding_sides"
+            lineColor="@theme/brls/applet_frame/separator"
+            lineBottom="1px">
+
+<!--        <brls:Image-->
+<!--                id="brls/applet_frame/title_icon"-->
+<!--                width="auto"-->
+<!--                height="auto"-->
+<!--                marginRight="@style/brls/applet_frame/header_image_title_spacing"-->
+<!--                visibility="gone" />-->
+
+        <brls:Label
+                id="brls/applet_frame/title_label"
+                width="auto"
+                height="auto"
+                marginTop="@style/brls/applet_frame/header_title_top_offset"
+                fontSize="@style/brls/applet_frame/header_title_font_size"
+                text="test test"/>
+
+    </brls:Box>
+
+    <!-- Content will be injected here with grow="1.0" -->
+
+    <!--
+        Footer
+        Direction inverted so that the bottom left text can be
+        set to visibility="gone" without affecting the hint
+    -->
+<!--    <brls:Box-->
+<!--            width="auto"-->
+<!--            height="@style/brls/applet_frame/footer_height"-->
+<!--            axis="row"-->
+<!--            direction="rightToLeft"-->
+<!--            paddingLeft="@style/brls/applet_frame/footer_padding_sides"-->
+<!--            paddingRight="@style/brls/applet_frame/footer_padding_sides"-->
+<!--            paddingTop="@style/brls/applet_frame/footer_padding_top_bottom"-->
+<!--            paddingBottom="@style/brls/applet_frame/footer_padding_top_bottom"-->
+<!--            marginLeft="@style/brls/applet_frame/padding_sides"-->
+<!--            marginRight="@style/brls/applet_frame/padding_sides"-->
+<!--            lineColor="@theme/brls/applet_frame/separator"-->
+<!--            lineTop="1px"-->
+<!--            justifyContent="spaceBetween" >-->
+
+<!--        <brls:Rectangle-->
+<!--                width="272px"-->
+<!--                height="auto"-->
+<!--                color="#FF0000" />-->
+
+<!--        <brls:Rectangle-->
+<!--                width="75px"-->
+<!--                height="auto"-->
+<!--                color="#FF00FF" />-->
+
+<!--    </brls:Box>-->
+
+</brls:Box>

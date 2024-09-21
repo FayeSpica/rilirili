@@ -2,12 +2,19 @@ use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::str::FromStr;
+use std::sync::Mutex;
 use nanovg_sys::NVGcolor;
 use crate::core::application::ViewCreatorRegistry;
-use crate::core::theme::AUTO;
+use crate::core::style::{hex_to_rgb, hex_to_rgba, style};
+use crate::core::theme::{AUTO, nvg_rgb, nvg_rgba, theme};
 use crate::core::view_base::{AlignSelf, FocusDirection, PositionType, ShadowType, View, ViewBackground, ViewBase, Visibility};
+use crate::core::view_creator::get_file_path_xml_attribute_value;
 use crate::core::view_layout::ViewLayout;
 use crate::core::view_style::ViewStyle;
+
+lazy_static! {
+    static ref ATTRIBUTE_SETTER: Mutex<AttributeSetter> = Mutex::new(AttributeSetter::default());
+}
 
 pub type AutoAttributeHandler = Box<dyn Fn(Rc<RefCell<View>>)>;
 pub type IntAttributeHandler = Box<dyn Fn(Rc<RefCell<View>>, i32)>;
@@ -16,7 +23,6 @@ pub type StringAttributeHandler = Box<dyn Fn(Rc<RefCell<View>>, &str)>;
 pub type ColorAttributeHandler = Box<dyn Fn(Rc<RefCell<View>>, NVGcolor)>;
 pub type BoolAttributeHandler = Box<dyn Fn(Rc<RefCell<View>>, bool)>;
 pub type FilePathAttributeHandler = Box<dyn Fn(Rc<RefCell<View>>, &str)>;
-
 
 pub struct AttributeSetter {
     pub auto_attributes: HashMap<String, AutoAttributeHandler>,
@@ -28,6 +34,9 @@ pub struct AttributeSetter {
     pub file_path_attributes: HashMap<String, FilePathAttributeHandler>,
     pub known_attributes: Vec<String>,
 }
+
+unsafe impl Send for AttributeSetter {}
+unsafe impl Sync for AttributeSetter {}
 
 impl Default for AttributeSetter {
     fn default() -> Self {
@@ -52,10 +61,12 @@ impl AttributeSetter {
         // Width
         self.register_auto_xml_attribute("width", Box::new(|view_clone| {
             view_clone.borrow_mut().set_width(AUTO);
+            view_clone.borrow().invalidate();
         }));
 
         self.register_float_xml_attribute("width", Box::new(|view_clone, value| {
             view_clone.borrow_mut().set_width(value);
+            view_clone.borrow().invalidate();
         }));
 
         self.register_percentage_xml_attribute("width", Box::new(|view_clone, value| {
@@ -65,10 +76,12 @@ impl AttributeSetter {
         // Height
         self.register_auto_xml_attribute("height", Box::new(|view_clone| {
             view_clone.borrow_mut().set_height(AUTO);
+            view_clone.borrow().invalidate();
         }));
 
         self.register_float_xml_attribute("height", Box::new(|view_clone,value| {
             view_clone.borrow_mut().set_height(value);
+            view_clone.borrow().invalidate();
         }));
 
         self.register_percentage_xml_attribute("height", Box::new(|view_clone,value| {
@@ -134,6 +147,7 @@ impl AttributeSetter {
 
         self.register_float_xml_attribute("marginTop", Box::new(|view_clone,value| {
             view_clone.borrow_mut().set_margin_top(value);
+            view_clone.borrow().invalidate();
         }));
 
 
@@ -350,32 +364,32 @@ impl AttributeSetter {
         }));
     }
 
-    fn register_auto_xml_attribute(&mut self, name: &str, handler: AutoAttributeHandler) {
+    pub fn register_auto_xml_attribute(&mut self, name: &str, handler: AutoAttributeHandler) {
         self.auto_attributes.insert(name.into(), handler);
         self.known_attributes.push(name.into());
     }
 
-    fn register_float_xml_attribute(&mut self, name: &str, handler: FloatAttributeHandler) {
+    pub fn register_float_xml_attribute(&mut self, name: &str, handler: FloatAttributeHandler) {
         self.float_attributes.insert(name.into(), handler);
         self.known_attributes.push(name.into());
     }
 
-    fn register_percentage_xml_attribute(&mut self, name: &str, handler: FloatAttributeHandler) {
+    pub fn register_percentage_xml_attribute(&mut self, name: &str, handler: FloatAttributeHandler) {
         self.percentage_attributes.insert(name.into(), handler);
         self.known_attributes.push(name.into());
     }
 
-    fn register_string_xml_attribute(&mut self, name: &str, handler: StringAttributeHandler) {
+    pub fn register_string_xml_attribute(&mut self, name: &str, handler: StringAttributeHandler) {
         self.string_attributes.insert(name.into(), handler);
         self.known_attributes.push(name.into());
     }
 
-    fn register_color_xml_attribute(&mut self, name: &str, handler: ColorAttributeHandler) {
+    pub fn register_color_xml_attribute(&mut self, name: &str, handler: ColorAttributeHandler) {
         self.color_attributes.insert(name.into(), handler);
         self.known_attributes.push(name.into());
     }
 
-    fn register_bool_xml_attribute(&mut self, name: &str, handler: BoolAttributeHandler) {
+    pub fn register_bool_xml_attribute(&mut self, name: &str, handler: BoolAttributeHandler) {
         self.bool_attributes.insert(name.into(), handler);
         self.known_attributes.push(name.into());
     }
@@ -387,46 +401,46 @@ impl AttributeSetter {
         view_creator_registry: &Rc<RefCell<ViewCreatorRegistry>>,
     ) {
         for attribute in element.attributes() {
-            info!(
-                "apply_xml_attributes: {} {}",
-                attribute.name(),
-                attribute.value()
-            );
+            // info!(
+            //     "apply_xml_attributes: {} {}",
+            //     attribute.name(),
+            //     attribute.value()
+            // );
             self.apply_xml_attribute(view.clone(), attribute.name(), attribute.value());
         }
     }
 
     pub fn apply_xml_attribute(&self, view: Rc<RefCell<View>>, name: &str, value: &str) -> bool {
-        // // String -> string
-        // if let Some(handler) = view.data().string_attributes.get(name) {
-        //     if value.starts_with("@i18n/") {
-        //         todo!();
-        //         return true;
-        //     }
-        //
-        //     handler(view, value);
-        //     return true;
-        // }
-        //
-        // // File path -> file path
-        // if value.starts_with("@res/") {
-        //     let path = get_file_path_xml_attribute_value(value);
-        //
-        //     if let Some(handler) = view.data().file_path_attributes.get(name) {
-        //         handler(view, value);
-        //         return true;
-        //     } else {
-        //         return false; // unknown res
-        //     }
-        // } else {
-        //     if let Some(handler) = view.data().file_path_attributes.get(name) {
-        //         handler(view, value);
-        //         return true;
-        //     }
-        //
-        //     // don't return false as it can be anything else
-        // }
-        //
+        // String -> string
+        if let Some(handler) = self.string_attributes.get(name) {
+            if value.starts_with("@i18n/") {
+                todo!();
+                return true;
+            }
+
+            handler(view, value);
+            return true;
+        }
+
+        // File path -> file path
+        if value.starts_with("@res/") {
+            let path = get_file_path_xml_attribute_value(value);
+
+            if let Some(handler) = self.file_path_attributes.get(name) {
+                handler(view, value);
+                return true;
+            } else {
+                return false; // unknown res
+            }
+        } else {
+            if let Some(handler) = self.file_path_attributes.get(name) {
+                handler(view, value);
+                return true;
+            }
+
+            // don't return false as it can be anything else
+        }
+
         // Auto -> auto
         if "auto" == value {
             if let Some(handler) = self.auto_attributes.get(name) {
@@ -437,119 +451,119 @@ impl AttributeSetter {
                 return false;
             }
         }
-        //
-        // // Ends with px -> float
-        // if value.ends_with("px") {
-        //     // Strip the px and parse the float value
-        //     let new_float = &value[..value.len() - 2];
-        //
-        //     if let Ok(float_value) = f32::from_str(new_float) {
-        //         if let Some(handler) = view.data().float_attributes.get(name) {
-        //             handler(view, float_value);
-        //             return true;
-        //         } else {
-        //             return false;
-        //         }
-        //     } else {
-        //         return false;
-        //     }
-        // }
-        //
-        // // Ends with % -> percentage
-        // if value.ends_with("%") {
-        //     // Strip the % and parse the float value
-        //     let new_float = &value[..value.len() - 1];
-        //
-        //     if let Ok(float_value) = f32::from_str(new_float) {
-        //
-        //         if float_value < -100.0 || float_value > 100.0 {
-        //             return false;
-        //         }
-        //
-        //         if let Some(handler) = view.data().float_attributes.get(name) {
-        //             handler(view, float_value);
-        //             return true;
-        //         } else {
-        //             return false;
-        //         }
-        //     } else {
-        //         return false;
-        //     }
-        // }
-        // // Starts with @style -> float
-        // else if value.starts_with("@style/") {
-        //     // Parse the style name
-        //     let style_name = &value[7..]; // length of "@style/"
-        //     let float_value = style(style_name);
-        //
-        //     if let Some(handler) = view.data().float_attributes.get(name) {
-        //         handler(view, float_value);
-        //         return true;
-        //     } else {
-        //         return false;
-        //     }
-        // }
-        // // Starts with with # -> color
-        // else if value.starts_with("#") {
-        //     // Parse the color
-        //     // #RRGGBB format
-        //     if value.len() == 7 {
-        //         if let Some((r, g, b)) = hex_to_rgb(value) {
-        //             if let Some(handler) = view.data().color_attributes.get(name) {
-        //                 handler(view, nvg_rgb(r, g, b));
-        //                 return true;
-        //             } else {
-        //                 return false;
-        //             }
-        //         } else {
-        //             return false;
-        //         }
-        //     }
-        //     // #RRGGBBAA format
-        //     else if value.len() == 9 {
-        //         if let Some((r, g, b, a)) = hex_to_rgba(value) {
-        //             if let Some(handler) = view.data().color_attributes.get(name) {
-        //                 handler(view, nvg_rgba(r, g, b, a));
-        //                 return true;
-        //             } else {
-        //                 return false;
-        //             }
-        //         } else {
-        //             return false;
-        //         }
-        //     } else {
-        //         return false;
-        //     }
-        // }
-        // // Starts with @theme -> color
-        // else if value.starts_with("@theme/") {
-        //     // Parse the color name
-        //     let style_name = &value[7..]; // length of "@style/"
-        //     let value = theme(style_name);
-        //
-        //     if let Some(handler) = view.data().color_attributes.get(name) {
-        //         handler(view, value);
-        //         return true;
-        //     } else {
-        //         return false;
-        //     }
-        // }
-        // // Equals true or false -> bool
-        // else if value == "true" || value == "false" {
-        //     let bool_value = if value == "true" {
-        //         true
-        //     } else {
-        //         false
-        //     };
-        //
-        //     if let Some(handler) = view.data().bool_attributes.get(name) {
-        //         handler(view, bool_value);
-        //         return true;
-        //     } else {
-        //         return false;
-        //     }
-        // }
-        //
+
+        // Ends with px -> float
+        if value.ends_with("px") {
+            // Strip the px and parse the float value
+            let new_float = &value[..value.len() - 2];
+
+            if let Ok(float_value) = f32::from_str(new_float) {
+                if let Some(handler) = self.float_attributes.get(name) {
+                    handler(view, float_value);
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
+
+        // Ends with % -> percentage
+        if value.ends_with("%") {
+            // Strip the % and parse the float value
+            let new_float = &value[..value.len() - 1];
+
+            if let Ok(float_value) = f32::from_str(new_float) {
+
+                if float_value < -100.0 || float_value > 100.0 {
+                    return false;
+                }
+
+                if let Some(handler) = self.float_attributes.get(name) {
+                    handler(view, float_value);
+                    return true;
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
+        // Starts with @style -> float
+        else if value.starts_with("@style/") {
+            // Parse the style name
+            let style_name = &value[7..]; // length of "@style/"
+            let float_value = style(style_name);
+
+            if let Some(handler) = self.float_attributes.get(name) {
+                handler(view, float_value);
+                return true;
+            } else {
+                return false;
+            }
+        }
+        // Starts with with # -> color
+        else if value.starts_with("#") {
+            // Parse the color
+            // #RRGGBB format
+            if value.len() == 7 {
+                if let Some((r, g, b)) = hex_to_rgb(value) {
+                    if let Some(handler) = self.color_attributes.get(name) {
+                        handler(view, nvg_rgb(r, g, b));
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } else {
+                    return false;
+                }
+            }
+            // #RRGGBBAA format
+            else if value.len() == 9 {
+                if let Some((r, g, b, a)) = hex_to_rgba(value) {
+                    if let Some(handler) = self.color_attributes.get(name) {
+                        handler(view, nvg_rgba(r, g, b, a));
+                        return true;
+                    } else {
+                        return false;
+                    }
+                } else {
+                    return false;
+                }
+            } else {
+                return false;
+            }
+        }
+        // Starts with @theme -> color
+        else if value.starts_with("@theme/") {
+            // Parse the color name
+            let style_name = &value[7..]; // length of "@style/"
+            let value = theme(style_name);
+
+            if let Some(handler) = self.color_attributes.get(name) {
+                handler(view, value);
+                return true;
+            } else {
+                return false;
+            }
+        }
+        // Equals true or false -> bool
+        else if value == "true" || value == "false" {
+            let bool_value = if value == "true" {
+                true
+            } else {
+                false
+            };
+
+            if let Some(handler) = self.bool_attributes.get(name) {
+                handler(view, bool_value);
+                return true;
+            } else {
+                return false;
+            }
+        }
+
         // Valid float -> float, otherwise unknown attribute
         if let Ok(float_value) = f32::from_str(value) {
             if let Some(handler) = self.float_attributes.get(name) {
@@ -562,4 +576,48 @@ impl AttributeSetter {
             return false;
         }
     }
+}
+
+pub fn apply_xml_attributes(
+    view: Rc<RefCell<View>>,
+    element: roxmltree::Node,
+    view_creator_registry: &Rc<RefCell<ViewCreatorRegistry>>, ) {
+    let mut attribute_setter = ATTRIBUTE_SETTER.lock().unwrap();
+    attribute_setter.apply_xml_attributes(view, element, view_creator_registry);
+}
+
+pub fn register_auto_xml_attribute(name: &str, handler: AutoAttributeHandler) {
+    let mut attribute_setter = ATTRIBUTE_SETTER.lock().unwrap();
+    attribute_setter.auto_attributes.insert(name.into(), handler);
+    attribute_setter.known_attributes.push(name.into());
+}
+
+pub fn register_float_xml_attribute(name: &str, handler: FloatAttributeHandler) {
+    let mut attribute_setter = ATTRIBUTE_SETTER.lock().unwrap();
+    attribute_setter.float_attributes.insert(name.into(), handler);
+    attribute_setter.known_attributes.push(name.into());
+}
+
+pub fn register_percentage_xml_attribute(name: &str, handler: FloatAttributeHandler) {
+    let mut attribute_setter = ATTRIBUTE_SETTER.lock().unwrap();
+    attribute_setter.percentage_attributes.insert(name.into(), handler);
+    attribute_setter.known_attributes.push(name.into());
+}
+
+pub fn register_string_xml_attribute(name: &str, handler: StringAttributeHandler) {
+    let mut attribute_setter = ATTRIBUTE_SETTER.lock().unwrap();
+    attribute_setter.string_attributes.insert(name.into(), handler);
+    attribute_setter.known_attributes.push(name.into());
+}
+
+pub fn register_color_xml_attribute(name: &str, handler: ColorAttributeHandler) {
+    let mut attribute_setter = ATTRIBUTE_SETTER.lock().unwrap();
+    attribute_setter.color_attributes.insert(name.into(), handler);
+    attribute_setter.known_attributes.push(name.into());
+}
+
+pub fn register_bool_xml_attribute(name: &str, handler: BoolAttributeHandler) {
+    let mut attribute_setter = ATTRIBUTE_SETTER.lock().unwrap();
+    attribute_setter.bool_attributes.insert(name.into(), handler);
+    attribute_setter.known_attributes.push(name.into());
 }

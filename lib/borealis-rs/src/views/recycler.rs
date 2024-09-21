@@ -1,3 +1,5 @@
+use std::cell::RefCell;
+use std::rc::Rc;
 use crate::core::view_base::{ViewBase, ViewData};
 use crate::core::view_box::{BoxTrait, BoxViewData};
 use crate::core::view_drawer::ViewDrawer;
@@ -26,11 +28,7 @@ impl ViewLayout for RecyclerCell {}
 impl ViewStyle for RecyclerCell {}
 
 impl ViewBase for RecyclerCell {
-    fn data(&self) -> &ViewData {
-        todo!()
-    }
-
-    fn data_mut(&mut self) -> &mut ViewData {
+    fn view_data(&self) -> &Rc<RefCell<ViewData>> {
         todo!()
     }
 }
@@ -60,11 +58,7 @@ impl ViewLayout for RecyclerHeader {}
 impl ViewStyle for RecyclerHeader {}
 
 impl ViewBase for RecyclerHeader {
-    fn data(&self) -> &ViewData {
-        todo!()
-    }
-
-    fn data_mut(&mut self) -> &mut ViewData {
+    fn view_data(&self) -> &Rc<RefCell<ViewData>> {
         todo!()
     }
 }
@@ -94,11 +88,7 @@ impl ViewLayout for RecyclerContentBox {}
 impl ViewStyle for RecyclerContentBox {}
 
 impl ViewBase for RecyclerContentBox {
-    fn data(&self) -> &ViewData {
-        todo!()
-    }
-
-    fn data_mut(&mut self) -> &mut ViewData {
+    fn view_data(&self) -> &Rc<RefCell<ViewData>> {
         todo!()
     }
 }
@@ -128,11 +118,7 @@ impl ViewLayout for RecyclerFrame {}
 impl ViewStyle for RecyclerFrame {}
 
 impl ViewBase for RecyclerFrame {
-    fn data(&self) -> &ViewData {
-        todo!()
-    }
-
-    fn data_mut(&mut self) -> &mut ViewData {
+    fn view_data(&self) -> &Rc<RefCell<ViewData>> {
         todo!()
     }
 }

@@ -31,11 +31,11 @@ pub trait ViewLayout: ViewStyle {
     }
 
     fn x(&self) -> f32 {
-        return unsafe { YGNodeLayoutGetLeft(self.data().yg_node) };
+        return unsafe { YGNodeLayoutGetLeft(self.view_data().borrow().yg_node) };
     }
 
     fn y(&self) -> f32 {
-        return unsafe { YGNodeLayoutGetTop(self.data().yg_node) };
+        return unsafe { YGNodeLayoutGetTop(self.view_data().borrow().yg_node) };
     }
 
     fn local_rect(&self) -> Rect {
@@ -46,19 +46,19 @@ pub trait ViewLayout: ViewStyle {
     }
 
     fn local_x(&self) -> f32 {
-        return unsafe { YGNodeLayoutGetLeft(self.data().yg_node) };
+        return unsafe { YGNodeLayoutGetLeft(self.view_data().borrow().yg_node) };
     }
 
     fn local_y(&self) -> f32 {
-        return unsafe { YGNodeLayoutGetTop(self.data().yg_node) };
+        return unsafe { YGNodeLayoutGetTop(self.view_data().borrow().yg_node) };
     }
 
     fn width(&self) -> f32 {
-        return unsafe { YGNodeLayoutGetWidth(self.data().yg_node) };
+        return unsafe { YGNodeLayoutGetWidth(self.view_data().borrow().yg_node) };
     }
 
     fn height(&self) -> f32 {
-        return unsafe { YGNodeLayoutGetHeight(self.data().yg_node) };
+        return unsafe { YGNodeLayoutGetHeight(self.view_data().borrow().yg_node) };
     }
 
     fn height_include_collapse(&self) -> f32 {
@@ -78,7 +78,7 @@ pub trait ViewLayout: ViewStyle {
         } else {
             unsafe {
                 YGNodeCalculateLayout(
-                    self.data().yg_node,
+                    self.view_data().borrow().yg_node,
                     f32::NAN,
                     f32::NAN,
                     YGDirection::YGDirectionLTR,
@@ -116,11 +116,11 @@ pub trait ViewLayout: ViewStyle {
      */
     fn set_width(&self, width: f32) {
         unsafe {
-            YGNodeStyleSetMinWidthPercent(self.data().yg_node, 0.0);
-            YGNodeStyleSetWidth(self.data().yg_node, width);
-            YGNodeStyleSetMinWidth(self.data().yg_node, width);
+            YGNodeStyleSetMinWidthPercent(self.view_data().borrow().yg_node, 0.0);
+            YGNodeStyleSetWidth(self.view_data().borrow().yg_node, width);
+            YGNodeStyleSetMinWidth(self.view_data().borrow().yg_node, width);
         }
-        self.invalidate();
+        // self.invalidate();
     }
 
     /**
@@ -132,11 +132,11 @@ pub trait ViewLayout: ViewStyle {
      */
     fn set_height(&self, height: f32) {
         unsafe {
-            YGNodeStyleSetMinHeightPercent(self.data().yg_node, 0.0);
-            YGNodeStyleSetHeight(self.data().yg_node, height);
-            YGNodeStyleSetMinHeight(self.data().yg_node, height);
+            YGNodeStyleSetMinHeightPercent(self.view_data().borrow().yg_node, 0.0);
+            YGNodeStyleSetHeight(self.view_data().borrow().yg_node, height);
+            YGNodeStyleSetMinHeight(self.view_data().borrow().yg_node, height);
         }
-        self.invalidate();
+        // self.invalidate();
     }
 
     /**
@@ -147,28 +147,28 @@ pub trait ViewLayout: ViewStyle {
     fn set_dimensions(&self, width: f32, height: f32) {
         warn!("set_dimensions({}, {})", width, height);
         unsafe {
-            YGNodeStyleSetMinWidthPercent(self.data().yg_node, 0.0);
-            YGNodeStyleSetMinHeightPercent(self.data().yg_node, 0.0);
+            YGNodeStyleSetMinWidthPercent(self.view_data().borrow().yg_node, 0.0);
+            YGNodeStyleSetMinHeightPercent(self.view_data().borrow().yg_node, 0.0);
 
             match width == AUTO {
                 true => {
-                    YGNodeStyleSetWidthAuto(self.data().yg_node);
-                    YGNodeStyleSetMinWidth(self.data().yg_node, YG_UNDEFINED);
+                    YGNodeStyleSetWidthAuto(self.view_data().borrow().yg_node);
+                    YGNodeStyleSetMinWidth(self.view_data().borrow().yg_node, YG_UNDEFINED);
                 }
                 false => {
-                    YGNodeStyleSetWidth(self.data().yg_node, width);
-                    YGNodeStyleSetMinWidth(self.data().yg_node, width);
+                    YGNodeStyleSetWidth(self.view_data().borrow().yg_node, width);
+                    YGNodeStyleSetMinWidth(self.view_data().borrow().yg_node, width);
                 }
             }
 
             match height == AUTO {
                 true => {
-                    YGNodeStyleSetHeightAuto(self.data().yg_node);
-                    YGNodeStyleSetMinHeight(self.data().yg_node, YG_UNDEFINED);
+                    YGNodeStyleSetHeightAuto(self.view_data().borrow().yg_node);
+                    YGNodeStyleSetMinHeight(self.view_data().borrow().yg_node, YG_UNDEFINED);
                 }
                 false => {
-                    YGNodeStyleSetHeight(self.data().yg_node, height);
-                    YGNodeStyleSetMinHeight(self.data().yg_node, height);
+                    YGNodeStyleSetHeight(self.view_data().borrow().yg_node, height);
+                    YGNodeStyleSetMinHeight(self.view_data().borrow().yg_node, height);
                 }
             }
         }
@@ -182,8 +182,8 @@ pub trait ViewLayout: ViewStyle {
      */
     fn set_width_percentage(&self, percentage: f32) {
         unsafe {
-            YGNodeStyleSetWidthPercent(self.data().yg_node, percentage);
-            YGNodeStyleSetMinWidthPercent(self.data().yg_node, percentage);
+            YGNodeStyleSetWidthPercent(self.view_data().borrow().yg_node, percentage);
+            YGNodeStyleSetMinWidthPercent(self.view_data().borrow().yg_node, percentage);
         }
         self.invalidate();
     }
@@ -194,8 +194,8 @@ pub trait ViewLayout: ViewStyle {
      */
     fn set_height_percentage(&self, percentage: f32) {
         unsafe {
-            YGNodeStyleSetHeightPercent(self.data().yg_node, percentage);
-            YGNodeStyleSetMinHeightPercent(self.data().yg_node, percentage);
+            YGNodeStyleSetHeightPercent(self.view_data().borrow().yg_node, percentage);
+            YGNodeStyleSetMinHeightPercent(self.view_data().borrow().yg_node, percentage);
         }
         self.invalidate();
     }
@@ -211,9 +211,9 @@ pub trait ViewLayout: ViewStyle {
     fn set_max_width(&self, max_width: f32) {
         unsafe {
             if max_width == AUTO {
-                YGNodeStyleSetMaxWidth(self.data().yg_node, YG_UNDEFINED);
+                YGNodeStyleSetMaxWidth(self.view_data().borrow().yg_node, YG_UNDEFINED);
             } else {
-                YGNodeStyleSetMaxWidth(self.data().yg_node, max_width);
+                YGNodeStyleSetMaxWidth(self.view_data().borrow().yg_node, max_width);
             }
         }
         self.invalidate();
@@ -230,9 +230,9 @@ pub trait ViewLayout: ViewStyle {
     fn set_max_height(&self, max_height: f32) {
         unsafe {
             if max_height == AUTO {
-                YGNodeStyleSetMaxHeight(self.data().yg_node, YG_UNDEFINED);
+                YGNodeStyleSetMaxHeight(self.view_data().borrow().yg_node, YG_UNDEFINED);
             } else {
-                YGNodeStyleSetMaxHeight(self.data().yg_node, max_height);
+                YGNodeStyleSetMaxHeight(self.view_data().borrow().yg_node, max_height);
             }
         }
         self.invalidate();
@@ -248,7 +248,7 @@ pub trait ViewLayout: ViewStyle {
      */
     fn set_max_width_percentage(&self, percentage: f32) {
         unsafe {
-            YGNodeStyleSetMaxWidthPercent(self.data().yg_node, percentage);
+            YGNodeStyleSetMaxWidthPercent(self.view_data().borrow().yg_node, percentage);
         }
         self.invalidate();
     }
@@ -263,7 +263,7 @@ pub trait ViewLayout: ViewStyle {
      */
     fn set_max_height_percentage(&self, percentage: f32) {
         unsafe {
-            YGNodeStyleSetMaxHeightPercent(self.data().yg_node, percentage);
+            YGNodeStyleSetMaxHeightPercent(self.view_data().borrow().yg_node, percentage);
         }
         self.invalidate();
     }
@@ -276,7 +276,7 @@ pub trait ViewLayout: ViewStyle {
      */
     fn set_grow(&self, grow: f32) {
         unsafe {
-            YGNodeStyleSetFlexGrow(self.data().yg_node, grow);
+            YGNodeStyleSetFlexGrow(self.view_data().borrow().yg_node, grow);
         }
         self.invalidate();
     }
@@ -289,7 +289,7 @@ pub trait ViewLayout: ViewStyle {
      */
     fn set_shrink(&self, shrink: f32) {
         unsafe {
-            YGNodeStyleSetFlexShrink(self.data().yg_node, shrink);
+            YGNodeStyleSetFlexShrink(self.view_data().borrow().yg_node, shrink);
         }
         self.invalidate();
     }
@@ -309,27 +309,27 @@ pub trait ViewLayout: ViewStyle {
     fn set_margins(&self, top: f32, right: f32, bottom: f32, left: f32) {
         unsafe {
             if top == AUTO {
-                YGNodeStyleSetMarginAuto(self.data().yg_node, YGEdgeTop);
+                YGNodeStyleSetMarginAuto(self.view_data().borrow().yg_node, YGEdgeTop);
             } else {
-                YGNodeStyleSetMargin(self.data().yg_node, YGEdgeTop, top);
+                YGNodeStyleSetMargin(self.view_data().borrow().yg_node, YGEdgeTop, top);
             }
 
             if right == AUTO {
-                YGNodeStyleSetMarginAuto(self.data().yg_node, YGEdgeRight);
+                YGNodeStyleSetMarginAuto(self.view_data().borrow().yg_node, YGEdgeRight);
             } else {
-                YGNodeStyleSetMargin(self.data().yg_node, YGEdgeRight, right);
+                YGNodeStyleSetMargin(self.view_data().borrow().yg_node, YGEdgeRight, right);
             }
 
             if bottom == AUTO {
-                YGNodeStyleSetMarginAuto(self.data().yg_node, YGEdgeBottom);
+                YGNodeStyleSetMarginAuto(self.view_data().borrow().yg_node, YGEdgeBottom);
             } else {
-                YGNodeStyleSetMargin(self.data().yg_node, YGEdgeBottom, bottom);
+                YGNodeStyleSetMargin(self.view_data().borrow().yg_node, YGEdgeBottom, bottom);
             }
 
             if left == AUTO {
-                YGNodeStyleSetMarginAuto(self.data().yg_node, YGEdgeLeft);
+                YGNodeStyleSetMarginAuto(self.view_data().borrow().yg_node, YGEdgeLeft);
             } else {
-                YGNodeStyleSetMargin(self.data().yg_node, YGEdgeLeft, left);
+                YGNodeStyleSetMargin(self.view_data().borrow().yg_node, YGEdgeLeft, left);
             }
         }
 
@@ -349,13 +349,13 @@ pub trait ViewLayout: ViewStyle {
     fn set_margin_top(&self, top: f32) {
         unsafe {
             if top == AUTO {
-                YGNodeStyleSetMarginAuto(self.data().yg_node, YGEdgeTop);
+                YGNodeStyleSetMarginAuto(self.view_data().borrow().yg_node, YGEdgeTop);
             } else {
-                YGNodeStyleSetMargin(self.data().yg_node, YGEdgeTop, top);
+                YGNodeStyleSetMargin(self.view_data().borrow().yg_node, YGEdgeTop, top);
             }
         }
 
-        self.invalidate();
+        // self.invalidate();
     }
 
     /**
@@ -371,9 +371,9 @@ pub trait ViewLayout: ViewStyle {
     fn set_margin_right(&self, right: f32) {
         unsafe {
             if right == AUTO {
-                YGNodeStyleSetMarginAuto(self.data().yg_node, YGEdgeRight);
+                YGNodeStyleSetMarginAuto(self.view_data().borrow().yg_node, YGEdgeRight);
             } else {
-                YGNodeStyleSetMargin(self.data().yg_node, YGEdgeRight, right);
+                YGNodeStyleSetMargin(self.view_data().borrow().yg_node, YGEdgeRight, right);
             }
         }
 
@@ -381,10 +381,10 @@ pub trait ViewLayout: ViewStyle {
     }
 
     fn margin_right(&self) -> f32 {
-        ntz(unsafe { YGNodeStyleGetMargin(self.data().yg_node, YGEdgeRight).value })
+        ntz(unsafe { YGNodeStyleGetMargin(self.view_data().borrow().yg_node, YGEdgeRight).value })
     }
     fn margin_left(&self) -> f32 {
-        ntz(unsafe { YGNodeStyleGetMargin(self.data().yg_node, YGEdgeLeft).value })
+        ntz(unsafe { YGNodeStyleGetMargin(self.view_data().borrow().yg_node, YGEdgeLeft).value })
     }
 
     /**
@@ -400,9 +400,9 @@ pub trait ViewLayout: ViewStyle {
     fn set_margin_bottom(&self, bottom: f32) {
         unsafe {
             if bottom == AUTO {
-                YGNodeStyleSetMarginAuto(self.data().yg_node, YGEdgeBottom);
+                YGNodeStyleSetMarginAuto(self.view_data().borrow().yg_node, YGEdgeBottom);
             } else {
-                YGNodeStyleSetMargin(self.data().yg_node, YGEdgeBottom, bottom);
+                YGNodeStyleSetMargin(self.view_data().borrow().yg_node, YGEdgeBottom, bottom);
             }
         }
 
@@ -422,9 +422,9 @@ pub trait ViewLayout: ViewStyle {
     fn set_margin_left(&self, left: f32) {
         unsafe {
             if left == AUTO {
-                YGNodeStyleSetMarginAuto(self.data().yg_node, YGEdgeLeft);
+                YGNodeStyleSetMarginAuto(self.view_data().borrow().yg_node, YGEdgeLeft);
             } else {
-                YGNodeStyleSetMargin(self.data().yg_node, YGEdgeLeft, left);
+                YGNodeStyleSetMargin(self.view_data().borrow().yg_node, YGEdgeLeft, left);
             }
         }
 
@@ -436,21 +436,21 @@ pub trait ViewLayout: ViewStyle {
      */
     fn set_visibility(&mut self, visibility: Visibility) {
         // Only change YG properties and invalidate if going from or to GONE
-        if (self.data().visibility == Visibility::Gone && visibility != Visibility::Gone) || (self.data().visibility != Visibility::Gone && visibility == Visibility::Gone) {
+        if (self.view_data().borrow().visibility == Visibility::Gone && visibility != Visibility::Gone) || (self.view_data().borrow().visibility != Visibility::Gone && visibility == Visibility::Gone) {
             if visibility == Visibility::Gone {
                 unsafe {
-                    YGNodeStyleSetDisplay(self.data().yg_node, YGDisplayNone);
+                    YGNodeStyleSetDisplay(self.view_data().borrow().yg_node, YGDisplayNone);
                 }
             } else {
                 unsafe {
-                    YGNodeStyleSetDisplay(self.data().yg_node, YGDisplayFlex);
+                    YGNodeStyleSetDisplay(self.view_data().borrow().yg_node, YGDisplayFlex);
                 }
             }
 
             self.invalidate();
         }
 
-        self.data_mut().visibility = visibility;
+        self.view_data().borrow_mut().visibility = visibility;
 
         if visibility == Visibility::Visible {
             self.will_appear(false);
@@ -477,9 +477,9 @@ pub trait ViewLayout: ViewStyle {
         unsafe {
             match pos == AUTO {
                 true => {
-                    YGNodeStyleSetPosition(self.data().yg_node, YGEdgeTop, YG_UNDEFINED)
+                    YGNodeStyleSetPosition(self.view_data().borrow().yg_node, YGEdgeTop, YG_UNDEFINED)
                 }
-                false => YGNodeStyleSetPosition(self.data().yg_node, YGEdgeTop, pos),
+                false => YGNodeStyleSetPosition(self.view_data().borrow().yg_node, YGEdgeTop, pos),
             }
         }
         self.invalidate();
@@ -503,9 +503,9 @@ pub trait ViewLayout: ViewStyle {
         unsafe {
             match pos == AUTO {
                 true => {
-                    YGNodeStyleSetPosition(self.data().yg_node, YGEdgeRight, YG_UNDEFINED)
+                    YGNodeStyleSetPosition(self.view_data().borrow().yg_node, YGEdgeRight, YG_UNDEFINED)
                 }
-                false => YGNodeStyleSetPosition(self.data().yg_node, YGEdgeRight, pos),
+                false => YGNodeStyleSetPosition(self.view_data().borrow().yg_node, YGEdgeRight, pos),
             }
         }
         self.invalidate();
@@ -529,9 +529,9 @@ pub trait ViewLayout: ViewStyle {
         unsafe {
             match pos == AUTO {
                 true => {
-                    YGNodeStyleSetPosition(self.data().yg_node, YGEdgeBottom, YG_UNDEFINED)
+                    YGNodeStyleSetPosition(self.view_data().borrow().yg_node, YGEdgeBottom, YG_UNDEFINED)
                 }
-                false => YGNodeStyleSetPosition(self.data().yg_node, YGEdgeBottom, pos),
+                false => YGNodeStyleSetPosition(self.view_data().borrow().yg_node, YGEdgeBottom, pos),
             }
         }
         self.invalidate();
@@ -555,9 +555,9 @@ pub trait ViewLayout: ViewStyle {
         unsafe {
             match pos == AUTO {
                 true => {
-                    YGNodeStyleSetPosition(self.data().yg_node, YGEdgeLeft, YG_UNDEFINED)
+                    YGNodeStyleSetPosition(self.view_data().borrow().yg_node, YGEdgeLeft, YG_UNDEFINED)
                 }
-                false => YGNodeStyleSetPosition(self.data().yg_node, YGEdgeLeft, pos),
+                false => YGNodeStyleSetPosition(self.view_data().borrow().yg_node, YGEdgeLeft, pos),
             }
         }
         self.invalidate();
@@ -571,7 +571,7 @@ pub trait ViewLayout: ViewStyle {
      */
     fn set_position_top_percentage(&self, percentage: f32) {
         unsafe {
-            YGNodeStyleSetPositionPercent(self.data().yg_node, YGEdgeTop, percentage);
+            YGNodeStyleSetPositionPercent(self.view_data().borrow().yg_node, YGEdgeTop, percentage);
         }
         self.invalidate();
     }
@@ -584,7 +584,7 @@ pub trait ViewLayout: ViewStyle {
      */
     fn set_position_right_percentage(&self, percentage: f32) {
         unsafe {
-            YGNodeStyleSetPositionPercent(self.data().yg_node, YGEdgeRight, percentage);
+            YGNodeStyleSetPositionPercent(self.view_data().borrow().yg_node, YGEdgeRight, percentage);
         }
         self.invalidate();
     }
@@ -597,7 +597,7 @@ pub trait ViewLayout: ViewStyle {
      */
     fn set_position_bottom_percentage(&self, percentage: f32) {
         unsafe {
-            YGNodeStyleSetPositionPercent(self.data().yg_node, YGEdgeBottom, percentage);
+            YGNodeStyleSetPositionPercent(self.view_data().borrow().yg_node, YGEdgeBottom, percentage);
         }
         self.invalidate();
     }
@@ -610,7 +610,7 @@ pub trait ViewLayout: ViewStyle {
      */
     fn set_position_left_percentage(&self, percentage: f32) {
         unsafe {
-            YGNodeStyleSetPositionPercent(self.data().yg_node, YGEdgeLeft, percentage);
+            YGNodeStyleSetPositionPercent(self.view_data().borrow().yg_node, YGEdgeLeft, percentage);
         }
         self.invalidate();
     }
@@ -625,10 +625,10 @@ pub trait ViewLayout: ViewStyle {
         unsafe {
             match _type {
                 PositionType::Relative => {
-                    YGNodeStyleSetPositionType(self.data().yg_node, YGPositionTypeRelative)
+                    YGNodeStyleSetPositionType(self.view_data().borrow().yg_node, YGPositionTypeRelative)
                 }
                 PositionType::Absolute => {
-                    YGNodeStyleSetPositionType(self.data().yg_node, YGPositionTypeAbsolute)
+                    YGNodeStyleSetPositionType(self.view_data().borrow().yg_node, YGPositionTypeAbsolute)
                 }
             }
         }
@@ -638,8 +638,12 @@ pub trait ViewLayout: ViewStyle {
     /**
      * Sets the id of the view.
      */
-    fn set_id(&self, id: &str) {
-        todo!()
+    fn set_id(&mut self, id: &str) {
+        self.view_data().borrow_mut().id = id.into();
+    }
+
+    fn id(&self) -> String {
+        self.view_data().borrow().id.clone()
     }
 
     /**
@@ -650,21 +654,21 @@ pub trait ViewLayout: ViewStyle {
     fn set_align_self(&self, align_self: AlignSelf) {
         unsafe {
             match align_self {
-                AlignSelf::Auto => YGNodeStyleSetAlignSelf(self.data().yg_node, YGAlignAuto),
+                AlignSelf::Auto => YGNodeStyleSetAlignSelf(self.view_data().borrow().yg_node, YGAlignAuto),
                 AlignSelf::FlexStart => {
-                    YGNodeStyleSetAlignSelf(self.data().yg_node, YGAlignFlexStart)
+                    YGNodeStyleSetAlignSelf(self.view_data().borrow().yg_node, YGAlignFlexStart)
                 }
-                AlignSelf::Center => YGNodeStyleSetAlignSelf(self.data().yg_node, YGAlignCenter),
-                AlignSelf::FlexEnd => YGNodeStyleSetAlignSelf(self.data().yg_node, YGAlignFlexEnd),
-                AlignSelf::Stretch => YGNodeStyleSetAlignSelf(self.data().yg_node, YGAlignStretch),
+                AlignSelf::Center => YGNodeStyleSetAlignSelf(self.view_data().borrow().yg_node, YGAlignCenter),
+                AlignSelf::FlexEnd => YGNodeStyleSetAlignSelf(self.view_data().borrow().yg_node, YGAlignFlexEnd),
+                AlignSelf::Stretch => YGNodeStyleSetAlignSelf(self.view_data().borrow().yg_node, YGAlignStretch),
                 AlignSelf::Baseline => {
-                    YGNodeStyleSetAlignSelf(self.data().yg_node, YGAlignBaseline)
+                    YGNodeStyleSetAlignSelf(self.view_data().borrow().yg_node, YGAlignBaseline)
                 }
                 AlignSelf::SpaceBetween => {
-                    YGNodeStyleSetAlignSelf(self.data().yg_node, YGAlignSpaceBetween)
+                    YGNodeStyleSetAlignSelf(self.view_data().borrow().yg_node, YGAlignSpaceBetween)
                 }
                 AlignSelf::SpaceAround => {
-                    YGNodeStyleSetAlignSelf(self.data().yg_node, YGAlignSpaceAround)
+                    YGNodeStyleSetAlignSelf(self.view_data().borrow().yg_node, YGAlignSpaceAround)
                 }
             }
         }
@@ -680,11 +684,11 @@ pub trait ViewLayout: ViewStyle {
     }
 
     fn set_wireframe_enabled(&mut self, wireframe: bool) {
-        self.data_mut().wireframe_enabled = wireframe;
+        self.view_data().borrow_mut().wireframe_enabled = wireframe;
     }
 
     fn is_wireframe_enabled(&self) -> bool {
-        self.data().wireframe_enabled
+        self.view_data().borrow().wireframe_enabled
     }
 
     /**

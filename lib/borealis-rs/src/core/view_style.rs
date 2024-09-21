@@ -15,7 +15,7 @@ pub trait ViewStyle: ViewBase {
      * The "line" is separate from the shape "border".
      */
     fn set_line_color(&mut self, color: NVGcolor) {
-        self.data_mut().line_color = color;
+        self.view_data().borrow_mut().line_color = color;
     }
 
     /**
@@ -25,7 +25,7 @@ pub trait ViewStyle: ViewBase {
      * The "line" is separate from the shape "border".
      */
     fn set_line_top(&mut self, thickness: f32) {
-        self.data_mut().line_top = thickness;
+        self.view_data().borrow_mut().line_top = thickness;
     }
 
     /**
@@ -35,7 +35,7 @@ pub trait ViewStyle: ViewBase {
      * The "line" is separate from the shape "border".
      */
     fn set_line_right(&mut self, thickness: f32) {
-        self.data_mut().line_right = thickness;
+        self.view_data().borrow_mut().line_right = thickness;
     }
 
     /**
@@ -45,7 +45,7 @@ pub trait ViewStyle: ViewBase {
      * The "line" is separate from the shape "border".
      */
     fn set_line_bottom(&mut self, thickness: f32) {
-        self.data_mut().line_bottom = thickness;
+        self.view_data().borrow_mut().line_bottom = thickness;
     }
 
     /**
@@ -55,14 +55,14 @@ pub trait ViewStyle: ViewBase {
      * The "line" is separate from the shape "border".
      */
     fn set_line_left(&mut self, thickness: f32) {
-        self.data_mut().line_left = thickness;
+        self.view_data().borrow_mut().line_left = thickness;
     }
 
     /**
      * Sets the view shape background color.
      */
     fn set_background_color(&mut self, color: NVGcolor) {
-        self.data_mut().background_color = color;
+        self.view_data().borrow_mut().background_color = color;
         self.set_background(ViewBackground::ShapeColor);
     }
 
@@ -70,18 +70,18 @@ pub trait ViewStyle: ViewBase {
      * Sets the view shape border color.
      */
     fn set_border_color(&mut self, color: NVGcolor) {
-        self.data_mut().border_color = color;
+        self.view_data().borrow_mut().border_color = color;
     }
 
     /**
      * Sets the view shape border thickness.
      */
     fn set_border_thickness(&mut self, thickness: f32) {
-        self.data_mut().border_thickness = thickness;
+        self.view_data().borrow_mut().border_thickness = thickness;
     }
 
     fn border_thickness(&self) -> f32 {
-        self.data().border_thickness
+        self.view_data().borrow().border_thickness
     }
 
     /**
@@ -89,11 +89,11 @@ pub trait ViewStyle: ViewBase {
      * 0 means no rounded corners.
      */
     fn set_corner_radius(&mut self, radius: f32) {
-        self.data_mut().corner_radius = radius;
+        self.view_data().borrow_mut().corner_radius = radius;
     }
 
     fn corner_radius(&self) -> f32 {
-        self.data().corner_radius
+        self.view_data().borrow().corner_radius
     }
 
     /**
@@ -101,14 +101,14 @@ pub trait ViewStyle: ViewBase {
      * Default is NONE.
      */
     fn set_shadow_type(&mut self, _type: ShadowType) {
-        self.data_mut().shadow_type = _type;
+        self.view_data().borrow_mut().shadow_type = _type;
     }
 
     /**
      * Sets the shadow visibility.
      */
     fn set_shadow_visibility(&mut self, visible: bool) {
-        self.data_mut().show_shadow = visible;
+        self.view_data().borrow_mut().show_shadow = visible;
     }
 
     /**
@@ -116,25 +116,25 @@ pub trait ViewStyle: ViewBase {
      * (the white rectangle that goes behind the view, replacing the usual background shape).
      */
     fn set_hide_highlight_background(&mut self, hide: bool) {
-        self.data_mut().hide_highlight_background = hide;
+        self.view_data().borrow_mut().hide_highlight_background = hide;
     }
 
     /**
      * If set to true, the highlight border will be hidden for this view.
      */
     fn set_hide_highlight_border(&mut self, hide: bool) {
-        self.data_mut().hide_highlight_border = hide;
+        self.view_data().borrow_mut().hide_highlight_border = hide;
     }
 
     /**
      * If set to true, the highlight will be hidden for this view.
      */
     fn set_hide_highlight(&mut self, hide: bool) {
-        self.data_mut().hide_highlight = hide;
+        self.view_data().borrow_mut().hide_highlight = hide;
     }
 
     fn set_hide_click_animation(&mut self, hide: bool) {
-        self.data_mut().hide_click_animation = hide;
+        self.view_data().borrow_mut().hide_click_animation = hide;
     }
 
     /**
@@ -142,14 +142,14 @@ pub trait ViewStyle: ViewBase {
      * highlight rectangle and the view. The highlight rect is enlarged, the view is untouched.
      */
     fn set_highlight_padding(&mut self, padding: f32) {
-        self.data_mut().highlight_padding = padding;
+        self.view_data().borrow_mut().highlight_padding = padding;
     }
 
     /**
      * Sets the highlight rectangle corner radius.
      */
     fn set_highlight_corner_radius(&mut self, radius: f32) {
-        self.data_mut().highlight_corner_radius = radius;
+        self.view_data().borrow_mut().highlight_corner_radius = radius;
     }
 
     /**
@@ -160,7 +160,7 @@ pub trait ViewStyle: ViewBase {
             panic!("Only focusable views can have a custom navigation route")
         }
 
-        self.data_mut().custom_focus_by_ptr.insert(direction, target);
+        self.view_data().borrow_mut().custom_focus_by_ptr.insert(direction, target);
     }
 
     /**
@@ -175,22 +175,22 @@ pub trait ViewStyle: ViewBase {
             panic!("Only focusable views can have a custom navigation route")
         }
 
-        self.data_mut().custom_focus_by_id.insert(direction, String::from(target_id));
+        self.view_data().borrow_mut().custom_focus_by_id.insert(direction, String::from(target_id));
     }
 
     fn has_custom_navigation_route_by_ptr(&self, direction: FocusDirection) -> bool {
-        !self.data().custom_focus_by_ptr.is_empty()
+        !self.view_data().borrow().custom_focus_by_ptr.is_empty()
     }
 
     fn has_custom_navigation_route_by_id(&self, direction: FocusDirection) -> bool {
-        !self.data().custom_focus_by_id.is_empty()
+        !self.view_data().borrow().custom_focus_by_id.is_empty()
     }
 
-    fn custom_navigation_route_by_ptr(&self, direction: FocusDirection) -> Option<&Rc<RefCell<View>>> {
-        self.data().custom_focus_by_ptr.get(&direction)
+    fn custom_navigation_route_by_ptr(&self, direction: FocusDirection) -> Option<Rc<RefCell<View>>> {
+        self.view_data().borrow().custom_focus_by_ptr.get(&direction).cloned()
     }
 
-    fn custom_navigation_route_by_id(&self, direction: FocusDirection) -> Option<&String> {
-        self.data().custom_focus_by_id.get(&direction)
+    fn custom_navigation_route_by_id(&self, direction: FocusDirection) -> Option<String> {
+        self.view_data().borrow().custom_focus_by_id.get(&direction).cloned()
     }
 }

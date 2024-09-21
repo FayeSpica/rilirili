@@ -1,3 +1,5 @@
+use std::cell::RefCell;
+use std::rc::Rc;
 use crate::core::view_base::{ViewBase, ViewData};
 use crate::core::view_box::{BoxTrait, BoxViewData};
 use crate::core::view_drawer::{ViewDrawer, ViewTrait};
@@ -18,11 +20,7 @@ impl ViewLayout for SidebarSeparator {}
 impl ViewStyle for SidebarSeparator {}
 
 impl ViewBase for SidebarSeparator {
-    fn data(&self) -> &ViewData {
-        todo!()
-    }
-
-    fn data_mut(&mut self) -> &mut ViewData {
+    fn view_data(&self) -> &Rc<RefCell<ViewData>> {
         todo!()
     }
 }
@@ -50,11 +48,7 @@ impl ViewLayout for SidebarItem {}
 impl ViewStyle for SidebarItem {}
 
 impl ViewBase for SidebarItem {
-    fn data(&self) -> &ViewData {
-        todo!()
-    }
-
-    fn data_mut(&mut self) -> &mut ViewData {
+    fn view_data(&self) -> &Rc<RefCell<ViewData>> {
         todo!()
     }
 }
@@ -84,11 +78,7 @@ impl ViewLayout for Sidebar {}
 impl ViewStyle for Sidebar {}
 
 impl ViewBase for Sidebar {
-    fn data(&self) -> &ViewData {
-        todo!()
-    }
-
-    fn data_mut(&mut self) -> &mut ViewData {
+    fn view_data(&self) -> &Rc<RefCell<ViewData>> {
         todo!()
     }
 }

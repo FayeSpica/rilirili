@@ -29,7 +29,7 @@ pub trait ViewDrawer: ViewLayout {
      * override draw() instead
      */
     fn frame(&mut self, ctx: &FrameContext) {
-        if self.data().visibility != Visibility::Visible {
+        if self.view_data().borrow().visibility != Visibility::Visible {
             return;
         }
 
@@ -43,39 +43,39 @@ pub trait ViewDrawer: ViewLayout {
         let width = rect.width();
         let height = rect.height();
 
-        if self.data().alpha.current_value > 0.0 {
+        if self.view_data().borrow().alpha.current_value > 0.0 {
             // Draw background
             self.draw_background(ctx, &rect);
 
             // Draw shadow
-            if self.data().shadow_type != ShadowType::None
-                && (self.data().show_shadow || get_input_type() == InputType::TOUCH)
+            if self.view_data().borrow().shadow_type != ShadowType::None
+                && (self.view_data().borrow().show_shadow || get_input_type() == InputType::TOUCH)
             {
                 self.draw_shadow(ctx, &rect);
             }
 
             // Draw border
-            if self.data().border_thickness > 0.0 {
+            if self.view_data().borrow().border_thickness > 0.0 {
                 self.draw_border(ctx, &rect);
             }
 
             self.draw_line(ctx, &rect);
 
             // Draw highlight background
-            if self.data().highlight_alpha.current_value > 0.0
-                && !self.data().hide_highlight_background
-                && !self.data().hide_highlight
+            if self.view_data().borrow().highlight_alpha.current_value > 0.0
+                && !self.view_data().borrow().hide_highlight_background
+                && !self.view_data().borrow().hide_highlight
             {
-                self.draw_highlight(ctx, &rect, self.data().highlight_alpha.value(), true);
+                self.draw_highlight(ctx, &rect, self.view_data().borrow().highlight_alpha.value(), true);
             }
 
             // Draw click animation
-            if self.data().click_alpha.current_value > 0.0 {
+            if self.view_data().borrow().click_alpha.current_value > 0.0 {
                 self.draw_click_animation(ctx, &rect);
             }
 
             // Collapse clipping
-            if self.data().collapse_state.current_value < 1.0 || self.data().clips_to_bounds {
+            if self.view_data().borrow().collapse_state.current_value < 1.0 || self.view_data().borrow().clips_to_bounds {
                 unsafe {
                     nvgSave(ctx.context);
                     nvgIntersectScissor(
@@ -83,7 +83,7 @@ pub trait ViewDrawer: ViewLayout {
                         x,
                         y,
                         width,
-                        height * self.data().collapse_state.current_value,
+                        height * self.view_data().borrow().collapse_state.current_value,
                     );
                 }
             }
@@ -91,12 +91,12 @@ pub trait ViewDrawer: ViewLayout {
             // Draw the view
             self.draw(ctx, x, y, width, height);
 
-            if self.data().wireframe_enabled {
+            if self.view_data().borrow().wireframe_enabled {
                 self.draw_wire_frame(ctx, &rect);
             }
 
             // Reset clipping
-            if self.data().collapse_state.current_value < 1.0 || self.data().clips_to_bounds {
+            if self.view_data().borrow().collapse_state.current_value < 1.0 || self.view_data().borrow().clips_to_bounds {
                 unsafe {
                     nvgRestore(ctx.context);
                 }
@@ -145,7 +145,7 @@ pub trait ViewDrawer: ViewLayout {
      * Shows the view with a fade in animation, or no animation at all.
      */
     fn show_animated(&mut self, cb: Box<dyn Fn()>, animate: bool, animation_duration: f32) {
-        if !self.data().hidden {
+        if !self.view_data().borrow().hidden {
             self.on_show_animation_end();
             cb();
             return;
@@ -153,14 +153,14 @@ pub trait ViewDrawer: ViewLayout {
 
         debug!("Showing {}", self.describe());
 
-        self.data_mut().hidden = false;
+        self.view_data().borrow_mut().hidden = false;
 
-        self.data_mut().fade_in = true;
+        self.view_data().borrow_mut().fade_in = true;
 
         if animate {
         } else {
-            self.data_mut().alpha.current_value = 1.0;
-            self.data_mut().fade_in = false;
+            self.view_data().borrow_mut().alpha.current_value = 1.0;
+            self.view_data().borrow_mut().fade_in = false;
             self.on_show_animation_end();
             cb();
         }
@@ -194,25 +194,25 @@ pub trait ViewDrawer: ViewLayout {
      * Hides the view with a fade out animation, or no animation at all.
      */
     fn hide_animated(&mut self, cb: Box<dyn Fn()>, animate: bool, animation_duration: f32) {
-        if self.data().hidden {
+        if self.view_data().borrow().hidden {
             cb();
             return;
         }
 
         debug!("Hiding {}", self.describe());
 
-        self.data_mut().hidden = true;
-        self.data_mut().fade_in = false;
+        self.view_data().borrow_mut().hidden = true;
+        self.view_data().borrow_mut().fade_in = false;
 
         if animate {
         } else {
-            self.data_mut().alpha.current_value = 0.0;
+            self.view_data().borrow_mut().alpha.current_value = 0.0;
             cb();
         }
     }
 
     fn alpha(&self) -> c_float {
-        self.data().alpha.current_value
+        self.view_data().borrow().alpha.current_value
     }
 
     fn a(&self, color: NVGcolor) -> NVGcolor {
@@ -229,7 +229,7 @@ pub trait ViewDrawer: ViewLayout {
 
         let vg = ctx.context;
 
-        match self.data().background {
+        match self.view_data().borrow().background {
             ViewBackground::None => {}
             ViewBackground::SideBar => {
                 let backdrop_height = style("brls/sidebar/border_height");
@@ -290,11 +290,11 @@ pub trait ViewDrawer: ViewLayout {
                 }
             }
             ViewBackground::ShapeColor => unsafe {
-                nvgFillColor(vg, self.a(self.data().background_color));
+                nvgFillColor(vg, self.a(self.view_data().borrow().background_color));
                 nvgBeginPath(vg);
 
-                if self.data().corner_radius > 0.0 {
-                    nvgRoundedRect(vg, x, y, width, height, self.data().corner_radius);
+                if self.view_data().borrow().corner_radius > 0.0 {
+                    nvgRoundedRect(vg, x, y, width, height, self.view_data().borrow().corner_radius);
                 } else {
                     nvgRect(vg, x, y, width, height);
                 }
@@ -307,12 +307,12 @@ pub trait ViewDrawer: ViewLayout {
                     y,
                     x,
                     y + height,
-                    self.a(self.data().background_start_color),
-                    self.a(self.data().background_end_color),
+                    self.a(self.view_data().borrow().background_start_color),
+                    self.a(self.view_data().borrow().background_end_color),
                 );
                 nvgBeginPath(vg);
                 nvgFillPaint(vg, gradient);
-                let background_radius = &self.data().background_radius;
+                let background_radius = &self.view_data().borrow().background_radius;
                 if background_radius.iter().all(|&i| i == 0.0) {
                     nvgRect(vg, x, y, width, height);
                 } else {
@@ -339,7 +339,7 @@ pub trait ViewDrawer: ViewLayout {
         let mut shadow_opacity = 0.0f32;
         let mut shadow_offset = 0.0f32;
 
-        match self.data().shadow_type {
+        match self.view_data().borrow().shadow_type {
             ShadowType::None => {}
             ShadowType::Generic => {
                 shadow_width = style("brls/shadow/width");
@@ -359,13 +359,13 @@ pub trait ViewDrawer: ViewLayout {
                 rect.min_y() + shadow_width,
                 rect.width(),
                 rect.height(),
-                self.data().corner_radius * 2.0,
+                self.view_data().borrow().corner_radius * 2.0,
                 shadow_feather,
                 nvgRGBA(
                     0,
                     0,
                     0,
-                    (shadow_opacity * self.data().alpha.current_value) as c_uchar,
+                    (shadow_opacity * self.view_data().borrow().alpha.current_value) as c_uchar,
                 ),
                 transparent_color(),
             );
@@ -384,7 +384,7 @@ pub trait ViewDrawer: ViewLayout {
                 rect.min_y(),
                 rect.width(),
                 rect.height(),
-                self.data().corner_radius,
+                self.view_data().borrow().corner_radius,
             );
             nvgPathWinding(vg, NVGsolidity::NVG_HOLE.bits());
             nvgFillPaint(vg, shadow_paint);
@@ -396,15 +396,15 @@ pub trait ViewDrawer: ViewLayout {
         let vg = ctx.context;
         unsafe {
             nvgBeginPath(vg);
-            nvgStrokeColor(vg, self.a(self.data().border_color));
-            nvgStrokeWidth(vg, self.data().border_thickness);
+            nvgStrokeColor(vg, self.a(self.view_data().borrow().border_color));
+            nvgStrokeWidth(vg, self.view_data().borrow().border_thickness);
             nvgRoundedRect(
                 vg,
                 rect.min_x(),
                 rect.min_y(),
                 rect.width(),
                 rect.height(),
-                self.data().corner_radius,
+                self.view_data().borrow().corner_radius,
             );
             nvgBeginPath(vg);
         }
@@ -422,8 +422,8 @@ pub trait ViewDrawer: ViewLayout {
             nvgResetScissor(vg);
         }
 
-        let padding = self.data().highlight_padding;
-        let corner_radius = self.data().highlight_corner_radius;
+        let padding = self.view_data().borrow().highlight_padding;
+        let corner_radius = self.view_data().borrow().highlight_corner_radius;
         let stroke_width = style("brls/highlight/stroke_width");
 
         let x = self.x() - padding - stroke_width / 2.0;
@@ -442,7 +442,7 @@ pub trait ViewDrawer: ViewLayout {
                         highlight_background_color.rgba[0],
                         highlight_background_color.rgba[1],
                         highlight_background_color.rgba[2],
-                        self.data().highlight_alpha.value(),
+                        self.view_data().borrow().highlight_alpha.value(),
                     ),
                 );
                 nvgBeginPath(vg);
@@ -493,13 +493,13 @@ pub trait ViewDrawer: ViewLayout {
             nvgStrokeColor(vg, nvgRGB(0, 255, 0));
 
             let padding_top =
-                view_base::ntz(YGNodeLayoutGetPadding(self.data().yg_node, YGEdgeTop));
+                view_base::ntz(YGNodeLayoutGetPadding(self.view_data().borrow().yg_node, YGEdgeTop));
             let padding_left =
-                view_base::ntz(YGNodeLayoutGetPadding(self.data().yg_node, YGEdgeLeft));
+                view_base::ntz(YGNodeLayoutGetPadding(self.view_data().borrow().yg_node, YGEdgeLeft));
             let padding_bottom =
-                view_base::ntz(YGNodeLayoutGetPadding(self.data().yg_node, YGEdgeBottom));
+                view_base::ntz(YGNodeLayoutGetPadding(self.view_data().borrow().yg_node, YGEdgeBottom));
             let padding_right =
-                view_base::ntz(YGNodeLayoutGetPadding(self.data().yg_node, YGEdgeRight));
+                view_base::ntz(YGNodeLayoutGetPadding(self.view_data().borrow().yg_node, YGEdgeRight));
 
             // Top
             if padding_top > 0.0 {
@@ -536,13 +536,13 @@ pub trait ViewDrawer: ViewLayout {
             nvgBeginPath(vg);
             nvgStrokeColor(vg, nvgRGB(255, 0, 0));
 
-            let margin_top = view_base::ntz(YGNodeLayoutGetMargin(self.data().yg_node, YGEdgeTop));
+            let margin_top = view_base::ntz(YGNodeLayoutGetMargin(self.view_data().borrow().yg_node, YGEdgeTop));
             let margin_left =
-                view_base::ntz(YGNodeLayoutGetMargin(self.data().yg_node, YGEdgeLeft));
+                view_base::ntz(YGNodeLayoutGetMargin(self.view_data().borrow().yg_node, YGEdgeLeft));
             let margin_bottom =
-                view_base::ntz(YGNodeLayoutGetMargin(self.data().yg_node, YGEdgeBottom));
+                view_base::ntz(YGNodeLayoutGetMargin(self.view_data().borrow().yg_node, YGEdgeBottom));
             let margin_right =
-                view_base::ntz(YGNodeLayoutGetMargin(self.data().yg_node, YGEdgeRight));
+                view_base::ntz(YGNodeLayoutGetMargin(self.view_data().borrow().yg_node, YGEdgeRight));
 
             // Top
             if margin_top > 0.0 {
@@ -591,68 +591,68 @@ pub trait ViewDrawer: ViewLayout {
     fn draw_line(&self, ctx: &FrameContext, rect: &Rect) {
         let vg = ctx.context;
         // Don't setup and draw empty nvg path if there is no line to draw
-        if self.data().line_top <= 0.0
-            && self.data().line_left <= 0.0
-            && self.data().line_bottom <= 0.0
-            && self.data().line_right <= 0.0
+        if self.view_data().borrow().line_top <= 0.0
+            && self.view_data().borrow().line_left <= 0.0
+            && self.view_data().borrow().line_bottom <= 0.0
+            && self.view_data().borrow().line_right <= 0.0
         {
             return;
         }
 
         unsafe {
-            if self.data().line_top > 0.0 {
+            if self.view_data().borrow().line_top > 0.0 {
                 nvgBeginPath(vg);
                 nvgRect(
                     vg,
                     rect.min_x(),
                     rect.min_y(),
                     rect.size.width,
-                    self.data().line_top,
+                    self.view_data().borrow().line_top,
                 );
                 nvgClosePath(vg);
-                nvgFillColor(vg, self.a(self.data().line_color));
+                nvgFillColor(vg, self.a(self.view_data().borrow().line_color));
                 nvgFill(vg);
             }
 
-            if self.data().line_right > 0.0 {
+            if self.view_data().borrow().line_right > 0.0 {
                 nvgBeginPath(vg);
                 nvgRect(
                     vg,
                     rect.max_x(),
                     rect.min_y(),
-                    self.data().line_right,
+                    self.view_data().borrow().line_right,
                     rect.size.height,
                 );
                 nvgClosePath(vg);
-                nvgFillColor(vg, self.a(self.data().line_color));
+                nvgFillColor(vg, self.a(self.view_data().borrow().line_color));
                 nvgFill(vg);
             }
 
-            if self.data().line_bottom > 0.0 {
+            if self.view_data().borrow().line_bottom > 0.0 {
                 nvgBeginPath(vg);
                 nvgRect(
                     vg,
                     rect.min_x(),
-                    rect.max_y() - self.data().line_bottom,
+                    rect.max_y() - self.view_data().borrow().line_bottom,
                     rect.size.width,
-                    self.data().line_bottom,
+                    self.view_data().borrow().line_bottom,
                 );
                 nvgClosePath(vg);
-                nvgFillColor(vg, self.a(self.data().line_color));
+                nvgFillColor(vg, self.a(self.view_data().borrow().line_color));
                 nvgFill(vg);
             }
 
-            if self.data().line_left > 0.0 {
+            if self.view_data().borrow().line_left > 0.0 {
                 nvgBeginPath(vg);
                 nvgRect(
                     vg,
-                    rect.min_x() - self.data().line_left,
+                    rect.min_x() - self.view_data().borrow().line_left,
                     rect.min_y(),
-                    self.data().line_left,
+                    self.view_data().borrow().line_left,
                     rect.size.height,
                 );
                 nvgClosePath(vg);
-                nvgFillColor(vg, self.a(self.data().line_color));
+                nvgFillColor(vg, self.a(self.view_data().borrow().line_color));
                 nvgFill(vg);
             }
         }

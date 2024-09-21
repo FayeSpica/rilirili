@@ -25,12 +25,17 @@ use sdl2::video::{GLContext, Window};
 use sdl2::{Sdl, VideoSubsystem};
 use std::cell::RefCell;
 use std::collections::HashMap;
-use std::ffi::c_float;
+use std::ffi::{c_float, c_int, CString};
 use std::num::NonZeroU32;
+use std::path::PathBuf;
 use std::ptr::eq;
 use std::rc::Rc;
 use std::sync::Arc;
 use crate::core::attribute::AttributeSetter;
+use crate::core::font::add_font_stash;
+use crate::core::theme::theme;
+use crate::core::view_creator::{create_from_xml_file, create_from_xml_resource};
+use crate::views::label::Label;
 
 pub type XMLViewCreator = Box<dyn Fn() -> Rc<RefCell<View>>>;
 
@@ -109,10 +114,11 @@ impl Application {
             attribute_setter: AttributeSetter::default(),
         };
 
-        application.register_xml_view("ScrollingFrame", Box::new(BaseScrollingFrame::create));
-        application.register_xml_view("Box", Box::new(BaseScrollingFrame::create));
-        application.register_xml_view("Rectangle", Box::new(BaseScrollingFrame::create));
-        application.register_xml_view("Label", Box::new(BaseScrollingFrame::create));
+        // Load fonts and setup fallbacks
+        application.load_fonts();
+
+        // Register built-in XML views
+        application.register_built_in_xml_views();
 
         application
     }
@@ -268,12 +274,9 @@ impl Application {
     pub fn frame(&self, ctx: &FrameContext) {
         // trace!("gl_window.window.inner_size(): {:?}", gl_window.window.inner_size());
         // trace!("gl_window.window.scale_factor(): {} {}", gl_window.window.scale_factor(), window_scale());
+        let background_color = theme("brls/background");
         self.sdl_context.begin_frame();
-        unsafe {
-            gl::BindFramebuffer(FRAMEBUFFER, 0);
-            gl::ClearColor(0.0, 0.0, 0.0, 0.0); // Transparent background
-            gl::Clear(gl::COLOR_BUFFER_BIT | gl::DEPTH_BUFFER_BIT);
-        }
+        self.sdl_context.clear(background_color);
         unsafe {
             nvgBeginFrame(
                 ctx.context,
@@ -332,12 +335,6 @@ impl Application {
             self.frame_index = 0;
             trace!("global_fps: {}", self.global_fps);
         }
-    }
-
-    pub fn register_xml_view(&mut self, name: &str, creator: XMLViewCreator) {
-        self.view_creator_registry
-            .borrow_mut()
-            .add_xml_view_creator(name.into(), creator);
     }
 
     pub fn push_activity(&mut self, mut activity: Activity) {
@@ -423,8 +420,47 @@ impl Application {
             }
         }
     }
+
+    pub fn load_fonts(&mut self) {
+        self.load_font_from_file(FONT_REGULAR, &resource("inter/Inter-Switch.ttf"))
+    }
+
+    pub fn load_font_from_file(&mut self, font_name: &str, file_path: &str) {
+        info!("load_font_from_file({}, {})", font_name, file_path);
+        let f_name = CString::new(font_name).unwrap();
+        let f_path = CString::new(file_path).unwrap();
+        let handle = unsafe {
+            nanovg_sys::nvgCreateFont(self.frame_context().context, f_name.as_ptr(), f_path.as_ptr())
+        };
+
+        if handle == -1 {
+            panic!("nvgCreateFont failed");
+        }
+
+        add_font_stash(font_name, handle);
+    }
+
+    pub fn register_built_in_xml_views(&mut self) {
+        self.register_xml_view("ScrollingFrame", Box::new(BaseScrollingFrame::create));
+        self.register_xml_view("Box", Box::new(BoxView::create));
+        self.register_xml_view("Rectangle", Box::new(BaseScrollingFrame::create));
+        self.register_xml_view("Label", Box::new(Label::create));
+    }
+
+    pub fn register_xml_view(&mut self, name: &str, creator: XMLViewCreator) {
+        self.view_creator_registry
+            .borrow_mut()
+            .add_xml_view_creator(name.into(), creator);
+    }
 }
+
+pub const FONT_REGULAR: &str = "regular";
 
 pub fn get_input_type() -> InputType {
     InputType::GAMEPAD
+}
+
+pub fn resource(name: &str) -> String {
+    let path_buf: PathBuf = PathBuf::from(crate::core::view_creator::CUSTOM_RESOURCES_PATH);
+    format!("{}", path_buf.join(name).display())
 }
