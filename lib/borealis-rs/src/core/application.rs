@@ -34,7 +34,7 @@ use std::sync::Arc;
 use crate::core::attribute::AttributeSetter;
 use crate::core::font::add_font_stash;
 use crate::core::theme::theme;
-use crate::core::view_creator::{create_from_xml_file, create_from_xml_resource};
+use crate::core::view_creator::{create_from_xml_file};
 use crate::views::label::Label;
 
 pub type XMLViewCreator = Box<dyn Fn() -> Rc<RefCell<View>>>;
@@ -84,6 +84,7 @@ pub struct Application {
     platform: Platform,
     view_creator_registry: Rc<RefCell<ViewCreatorRegistry>>,
     attribute_setter: AttributeSetter,
+    font_bytes: Vec<u8>,
 }
 
 impl Application {
@@ -112,6 +113,7 @@ impl Application {
             platform: Platform::SDL2,
             view_creator_registry: Rc::new(RefCell::new(ViewCreatorRegistry::new())),
             attribute_setter: AttributeSetter::default(),
+            font_bytes: vec![],
         };
 
         // Load fonts and setup fallbacks
@@ -423,7 +425,8 @@ impl Application {
 
     pub fn load_fonts(&mut self) {
         // self.load_font_from_file(FONT_REGULAR, &resource("inter/Inter-Switch.ttf"));
-        self.load_font_from_file(FONT_REGULAR, &resource("inter/font.ttf"));
+        // self.load_font_from_file(FONT_REGULAR, &resource("inter/font.ttf"));
+        self.load_font_from_bytes(FONT_REGULAR, "inter/font.ttf");
     }
 
     pub fn load_font_from_file(&mut self, font_name: &str, file_path: &str) {
@@ -432,6 +435,21 @@ impl Application {
         let f_path = CString::new(file_path).unwrap();
         let handle = unsafe {
             nanovg_sys::nvgCreateFont(self.frame_context().context, f_name.as_ptr(), f_path.as_ptr())
+        };
+
+        if handle == -1 {
+            panic!("nvgCreateFont failed: {}", handle);
+        }
+
+        add_font_stash(font_name, handle);
+    }
+
+    pub fn load_font_from_bytes(&mut self, font_name: &str, file_path: &str) {
+        info!("load_font_from_file({}, {})", font_name, file_path);
+        let f_name = CString::new(font_name).unwrap();
+        self.font_bytes = crate::core::resource::read_to_bytes(file_path).unwrap();
+        let handle = unsafe {
+            nanovg_sys::nvgCreateFontMem(self.frame_context().context, f_name.as_ptr(), self.font_bytes.as_mut_ptr(), self.font_bytes.len() as c_int, 0)
         };
 
         if handle == -1 {
@@ -462,6 +480,6 @@ pub fn get_input_type() -> InputType {
 }
 
 pub fn resource(name: &str) -> String {
-    let path_buf: PathBuf = PathBuf::from(crate::core::view_creator::CUSTOM_RESOURCES_PATH);
+    let path_buf: PathBuf = PathBuf::from("resources/");
     format!("{}", path_buf.join(name).display())
 }

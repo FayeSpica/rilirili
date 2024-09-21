@@ -4,13 +4,10 @@ use crate::core::view_base::{View, ViewBase};
 use crate::core::view_box::{BoxEnum, BoxTrait, BoxView};
 use crate::core::view_layout::ViewLayout;
 use std::cell::RefCell;
-use std::fs::File;
 use std::io::BufReader;
 use std::path::PathBuf;
 use std::rc::Rc;
 use crate::core::attribute::{apply_xml_attributes, AttributeSetter};
-
-pub(crate) const CUSTOM_RESOURCES_PATH: &str = "resources";
 
 /**
  * Creates a view from the given XML file content.
@@ -42,31 +39,14 @@ pub fn create_from_xml_string(
  * you can use them in your own XML files.
  */
 pub fn create_from_xml_file(
-    name: PathBuf,
+    name: &str,
     view_creator_registry: &Rc<RefCell<ViewCreatorRegistry>>,
 ) -> Rc<RefCell<View>> {
     trace!("create_from_xml_file: {:?}", name);
     create_from_xml_string(
-        std::fs::read_to_string(name).unwrap(),
+        crate::core::resource::read_to_string(name).unwrap(),
         view_creator_registry,
     )
-}
-
-/**
- * Creates a view from the given XML resource file name.
- *
- * The method handleXMLElement() is executed for each child node in the XML.
- *
- * Uses the internal lookup table to instantiate the views.
- * Use registerXMLView() to add your own views to the table so that
- * you can use them in your own XML files.
- */
-pub fn create_from_xml_resource(
-    name: PathBuf,
-    view_creator_registry: &Rc<RefCell<ViewCreatorRegistry>>,
-) -> Rc<RefCell<View>> {
-    let path_buf: PathBuf = PathBuf::from(CUSTOM_RESOURCES_PATH);
-    create_from_xml_file(path_buf.join("xml").join(name), view_creator_registry)
 }
 
 pub fn create_from_xml_element(
@@ -85,9 +65,7 @@ pub fn create_from_xml_element(
     let mut view = if view_name == "View" {
         if let Some(xml_attribute) = element.attribute("xml") {
             create_from_xml_file(
-                get_file_path_xml_attribute_value(xml_attribute)
-                    .parse()
-                    .unwrap(),
+                &get_file_path_xml_attribute_value(xml_attribute),
                 view_creator_registry,
             )
         } else {
@@ -113,11 +91,9 @@ pub fn create_from_xml_element(
     view
 }
 
-const BRLS_RESOURCES: &str = "./resources/";
-
 pub fn get_file_path_xml_attribute_value(value: &str) -> String {
     if value.starts_with("@res/") {
-        return format!("{}{}", BRLS_RESOURCES, &value[5..]);
+        return format!("{}", &value[5..]);
     }
     format!("{}", value)
 }
