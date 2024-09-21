@@ -47,9 +47,9 @@ extern "C" fn label_measure_func(node: YGNodeRef, mut width: f32, mut widthMode:
         _ => panic!()
     };
 
-    if label.label_data.borrow().full_text.is_empty() {
-        return size;
-    }
+    // if label.label_data.borrow().full_text {
+    //     return size;
+    // }
 
     // XXX: workaround for a Yoga bug
     if widthMode == YGMeasureMode::YGMeasureModeAtMost && (width == 0.0 || width.is_nan()) {
