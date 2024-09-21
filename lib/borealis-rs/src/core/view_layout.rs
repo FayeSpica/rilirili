@@ -1,9 +1,9 @@
 use crate::core::application::ViewCreatorRegistry;
 use crate::core::geometry::{Point, Rect, Size};
 use crate::core::theme::{AUTO, nvg_rgb, nvg_rgba, theme, YG_UNDEFINED};
-use crate::core::view_base::{AlignSelf, FocusDirection, PositionType, ShadowType, View, ViewBackground, ViewBase, Visibility};
+use crate::core::view_base::{AlignSelf, FocusDirection, ntz, PositionType, ShadowType, View, ViewBackground, ViewBase, Visibility};
 use crate::core::view_style::ViewStyle;
-use std::cell::RefCell;
+use std::cell::{RefCell, RefMut};
 use std::rc::Rc;
 use std::str::FromStr;
 use yoga_sys::YGAlign::{
@@ -11,14 +11,9 @@ use yoga_sys::YGAlign::{
     YGAlignSpaceAround, YGAlignSpaceBetween, YGAlignStretch,
 };
 use yoga_sys::YGPositionType::{YGPositionTypeAbsolute, YGPositionTypeRelative};
-use yoga_sys::{
-    YGDirection, YGEdge, YGNodeCalculateLayout, YGNodeLayoutGetHeight, YGNodeLayoutGetLeft,
-    YGNodeLayoutGetTop, YGNodeLayoutGetWidth, YGNodeStyleSetAlignSelf, YGNodeStyleSetFlexGrow,
-    YGNodeStyleSetFlexShrink, YGNodeStyleSetHeight, YGNodeStyleSetHeightAuto,
-    YGNodeStyleSetMinHeight, YGNodeStyleSetMinHeightPercent, YGNodeStyleSetMinWidth,
-    YGNodeStyleSetMinWidthPercent, YGNodeStyleSetPosition, YGNodeStyleSetPositionPercent,
-    YGNodeStyleSetPositionType, YGNodeStyleSetWidth, YGNodeStyleSetWidthAuto,
-};
+use yoga_sys::{YGDirection, YGEdge, YGNodeCalculateLayout, YGNodeLayoutGetHeight, YGNodeLayoutGetLeft, YGNodeLayoutGetTop, YGNodeLayoutGetWidth, YGNodeStyleGetMargin, YGNodeStyleSetAlignSelf, YGNodeStyleSetDisplay, YGNodeStyleSetFlexGrow, YGNodeStyleSetFlexShrink, YGNodeStyleSetHeight, YGNodeStyleSetHeightAuto, YGNodeStyleSetHeightPercent, YGNodeStyleSetMargin, YGNodeStyleSetMarginAuto, YGNodeStyleSetMaxHeight, YGNodeStyleSetMaxHeightPercent, YGNodeStyleSetMaxWidth, YGNodeStyleSetMaxWidthPercent, YGNodeStyleSetMinHeight, YGNodeStyleSetMinHeightPercent, YGNodeStyleSetMinWidth, YGNodeStyleSetMinWidthPercent, YGNodeStyleSetPosition, YGNodeStyleSetPositionPercent, YGNodeStyleSetPositionType, YGNodeStyleSetWidth, YGNodeStyleSetWidthAuto, YGNodeStyleSetWidthPercent};
+use yoga_sys::YGDisplay::{YGDisplayFlex, YGDisplayNone};
+use yoga_sys::YGEdge::{YGEdgeBottom, YGEdgeLeft, YGEdgeRight, YGEdgeTop};
 use crate::core::attribute::{AutoAttributeHandler, BoolAttributeHandler, ColorAttributeHandler, FloatAttributeHandler, StringAttributeHandler};
 use crate::core::style::{hex_to_rgb, hex_to_rgba, style};
 use crate::core::view_creator::get_file_path_xml_attribute_value;
@@ -145,17 +140,6 @@ pub trait ViewLayout: ViewStyle {
     }
 
     /**
-     * Sets the preferred width and height of the view. Use brls::View::AUTO
-     * to have the layout automatically resize the view.
-     *
-     * If set to anything else than AUTO, the view is guaranteed
-     * to never shrink below the given height.
-     */
-    fn set_size(&self, size: Size) {
-        todo!()
-    }
-
-    /**
      * Shortcut to setWidth + setHeight.
      *
      * Only does one layout pass instead of two when using the two methods separately.
@@ -197,7 +181,11 @@ pub trait ViewLayout: ViewStyle {
      * the parent view width. Between 0.0f and 100.0f.
      */
     fn set_width_percentage(&self, percentage: f32) {
-        todo!()
+        unsafe {
+            YGNodeStyleSetWidthPercent(self.data().yg_node, percentage);
+            YGNodeStyleSetMinWidthPercent(self.data().yg_node, percentage);
+        }
+        self.invalidate();
     }
 
     /**
@@ -205,55 +193,11 @@ pub trait ViewLayout: ViewStyle {
      * the parent view height. Between 0.0f and 100.0f.
      */
     fn set_height_percentage(&self, percentage: f32) {
-        todo!()
-    }
-
-    /**
-     * Sets the minimum width of the view, in pixels.
-     *
-     * This constraint is stronger than the grow factor: the view
-     * is guaranteed to never be less than the given min width.
-     *
-     * Use View::AUTO to disable the min width constraint.
-     */
-    fn set_min_width(&self, min_width: f32) {
-        todo!()
-    }
-
-    /**
-     * Sets the minimum height of the view, in pixels.
-     *
-     * This constraint is stronger than the grow factor: the view
-     * is guaranteed to never be less than the given max height.
-     *
-     * Use View::AUTO to disable the min height constraint.
-     */
-    fn set_min_height(&self, min_height: f32) {
-        todo!()
-    }
-
-    /**
-     * Sets the minimum width of the view, in parent width percentage.
-     *
-     * This constraint is stronger than the grow factor: the view
-     * is guaranteed to never be less than the given max width.
-     *
-     * Use View::AUTO to disable the min width constraint.
-     */
-    fn set_min_width_percentage(&self, percentage: f32) {
-        todo!()
-    }
-
-    /**
-     * Sets the minimum height of the view, in parent height percentage.
-     *
-     * This constraint is stronger than the grow factor: the view
-     * is guaranteed to never be less than the given max height.
-     *
-     * Use View::AUTO to disable the min height constraint.
-     */
-    fn set_min_height_percentage(&self, percentage: f32) {
-        todo!()
+        unsafe {
+            YGNodeStyleSetHeightPercent(self.data().yg_node, percentage);
+            YGNodeStyleSetMinHeightPercent(self.data().yg_node, percentage);
+        }
+        self.invalidate();
     }
 
     /**
@@ -264,8 +208,15 @@ pub trait ViewLayout: ViewStyle {
      *
      * Use View::AUTO to disable the max width constraint.
      */
-    fn set_max_width(&self, min_width: f32) {
-        todo!()
+    fn set_max_width(&self, max_width: f32) {
+        unsafe {
+            if max_width == AUTO {
+                YGNodeStyleSetMaxWidth(self.data().yg_node, YG_UNDEFINED);
+            } else {
+                YGNodeStyleSetMaxWidth(self.data().yg_node, max_width);
+            }
+        }
+        self.invalidate();
     }
 
     /**
@@ -276,8 +227,15 @@ pub trait ViewLayout: ViewStyle {
      *
      * Use View::AUTO to disable the max height constraint.
      */
-    fn set_max_height(&self, min_height: f32) {
-        todo!()
+    fn set_max_height(&self, max_height: f32) {
+        unsafe {
+            if max_height == AUTO {
+                YGNodeStyleSetMaxHeight(self.data().yg_node, YG_UNDEFINED);
+            } else {
+                YGNodeStyleSetMaxHeight(self.data().yg_node, max_height);
+            }
+        }
+        self.invalidate();
     }
 
     /**
@@ -289,7 +247,10 @@ pub trait ViewLayout: ViewStyle {
      * Use View::AUTO to disable the max width constraint.
      */
     fn set_max_width_percentage(&self, percentage: f32) {
-        todo!()
+        unsafe {
+            YGNodeStyleSetMaxWidthPercent(self.data().yg_node, percentage);
+        }
+        self.invalidate();
     }
 
     /**
@@ -301,7 +262,10 @@ pub trait ViewLayout: ViewStyle {
      * Use View::AUTO to disable the max height constraint.
      */
     fn set_max_height_percentage(&self, percentage: f32) {
-        todo!()
+        unsafe {
+            YGNodeStyleSetMaxHeightPercent(self.data().yg_node, percentage);
+        }
+        self.invalidate();
     }
 
     /**
@@ -343,7 +307,33 @@ pub trait ViewLayout: ViewStyle {
      * Only does one layout pass instead of four when using the four methods separately.
      */
     fn set_margins(&self, top: f32, right: f32, bottom: f32, left: f32) {
-        todo!()
+        unsafe {
+            if top == AUTO {
+                YGNodeStyleSetMarginAuto(self.data().yg_node, YGEdgeTop);
+            } else {
+                YGNodeStyleSetMargin(self.data().yg_node, YGEdgeTop, top);
+            }
+
+            if right == AUTO {
+                YGNodeStyleSetMarginAuto(self.data().yg_node, YGEdgeRight);
+            } else {
+                YGNodeStyleSetMargin(self.data().yg_node, YGEdgeRight, right);
+            }
+
+            if bottom == AUTO {
+                YGNodeStyleSetMarginAuto(self.data().yg_node, YGEdgeBottom);
+            } else {
+                YGNodeStyleSetMargin(self.data().yg_node, YGEdgeBottom, bottom);
+            }
+
+            if left == AUTO {
+                YGNodeStyleSetMarginAuto(self.data().yg_node, YGEdgeLeft);
+            } else {
+                YGNodeStyleSetMargin(self.data().yg_node, YGEdgeLeft, left);
+            }
+        }
+
+        self.invalidate();
     }
 
     /**
@@ -357,7 +347,15 @@ pub trait ViewLayout: ViewStyle {
      * margin.
      */
     fn set_margin_top(&self, top: f32) {
-        todo!()
+        unsafe {
+            if top == AUTO {
+                YGNodeStyleSetMarginAuto(self.data().yg_node, YGEdgeTop);
+            } else {
+                YGNodeStyleSetMargin(self.data().yg_node, YGEdgeTop, top);
+            }
+        }
+
+        self.invalidate();
     }
 
     /**
@@ -371,14 +369,22 @@ pub trait ViewLayout: ViewStyle {
      * margin.
      */
     fn set_margin_right(&self, right: f32) {
-        todo!()
+        unsafe {
+            if right == AUTO {
+                YGNodeStyleSetMarginAuto(self.data().yg_node, YGEdgeRight);
+            } else {
+                YGNodeStyleSetMargin(self.data().yg_node, YGEdgeRight, right);
+            }
+        }
+
+        self.invalidate();
     }
 
     fn margin_right(&self) -> f32 {
-        todo!()
+        ntz(unsafe { YGNodeStyleGetMargin(self.data().yg_node, YGEdgeRight).value })
     }
     fn margin_left(&self) -> f32 {
-        todo!()
+        ntz(unsafe { YGNodeStyleGetMargin(self.data().yg_node, YGEdgeLeft).value })
     }
 
     /**
@@ -391,8 +397,16 @@ pub trait ViewLayout: ViewStyle {
      * Use brls::View::AUTO to have the layout automatically select the
      * margin.
      */
-    fn set_margin_bottom(&self, right: f32) {
-        todo!()
+    fn set_margin_bottom(&self, bottom: f32) {
+        unsafe {
+            if bottom == AUTO {
+                YGNodeStyleSetMarginAuto(self.data().yg_node, YGEdgeBottom);
+            } else {
+                YGNodeStyleSetMargin(self.data().yg_node, YGEdgeBottom, bottom);
+            }
+        }
+
+        self.invalidate();
     }
 
     /**
@@ -406,19 +420,43 @@ pub trait ViewLayout: ViewStyle {
      * margin.
      */
     fn set_margin_left(&self, left: f32) {
-        todo!()
+        unsafe {
+            if left == AUTO {
+                YGNodeStyleSetMarginAuto(self.data().yg_node, YGEdgeLeft);
+            } else {
+                YGNodeStyleSetMargin(self.data().yg_node, YGEdgeLeft, left);
+            }
+        }
+
+        self.invalidate();
     }
 
     /**
      * Sets the visibility of the view.
      */
-    fn set_visibility(&self, visibility: Visibility) {}
+    fn set_visibility(&mut self, visibility: Visibility) {
+        // Only change YG properties and invalidate if going from or to GONE
+        if (self.data().visibility == Visibility::Gone && visibility != Visibility::Gone) || (self.data().visibility != Visibility::Gone && visibility == Visibility::Gone) {
+            if visibility == Visibility::Gone {
+                unsafe {
+                    YGNodeStyleSetDisplay(self.data().yg_node, YGDisplayNone);
+                }
+            } else {
+                unsafe {
+                    YGNodeStyleSetDisplay(self.data().yg_node, YGDisplayFlex);
+                }
+            }
 
-    /**
-     * Gets the visibility of the view.
-     */
-    fn visibility(&self) -> Visibility {
-        todo!()
+            self.invalidate();
+        }
+
+        self.data_mut().visibility = visibility;
+
+        if visibility == Visibility::Visible {
+            self.will_appear(false);
+        } else {
+            self.will_disappear(false);
+        }
     }
 
     /**
@@ -439,9 +477,9 @@ pub trait ViewLayout: ViewStyle {
         unsafe {
             match pos == AUTO {
                 true => {
-                    YGNodeStyleSetPosition(self.data().yg_node, YGEdge::YGEdgeTop, YG_UNDEFINED)
+                    YGNodeStyleSetPosition(self.data().yg_node, YGEdgeTop, YG_UNDEFINED)
                 }
-                false => YGNodeStyleSetPosition(self.data().yg_node, YGEdge::YGEdgeTop, pos),
+                false => YGNodeStyleSetPosition(self.data().yg_node, YGEdgeTop, pos),
             }
         }
         self.invalidate();
@@ -465,9 +503,9 @@ pub trait ViewLayout: ViewStyle {
         unsafe {
             match pos == AUTO {
                 true => {
-                    YGNodeStyleSetPosition(self.data().yg_node, YGEdge::YGEdgeRight, YG_UNDEFINED)
+                    YGNodeStyleSetPosition(self.data().yg_node, YGEdgeRight, YG_UNDEFINED)
                 }
-                false => YGNodeStyleSetPosition(self.data().yg_node, YGEdge::YGEdgeRight, pos),
+                false => YGNodeStyleSetPosition(self.data().yg_node, YGEdgeRight, pos),
             }
         }
         self.invalidate();
@@ -491,9 +529,9 @@ pub trait ViewLayout: ViewStyle {
         unsafe {
             match pos == AUTO {
                 true => {
-                    YGNodeStyleSetPosition(self.data().yg_node, YGEdge::YGEdgeBottom, YG_UNDEFINED)
+                    YGNodeStyleSetPosition(self.data().yg_node, YGEdgeBottom, YG_UNDEFINED)
                 }
-                false => YGNodeStyleSetPosition(self.data().yg_node, YGEdge::YGEdgeBottom, pos),
+                false => YGNodeStyleSetPosition(self.data().yg_node, YGEdgeBottom, pos),
             }
         }
         self.invalidate();
@@ -517,9 +555,9 @@ pub trait ViewLayout: ViewStyle {
         unsafe {
             match pos == AUTO {
                 true => {
-                    YGNodeStyleSetPosition(self.data().yg_node, YGEdge::YGEdgeLeft, YG_UNDEFINED)
+                    YGNodeStyleSetPosition(self.data().yg_node, YGEdgeLeft, YG_UNDEFINED)
                 }
-                false => YGNodeStyleSetPosition(self.data().yg_node, YGEdge::YGEdgeLeft, pos),
+                false => YGNodeStyleSetPosition(self.data().yg_node, YGEdgeLeft, pos),
             }
         }
         self.invalidate();
@@ -533,7 +571,7 @@ pub trait ViewLayout: ViewStyle {
      */
     fn set_position_top_percentage(&self, percentage: f32) {
         unsafe {
-            YGNodeStyleSetPositionPercent(self.data().yg_node, YGEdge::YGEdgeTop, percentage);
+            YGNodeStyleSetPositionPercent(self.data().yg_node, YGEdgeTop, percentage);
         }
         self.invalidate();
     }
@@ -546,7 +584,7 @@ pub trait ViewLayout: ViewStyle {
      */
     fn set_position_right_percentage(&self, percentage: f32) {
         unsafe {
-            YGNodeStyleSetPositionPercent(self.data().yg_node, YGEdge::YGEdgeRight, percentage);
+            YGNodeStyleSetPositionPercent(self.data().yg_node, YGEdgeRight, percentage);
         }
         self.invalidate();
     }
@@ -559,7 +597,7 @@ pub trait ViewLayout: ViewStyle {
      */
     fn set_position_bottom_percentage(&self, percentage: f32) {
         unsafe {
-            YGNodeStyleSetPositionPercent(self.data().yg_node, YGEdge::YGEdgeBottom, percentage);
+            YGNodeStyleSetPositionPercent(self.data().yg_node, YGEdgeBottom, percentage);
         }
         self.invalidate();
     }
@@ -572,7 +610,7 @@ pub trait ViewLayout: ViewStyle {
      */
     fn set_position_left_percentage(&self, percentage: f32) {
         unsafe {
-            YGNodeStyleSetPositionPercent(self.data().yg_node, YGEdge::YGEdgeLeft, percentage);
+            YGNodeStyleSetPositionPercent(self.data().yg_node, YGEdgeLeft, percentage);
         }
         self.invalidate();
     }
@@ -633,188 +671,6 @@ pub trait ViewLayout: ViewStyle {
         self.invalidate();
     }
 
-    fn apply_xml_attributes(
-        &self,
-        element: roxmltree::Node,
-        view_creator_registry: &Rc<RefCell<ViewCreatorRegistry>>,
-    ) {
-        for attribute in element.attributes() {
-            info!(
-                "apply_xml_attributes: {} {}",
-                attribute.name(),
-                attribute.value()
-            );
-            self.apply_xml_attribute(attribute.name(), attribute.value());
-        }
-    }
-
-    fn apply_xml_attribute(&self, name: &str, value: &str) -> bool {
-        // String -> string
-        if let Some(handler) = self.data().string_attributes.get(name) {
-            if value.starts_with("@i18n/") {
-                todo!();
-                return true;
-            }
-
-            handler(value);
-            return true;
-        }
-
-        // File path -> file path
-        if value.starts_with("@res/") {
-            let path = get_file_path_xml_attribute_value(value);
-
-            if let Some(handler) = self.data().file_path_attributes.get(name) {
-                handler(value);
-                return true;
-            } else {
-                return false; // unknown res
-            }
-        } else {
-            if let Some(handler) = self.data().file_path_attributes.get(name) {
-                handler(value);
-                return true;
-            }
-
-            // don't return false as it can be anything else
-        }
-
-        // Auto -> auto
-        if "auto" == value {
-            if let Some(handler) = self.data().auto_attributes.get(name) {
-                handler();
-                return true;
-            } else {
-                info!("{:?}", self.data().auto_attributes.keys());
-                return false;
-            }
-        }
-
-        // Ends with px -> float
-        if value.ends_with("px") {
-            // Strip the px and parse the float value
-            let new_float = &value[..value.len() - 2];
-
-            if let Ok(float_value) = f32::from_str(new_float) {
-                if let Some(handler) = self.data().float_attributes.get(name) {
-                    handler(float_value);
-                    return true;
-                } else {
-                    return false;
-                }
-            } else {
-                return false;
-            }
-        }
-
-        // Ends with % -> percentage
-        if value.ends_with("%") {
-            // Strip the % and parse the float value
-            let new_float = &value[..value.len() - 1];
-
-            if let Ok(float_value) = f32::from_str(new_float) {
-
-                if float_value < -100.0 || float_value > 100.0 {
-                    return false;
-                }
-
-                if let Some(handler) = self.data().float_attributes.get(name) {
-                    handler(float_value);
-                    return true;
-                } else {
-                    return false;
-                }
-            } else {
-                return false;
-            }
-        }
-        // Starts with @style -> float
-        else if value.starts_with("@style/") {
-            // Parse the style name
-            let style_name = &value[7..]; // length of "@style/"
-            let float_value = style(style_name);
-
-            if let Some(handler) = self.data().float_attributes.get(name) {
-                handler(float_value);
-                return true;
-            } else {
-                return false;
-            }
-        }
-        // Starts with with # -> color
-        else if value.starts_with("#") {
-            // Parse the color
-            // #RRGGBB format
-            if value.len() == 7 {
-                if let Some((r, g, b)) = hex_to_rgb(value) {
-                    if let Some(handler) = self.data().color_attributes.get(name) {
-                        handler(nvg_rgb(r, g, b));
-                        return true;
-                    } else {
-                        return false;
-                    }
-                } else {
-                    return false;
-                }
-            }
-            // #RRGGBBAA format
-            else if value.len() == 9 {
-                if let Some((r, g, b, a)) = hex_to_rgba(value) {
-                    if let Some(handler) = self.data().color_attributes.get(name) {
-                        handler(nvg_rgba(r, g, b, a));
-                        return true;
-                    } else {
-                        return false;
-                    }
-                } else {
-                    return false;
-                }
-            } else {
-                return false;
-            }
-        }
-        // Starts with @theme -> color
-        else if value.starts_with("@theme/") {
-            // Parse the color name
-            let style_name = &value[7..]; // length of "@style/"
-            let value = theme(style_name);
-
-            if let Some(handler) = self.data().color_attributes.get(name) {
-                handler(value);
-                return true;
-            } else {
-                return false;
-            }
-        }
-        // Equals true or false -> bool
-        else if value == "true" || value == "false" {
-            let bool_value = if value == "true" {
-                true
-            } else {
-                false
-            };
-
-            if let Some(handler) = self.data().bool_attributes.get(name) {
-                handler(bool_value);
-                return true;
-            } else {
-                return false;
-            }
-        }
-
-        // Valid float -> float, otherwise unknown attribute
-        if let Ok(float_value) = f32::from_str(value) {
-            if let Some(handler) = self.data().float_attributes.get(name) {
-                handler(float_value);
-                return true;
-            } else {
-                return false;
-            }
-        } else {
-            return false;
-        }
-    }
-
     fn handle_xml_attributes(
         &mut self,
         element: roxmltree::Node,
@@ -823,359 +679,33 @@ pub trait ViewLayout: ViewStyle {
         panic!("Raw views cannot have child XML tags");
     }
 
-    fn register_common_attributes(&mut self, view: Rc<RefCell<View>>) {
-        // Width
-        let view_clone = view.clone();
-        self.register_auto_xml_attribute("width", Box::new(move || {
-            // view_clone.borrow_mut().set_width(AUTO);
-            let _ = view_clone.borrow().data();
-            debug!("apply success");
-        }));
-
-        let view_clone = view.clone();
-        self.register_float_xml_attribute("width", Box::new(move |value| {
-            view_clone.borrow_mut().set_width(value);
-        }));
-
-        let view_clone = view.clone();
-        self.register_percentage_xml_attribute("width", Box::new(move |value| {
-            view_clone.borrow_mut().set_width_percentage(value);
-        }));
-
-        // Height
-        let view_clone = view.clone();
-        self.register_auto_xml_attribute("height", Box::new(move || {
-            view_clone.borrow_mut().set_height(AUTO);
-        }));
-
-        let view_clone = view.clone();
-        self.register_float_xml_attribute("height", Box::new(move |value| {
-            view_clone.borrow_mut().set_height(value);
-        }));
-
-        let view_clone = view.clone();
-        self.register_percentage_xml_attribute("height", Box::new(move |value| {
-            view_clone.borrow_mut().set_height_percentage(value);
-        }));
-
-        // Max width
-        let view_clone = view.clone();
-        self.register_auto_xml_attribute("maxWidth", Box::new(move || {
-            view_clone.borrow_mut().set_max_width(AUTO);
-        }));
-
-        let view_clone = view.clone();
-        self.register_float_xml_attribute("maxWidth", Box::new(move |value| {
-            view_clone.borrow_mut().set_max_width(value);
-        }));
-
-        let view_clone = view.clone();
-        self.register_percentage_xml_attribute("maxWidth", Box::new(move |value| {
-            view_clone.borrow_mut().set_max_width_percentage(value);
-        }));
-
-        // Max Height
-        let view_clone = view.clone();
-        self.register_auto_xml_attribute("maxHeight", Box::new(move || {
-            view_clone.borrow_mut().set_max_height(AUTO);
-        }));
-
-        let view_clone = view.clone();
-        self.register_float_xml_attribute("maxHeight", Box::new(move |value| {
-            view_clone.borrow_mut().set_max_height(value);
-        }));
-
-        let view_clone = view.clone();
-        self.register_percentage_xml_attribute("maxHeight", Box::new(move |value| {
-            view_clone.borrow_mut().set_max_height_percentage(value);
-        }));
-
-        // Grow and shrink
-        let view_clone = view.clone();
-        self.register_float_xml_attribute("grow", Box::new(move |value| {
-            view_clone.borrow_mut().set_grow(value);
-        }));
-
-        let view_clone = view.clone();
-        self.register_percentage_xml_attribute("shrink", Box::new(move |value| {
-            view_clone.borrow_mut().set_shrink(value);
-        }));
-
-        // Alignment
-        let view_clone = view.clone();
-        self.register_string_xml_attribute("alignSelf", Box::new(move |value| {
-            view_clone.borrow_mut().set_align_self( match value {
-                "auto" => AlignSelf::Auto,
-                "flexStart" => AlignSelf::FlexStart,
-                "center" => AlignSelf::Center,
-                "flexEnd" => AlignSelf::FlexEnd,
-                "stretch" => AlignSelf::Stretch,
-                "baseline" => AlignSelf::Baseline,
-                "spaceBetween" => AlignSelf::SpaceBetween,
-                "spaceAround" => AlignSelf::SpaceAround,
-                &_ => AlignSelf::Auto,
-            });
-        }));
-
-        // Margins top
-        let view_clone = view.clone();
-        self.register_float_xml_attribute("marginTop", Box::new(move |value| {
-            view_clone.borrow_mut().set_margin_top(value);
-        }));
-
-        let view_clone = view.clone();
-        self.register_auto_xml_attribute("marginTop", Box::new(move || {
-            view_clone.borrow_mut().set_margin_top(AUTO);
-        }));
-
-        // Margins right
-        let view_clone = view.clone();
-        self.register_float_xml_attribute("marginRight", Box::new(move |value| {
-            view_clone.borrow_mut().set_margin_right(value);
-        }));
-
-        let view_clone = view.clone();
-        self.register_auto_xml_attribute("marginRight", Box::new(move || {
-            view_clone.borrow_mut().set_margin_right(AUTO);
-        }));
-
-        // Margins bottom
-        let view_clone = view.clone();
-        self.register_float_xml_attribute("marginBottom", Box::new(move |value| {
-            view_clone.borrow_mut().set_margin_bottom(value);
-        }));
-
-        let view_clone = view.clone();
-        self.register_auto_xml_attribute("marginBottom", Box::new(move || {
-            view_clone.borrow_mut().set_margin_bottom(AUTO);
-        }));
-
-        // Margins left
-        let view_clone = view.clone();
-        self.register_float_xml_attribute("marginLeft", Box::new(move |value| {
-            view_clone.borrow_mut().set_margin_left(value);
-        }));
-
-        let view_clone = view.clone();
-        self.register_auto_xml_attribute("marginLeft", Box::new(move || {
-            view_clone.borrow_mut().set_margin_left(AUTO);
-        }));
-
-        // Line
-        let view_clone = view.clone();
-        self.register_color_xml_attribute("lineColor", Box::new(move |value| {
-            view_clone.borrow_mut().set_line_color(value);
-        }));
-
-        let view_clone = view.clone();
-        self.register_float_xml_attribute("lineTop", Box::new(move |value| {
-            view_clone.borrow_mut().set_line_top(value);
-        }));
-
-        let view_clone = view.clone();
-        self.register_float_xml_attribute("lineRight", Box::new(move |value| {
-            view_clone.borrow_mut().set_line_right(value);
-        }));
-
-        let view_clone = view.clone();
-        self.register_float_xml_attribute("lineBottom", Box::new(move |value| {
-            view_clone.borrow_mut().set_line_bottom(value);
-        }));
-
-        let view_clone = view.clone();
-        self.register_float_xml_attribute("lineLeft", Box::new(move |value| {
-            view_clone.borrow_mut().set_line_left(value);
-        }));
-
-        // Position
-        let view_clone = view.clone();
-        self.register_float_xml_attribute("positionTop", Box::new(move |value| {
-            view_clone.borrow_mut().set_position_top(value);
-        }));
-
-        let view_clone = view.clone();
-        self.register_float_xml_attribute("positionRight", Box::new(move |value| {
-            view_clone.borrow_mut().set_position_right(value);
-        }));
-
-        let view_clone = view.clone();
-        self.register_float_xml_attribute("positionBottom", Box::new(move |value| {
-            view_clone.borrow_mut().set_position_bottom(value);
-        }));
-
-        let view_clone = view.clone();
-        self.register_float_xml_attribute("positionLeft", Box::new(move |value| {
-            view_clone.borrow_mut().set_position_left(value);
-        }));
-
-        let view_clone = view.clone();
-        self.register_percentage_xml_attribute("positionTop", Box::new(move |value| {
-            view_clone.borrow_mut().set_position_top_percentage(value);
-        }));
-
-        let view_clone = view.clone();
-        self.register_percentage_xml_attribute("positionRight", Box::new(move |value| {
-            view_clone.borrow_mut().set_position_right_percentage(value);
-        }));
-
-        let view_clone = view.clone();
-        self.register_percentage_xml_attribute("positionBottom", Box::new(move |value| {
-            view_clone.borrow_mut().set_position_bottom_percentage(value);
-        }));
-
-        let view_clone = view.clone();
-        self.register_percentage_xml_attribute("positionLeft", Box::new(move |value| {
-            view_clone.borrow_mut().set_position_left_percentage(value);
-        }));
-
-        let view_clone = view.clone();
-        self.register_string_xml_attribute("positionType", Box::new(move |value| {
-            view_clone.borrow_mut().set_position_type( match value {
-                "relative" => PositionType::Relative,
-                "absolute" => PositionType::Absolute,
-                &_ => PositionType::Relative,
-            });
-        }));
-
-        // Custom focus routes
-        let view_clone = view.clone();
-        self.register_string_xml_attribute("focusUp", Box::new(move |value| {
-            view_clone.borrow_mut().set_custom_navigation_route_by_id(FocusDirection::Up, value);
-        }));
-
-        let view_clone = view.clone();
-        self.register_string_xml_attribute("focusRight", Box::new(move |value| {
-            view_clone.borrow_mut().set_custom_navigation_route_by_id(FocusDirection::Right, value);
-        }));
-
-        let view_clone = view.clone();
-        self.register_string_xml_attribute("focusDown", Box::new(move |value| {
-            view_clone.borrow_mut().set_custom_navigation_route_by_id(FocusDirection::Down, value);
-        }));
-
-        let view_clone = view.clone();
-        self.register_string_xml_attribute("focusLeft", Box::new(move |value| {
-            view_clone.borrow_mut().set_custom_navigation_route_by_id(FocusDirection::Left, value);
-        }));
-
-        // Shape
-        let view_clone = view.clone();
-        self.register_color_xml_attribute("backgroundColor", Box::new(move |value| {
-            view_clone.borrow_mut().set_background_color(value);
-        }));
-
-        let view_clone = view.clone();
-        self.register_color_xml_attribute("borderColor", Box::new(move |value| {
-            view_clone.borrow_mut().set_border_color(value);
-        }));
-
-        let view_clone = view.clone();
-        self.register_float_xml_attribute("borderThickness", Box::new(move |value| {
-            view_clone.borrow_mut().set_border_thickness(value);
-        }));
-
-        let view_clone = view.clone();
-        self.register_float_xml_attribute("cornerRadius", Box::new(move |value| {
-            view_clone.borrow_mut().set_corner_radius(value);
-        }));
-
-        let view_clone = view.clone();
-        self.register_string_xml_attribute("shadowType", Box::new(move |value| {
-            view_clone.borrow_mut().set_shadow_type( match value {
-                "none" => ShadowType::None,
-                "generic" => ShadowType::Generic,
-                "custom" => ShadowType::Custom,
-                &_ => ShadowType::None,
-            });
-        }));
-
-        // Misc
-        let view_clone = view.clone();
-        self.register_string_xml_attribute("visibility", Box::new(move |value| {
-            view_clone.borrow_mut().set_visibility( match value {
-                "visible" => Visibility::Visible,
-                "invisible" => Visibility::Invisible,
-                "gone" => Visibility::Gone,
-                &_ => Visibility::Visible,
-            });
-        }));
-
-        let view_clone = view.clone();
-        self.register_string_xml_attribute("id", Box::new(move |value| {
-            view_clone.borrow_mut().set_id(value);
-        }));
-
-        let view_clone = view.clone();
-        self.register_string_xml_attribute("background", Box::new(move |value| {
-            view_clone.borrow_mut().set_background( match value {
-                "sidebar" => ViewBackground::SideBar,
-                "backdrop" => ViewBackground::BackDrop,
-                &_ => ViewBackground::None,
-            });
-        }));
-
-        let view_clone = view.clone();
-        self.register_bool_xml_attribute("focusable", Box::new(move |value| {
-            view_clone.borrow_mut().set_focusable(value);
-        }));
-
-        let view_clone = view.clone();
-        self.register_bool_xml_attribute("wireframe", Box::new(move |value| {
-            view_clone.borrow_mut().set_wireframe_enabled(value);
-        }));
-
-        // Highlight
-        let view_clone = view.clone();
-        self.register_bool_xml_attribute("hideHighlightBackground", Box::new(move |value| {
-            view_clone.borrow_mut().set_hide_highlight_background(value);
-        }));
-
-        let view_clone = view.clone();
-        self.register_float_xml_attribute("highlightPadding", Box::new(move |value| {
-            view_clone.borrow_mut().set_highlight_padding(value);
-        }));
-
-        let view_clone = view.clone();
-        self.register_float_xml_attribute("highlightCornerRadius", Box::new(move |value| {
-            view_clone.borrow_mut().set_highlight_corner_radius(value);
-        }));
-    }
-
-    fn register_auto_xml_attribute(&mut self, name: &str, handler: AutoAttributeHandler) {
-        self.data_mut().auto_attributes.insert(name.into(), handler);
-        self.data_mut().known_attributes.push(name.into());
-    }
-
-    fn register_float_xml_attribute(&mut self, name: &str, handler: FloatAttributeHandler) {
-        self.data_mut().float_attributes.insert(name.into(), handler);
-        self.data_mut().known_attributes.push(name.into());
-    }
-
-    fn register_percentage_xml_attribute(&mut self, name: &str, handler: FloatAttributeHandler) {
-        self.data_mut().percentage_attributes.insert(name.into(), handler);
-        self.data_mut().known_attributes.push(name.into());
-    }
-
-    fn register_string_xml_attribute(&mut self, name: &str, handler: StringAttributeHandler) {
-        self.data_mut().string_attributes.insert(name.into(), handler);
-        self.data_mut().known_attributes.push(name.into());
-    }
-
-    fn register_color_xml_attribute(&mut self, name: &str, handler: ColorAttributeHandler) {
-        self.data_mut().color_attributes.insert(name.into(), handler);
-        self.data_mut().known_attributes.push(name.into());
-    }
-
-    fn register_bool_xml_attribute(&mut self, name: &str, handler: BoolAttributeHandler) {
-        self.data_mut().bool_attributes.insert(name.into(), handler);
-        self.data_mut().known_attributes.push(name.into());
-    }
-
     fn set_wireframe_enabled(&mut self, wireframe: bool) {
         self.data_mut().wireframe_enabled = wireframe;
     }
 
     fn is_wireframe_enabled(&self) -> bool {
         self.data().wireframe_enabled
+    }
+
+    /**
+     * Called when the view will appear
+     * on screen, before or after layout().
+     *
+     * Can be called if the view has
+     * already appeared, so be careful.
+     */
+    fn will_appear(&self, reset_state: bool) {
+        // Nothing to do
+    }
+
+    /**
+     * Called when the view will disappear
+     * from the screen.
+     *
+     * Can be called if the view has
+     * already disappeared, so be careful.
+     */
+    fn will_disappear(&self, reset_state: bool) {
+        // Nothing to do
     }
 }

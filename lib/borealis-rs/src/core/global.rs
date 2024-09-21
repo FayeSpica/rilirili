@@ -1,5 +1,7 @@
+use std::collections::HashMap;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::Mutex;
+use crate::core::attribute::AutoAttributeHandler;
 
 pub const BASE_WINDOW_WIDTH: u32 = 1280;
 pub const BASE_WINDOW_HEIGHT: u32 = 720;

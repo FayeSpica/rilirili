@@ -8,6 +8,7 @@ use std::fs::File;
 use std::io::BufReader;
 use std::path::PathBuf;
 use std::rc::Rc;
+use crate::core::attribute::AttributeSetter;
 
 const CUSTOM_RESOURCES_PATH: &str = "resources";
 
@@ -122,10 +123,8 @@ pub fn create_from_xml_element(
         let mut tmp_view = viw_creator();
         // Register common XML attributes
         tmp_view.borrow_mut().set_view(Some(tmp_view.clone()));
-        tmp_view.borrow_mut().register_common_attributes(tmp_view.clone());
-        tmp_view
-            .borrow()
-            .apply_xml_attributes(element, view_creator_registry);
+        let setter = AttributeSetter::default(); // todo: performance
+        setter.apply_xml_attributes(tmp_view.clone(), element, view_creator_registry);
 
         tmp_view
     };

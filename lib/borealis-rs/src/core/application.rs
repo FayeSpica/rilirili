@@ -30,6 +30,7 @@ use std::num::NonZeroU32;
 use std::ptr::eq;
 use std::rc::Rc;
 use std::sync::Arc;
+use crate::core::attribute::AttributeSetter;
 
 pub type XMLViewCreator = Box<dyn Fn() -> Rc<RefCell<View>>>;
 
@@ -77,6 +78,7 @@ pub struct Application {
     global_quit_identifier: ActionIdentifier,
     platform: Platform,
     view_creator_registry: Rc<RefCell<ViewCreatorRegistry>>,
+    attribute_setter: AttributeSetter,
 }
 
 impl Application {
@@ -104,6 +106,7 @@ impl Application {
             global_quit_identifier: 0,
             platform: Platform::SDL2,
             view_creator_registry: Rc::new(RefCell::new(ViewCreatorRegistry::new())),
+            attribute_setter: AttributeSetter::default(),
         };
 
         application.register_xml_view("ScrollingFrame", Box::new(BaseScrollingFrame::create));

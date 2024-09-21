@@ -125,28 +125,6 @@ pub trait ViewDrawer: ViewLayout {
     }
 
     /**
-     * Called when the view will appear
-     * on screen, before or after layout().
-     *
-     * Can be called if the view has
-     * already appeared, so be careful.
-     */
-    fn will_appear(&self, reset_state: bool) {
-        // Nothing to do
-    }
-
-    /**
-     * Called when the view will disappear
-     * from the screen.
-     *
-     * Can be called if the view has
-     * already disappeared, so be careful.
-     */
-    fn will_disappear(&self, reset_state: bool) {
-        // Nothing to do
-    }
-
-    /**
      * Called when the show() animation (fade in)
      * ends
      */
