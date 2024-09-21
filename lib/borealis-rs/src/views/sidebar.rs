@@ -32,11 +32,7 @@ pub struct SidebarItem;
 pub trait SidebarItemTrait: BoxTrait {}
 
 impl BoxTrait for SidebarItem {
-    fn box_view_data(&self) -> &BoxViewData {
-        todo!()
-    }
-
-    fn box_view_data_mut(&mut self) -> &mut BoxViewData {
+    fn box_view_data(&self) -> &Rc<RefCell<BoxViewData>> {
         todo!()
     }
 }
@@ -62,11 +58,7 @@ pub trait SidebarTrait: ScrollingFrameTrait {}
 impl ScrollingFrameTrait for Sidebar {}
 
 impl BoxTrait for Sidebar {
-    fn box_view_data(&self) -> &BoxViewData {
-        todo!()
-    }
-
-    fn box_view_data_mut(&mut self) -> &mut BoxViewData {
+    fn box_view_data(&self) -> &Rc<RefCell<BoxViewData>> {
         todo!()
     }
 }

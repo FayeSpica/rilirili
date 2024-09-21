@@ -332,7 +332,6 @@ impl Video {
 
         let s = Self {
             box_view_data: BoxViewData {
-                view_data: Default::default(),
                 axis: Axis::Row,
                 children: vec![],
                 default_focused_index: 0,
@@ -502,11 +501,7 @@ pub trait VideoTrait: BoxTrait {
 }
 
 impl BoxTrait for Video {
-    fn box_view_data(&self) -> &BoxViewData {
-        todo!()
-    }
-
-    fn box_view_data_mut(&mut self) -> &mut BoxViewData {
+    fn box_view_data(&self) -> &Rc<RefCell<BoxViewData>> {
         todo!()
     }
 }

@@ -11,11 +11,7 @@ pub struct EditTextDialog;
 pub trait EditTextDialogTrait: BoxTrait {}
 
 impl BoxTrait for EditTextDialog {
-    fn box_view_data(&self) -> &BoxViewData {
-        todo!()
-    }
-
-    fn box_view_data_mut(&mut self) -> &mut BoxViewData {
+    fn box_view_data(&self) -> &Rc<RefCell<BoxViewData>> {
         todo!()
     }
 }

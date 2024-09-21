@@ -19,19 +19,11 @@ pub enum ScrollingFrame {
 pub trait ScrollingFrameTrait: BoxTrait {}
 
 impl BoxTrait for ScrollingFrame {
-    fn box_view_data(&self) -> &BoxViewData {
+    fn box_view_data(&self) -> &Rc<RefCell<BoxViewData>> {
         match self {
             ScrollingFrame::BaseScrollingFrame(v) => BaseScrollingFrame::box_view_data(v),
             ScrollingFrame::RecyclerFrame(v) => RecyclerFrame::box_view_data(v),
             ScrollingFrame::Sidebar(v) => Sidebar::box_view_data(v),
-        }
-    }
-
-    fn box_view_data_mut(&mut self) -> &mut BoxViewData {
-        match self {
-            ScrollingFrame::BaseScrollingFrame(v) => BaseScrollingFrame::box_view_data_mut(v),
-            ScrollingFrame::RecyclerFrame(v) => RecyclerFrame::box_view_data_mut(v),
-            ScrollingFrame::Sidebar(v) => Sidebar::box_view_data_mut(v),
         }
     }
 }
@@ -56,7 +48,7 @@ impl ViewBase for ScrollingFrame {
 impl ScrollingFrameTrait for ScrollingFrame {}
 
 pub struct BaseScrollingFrame {
-    box_view_data: BoxViewData,
+    box_view_data: Rc<RefCell<BoxViewData>>,
 }
 
 impl Default for BaseScrollingFrame {
@@ -68,12 +60,8 @@ impl Default for BaseScrollingFrame {
 }
 
 impl BoxTrait for BaseScrollingFrame {
-    fn box_view_data(&self) -> &BoxViewData {
+    fn box_view_data(&self) -> &Rc<RefCell<BoxViewData>> {
         &self.box_view_data
-    }
-
-    fn box_view_data_mut(&mut self) -> &mut BoxViewData {
-        &mut self.box_view_data
     }
 }
 

@@ -11,11 +11,7 @@ pub struct Image;
 pub trait ImageTrait: BoxTrait {}
 
 impl BoxTrait for Image {
-    fn box_view_data(&self) -> &BoxViewData {
-        todo!()
-    }
-
-    fn box_view_data_mut(&mut self) -> &mut BoxViewData {
+    fn box_view_data(&self) -> &Rc<RefCell<BoxViewData>> {
         todo!()
     }
 }

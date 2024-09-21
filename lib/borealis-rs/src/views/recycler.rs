@@ -12,11 +12,7 @@ pub struct RecyclerCell;
 pub trait RecyclerCellTrait: BoxTrait {}
 
 impl BoxTrait for RecyclerCell {
-    fn box_view_data(&self) -> &BoxViewData {
-        todo!()
-    }
-
-    fn box_view_data_mut(&mut self) -> &mut BoxViewData {
+    fn box_view_data(&self) -> &Rc<RefCell<BoxViewData>> {
         todo!()
     }
 }
@@ -42,11 +38,7 @@ pub trait RecyclerHeaderTrait: RecyclerCellTrait {}
 impl RecyclerCellTrait for RecyclerHeader {}
 
 impl BoxTrait for RecyclerHeader {
-    fn box_view_data(&self) -> &BoxViewData {
-        todo!()
-    }
-
-    fn box_view_data_mut(&mut self) -> &mut BoxViewData {
+    fn box_view_data(&self) -> &Rc<RefCell<BoxViewData>> {
         todo!()
     }
 }
@@ -72,11 +64,7 @@ pub struct RecyclerContentBox;
 pub trait RecyclerContentBoxTrait: BoxTrait {}
 
 impl BoxTrait for RecyclerContentBox {
-    fn box_view_data(&self) -> &BoxViewData {
-        todo!()
-    }
-
-    fn box_view_data_mut(&mut self) -> &mut BoxViewData {
+    fn box_view_data(&self) -> &Rc<RefCell<BoxViewData>> {
         todo!()
     }
 }
@@ -102,11 +90,7 @@ pub trait RecyclerFrameTrait: ScrollingFrameTrait {}
 impl ScrollingFrameTrait for RecyclerFrame {}
 
 impl BoxTrait for RecyclerFrame {
-    fn box_view_data(&self) -> &BoxViewData {
-        todo!()
-    }
-
-    fn box_view_data_mut(&mut self) -> &mut BoxViewData {
+    fn box_view_data(&self) -> &Rc<RefCell<BoxViewData>> {
         todo!()
     }
 }

@@ -63,13 +63,15 @@ pub enum Direction {
 }
 
 pub struct BoxView {
-    box_view_data: BoxViewData,
+    pub box_view_data: Rc<RefCell<BoxViewData>>,
+    pub view_data: Rc<RefCell<ViewData>>,
 }
 
 impl Default for BoxView {
     fn default() -> Self {
         let mut s = Self {
-            box_view_data: BoxViewData::default(),
+            box_view_data: Default::default(),
+            view_data: Default::default(),
         };
 
         s.set_axis(Axis::Row);
@@ -179,15 +181,8 @@ impl Default for BoxView {
 impl BoxView {
     pub fn new(x: f32, y: f32, width: f32, height: f32) -> Self {
         let s = Self {
-            box_view_data: BoxViewData {
-                view_data: Default::default(),
-                axis: Axis::Row,
-                children: vec![],
-                default_focused_index: 0,
-                last_focused_view: None,
-                forwarded_attributes: Default::default(),
-                box_view: None,
-            },
+            box_view_data: Default::default(),
+            view_data: Default::default(),
         };
         s.set_width(width);
         s.set_height(height);
@@ -203,7 +198,7 @@ impl BoxView {
 
 impl ViewBase for BoxView {
     fn view_data(&self) -> &Rc<RefCell<ViewData>> {
-        &self.box_view_data.view_data
+        &self.view_data
     }
 }
 
@@ -218,12 +213,8 @@ impl ViewDrawer for BoxView {
 }
 
 impl BoxTrait for BoxView {
-    fn box_view_data(&self) -> &BoxViewData {
+    fn box_view_data(&self) -> &Rc<RefCell<BoxViewData>> {
         &self.box_view_data
-    }
-
-    fn box_view_data_mut(&mut self) -> &mut BoxViewData {
-        &mut self.box_view_data
     }
 }
 
@@ -278,11 +269,8 @@ impl ViewBase for BoxEnum {
 }
 
 pub struct BoxViewData {
-    pub view_data: Rc<RefCell<ViewData>>,
-
     pub axis: Axis,
     pub children: Vec<Rc<RefCell<View>>>,
-
     pub default_focused_index: usize,
     pub last_focused_view: Option<Rc<RefCell<View>>>,
     pub forwarded_attributes: HashMap<String, (String, Rc<RefCell<RefCell<View>>>)>,
@@ -292,7 +280,6 @@ pub struct BoxViewData {
 impl Default for BoxViewData {
     fn default() -> Self {
         Self {
-            view_data: Default::default(),
             axis: Axis::Row,
             children: vec![],
             default_focused_index: 0,
@@ -304,18 +291,10 @@ impl Default for BoxViewData {
 }
 
 impl BoxTrait for BoxEnum {
-    fn box_view_data(&self) -> &BoxViewData {
+    fn box_view_data(&self) -> &Rc<RefCell<BoxViewData>> {
         match self {
             BoxEnum::Box(v) => BoxView::box_view_data(v),
             BoxEnum::ScrollingFrame(v) => ScrollingFrame::box_view_data(v),
-            _ => todo!(),
-        }
-    }
-
-    fn box_view_data_mut(&mut self) -> &mut BoxViewData {
-        match self {
-            BoxEnum::Box(v) => BoxView::box_view_data_mut(v),
-            BoxEnum::ScrollingFrame(v) => ScrollingFrame::box_view_data_mut(v),
             _ => todo!(),
         }
     }
@@ -323,9 +302,7 @@ impl BoxTrait for BoxEnum {
 
 // Generic FlexBox layout
 pub trait BoxTrait: ViewDrawer {
-    fn box_view_data(&self) -> &BoxViewData;
-
-    fn box_view_data_mut(&mut self) -> &mut BoxViewData;
+    fn box_view_data(&self) -> &Rc<RefCell<BoxViewData>>;
 
     /**
      * Adds a view to this Box.
@@ -341,17 +318,17 @@ pub trait BoxTrait: ViewDrawer {
      * Returns the position the view was added at.
      */
     fn add_view_position(&mut self, view: Rc<RefCell<View>>, position: usize) {
-        if position > self.box_view_data().children.len() {
+        if position > self.box_view_data().borrow().children.len() {
             panic!(
                 "cannot insert view at {}:{}/{}",
                 self.describe(),
-                self.box_view_data().children.len(),
+                self.box_view_data().borrow().children.len(),
                 position
             );
         }
 
         // Add the view to our children and YGNode
-        self.box_view_data_mut()
+        self.box_view_data().borrow_mut()
             .children
             .insert(position, view.clone());
 
@@ -378,13 +355,13 @@ pub trait BoxTrait: ViewDrawer {
      */
     fn remove_view(&mut self, to_remove: Rc<RefCell<View>>, free: bool) {
         let mut delete_index = None;
-        for (index, view) in self.box_view_data().children.iter().enumerate() {
+        for (index, view) in self.box_view_data().borrow().children.iter().enumerate() {
             if Rc::ptr_eq(view, &to_remove) {
                 delete_index = Some(index)
             }
         }
         if let Some(index) = delete_index {
-            let view = self.box_view_data_mut().children.remove(index);
+            let view = self.box_view_data().borrow_mut().children.remove(index);
             // Remove it
             if !view.borrow().is_detached() {
                 unsafe {
@@ -405,7 +382,7 @@ pub trait BoxTrait: ViewDrawer {
      */
     fn clear_views(&mut self, free: bool) {
         let yg_node = self.view_data().borrow().yg_node.clone();
-        for view in self.box_view_data_mut().children.drain(..) {
+        for view in self.box_view_data().borrow_mut().children.drain(..) {
             // Remove it
             unsafe {
                 YGNodeRemoveChild(yg_node, view.borrow().view_data().borrow().yg_node);
@@ -423,7 +400,7 @@ pub trait BoxTrait: ViewDrawer {
     fn on_focus_gained(&mut self) {
         ViewBase::on_focus_gained(self);
 
-        for child in &self.box_view_data().children {
+        for child in &self.box_view_data().borrow().children {
             child
                 .borrow()
                 .on_parent_focus_gained(self.view().as_ref().unwrap().clone())
@@ -433,7 +410,7 @@ pub trait BoxTrait: ViewDrawer {
     fn on_focus_lost(&mut self) {
         ViewBase::on_focus_lost(self);
 
-        for child in &self.box_view_data().children {
+        for child in &self.box_view_data().borrow().children {
             child
                 .borrow()
                 .on_parent_focus_lost(self.view().as_ref().unwrap().clone())
@@ -443,7 +420,7 @@ pub trait BoxTrait: ViewDrawer {
     fn on_parent_focus_gained(&mut self, focused_view: Rc<RefCell<View>>) {
         ViewBase::on_parent_focus_gained(self, focused_view);
 
-        for child in &self.box_view_data().children {
+        for child in &self.box_view_data().borrow().children {
             child
                 .borrow()
                 .on_parent_focus_gained(self.view().as_ref().unwrap().clone())
@@ -453,7 +430,7 @@ pub trait BoxTrait: ViewDrawer {
     fn on_parent_focus_lost(&mut self, focused_view: Rc<RefCell<View>>) {
         ViewBase::on_parent_focus_lost(self, focused_view);
 
-        for child in &self.box_view_data().children {
+        for child in &self.box_view_data().borrow().children {
             child
                 .borrow()
                 .on_parent_focus_lost(self.view().as_ref().unwrap().clone())
@@ -465,7 +442,7 @@ pub trait BoxTrait: ViewDrawer {
         direct_child: Rc<RefCell<View>>,
         focused_view: Rc<RefCell<View>>,
     ) {
-        self.box_view_data_mut().last_focused_view = Some(direct_child);
+        self.box_view_data().borrow_mut().last_focused_view = Some(direct_child);
         if let Some(parent) = self.parent() {
             parent
                 .borrow_mut()
@@ -478,7 +455,7 @@ pub trait BoxTrait: ViewDrawer {
         direct_child: Rc<RefCell<View>>,
         focused_view: Rc<RefCell<View>>,
     ) {
-        self.box_view_data_mut().last_focused_view = Some(direct_child);
+        self.box_view_data().borrow_mut().last_focused_view = Some(direct_child);
         if let Some(parent) = self.parent() {
             parent
                 .borrow_mut()
@@ -549,16 +526,16 @@ pub trait BoxTrait: ViewDrawer {
     }
 
     fn box_view(&self) -> Option<Rc<RefCell<BoxEnum>>> {
-        self.box_view_data().box_view.clone()
+        self.box_view_data().borrow().box_view.clone()
     }
 
     fn set_box_view(&mut self, box_view: Option<Rc<RefCell<BoxEnum>>>) {
-        self.box_view_data_mut().box_view = box_view;
+        self.box_view_data().borrow_mut().box_view = box_view;
     }
 
     fn draw(&self, ctx: &FrameContext, x: f32, y: f32, width: f32, height: f32) {
-        trace!("box draw ({},{},{},{}), childs: {}", x, y, width, height,  &self.box_view_data().children.len());
-        for child in &self.box_view_data().children {
+        trace!("box draw ({},{},{},{}), childs: {}", x, y, width, height,  &self.box_view_data().borrow().children.len());
+        for child in &self.box_view_data().borrow().children {
             trace!("draw {}", child.borrow().describe());
             child.borrow_mut().frame(ctx);
         }
@@ -578,7 +555,7 @@ pub trait BoxTrait: ViewDrawer {
         unsafe {
             YGNodeStyleSetFlexDirection(self.view_data().borrow().yg_node, get_yg_flex_direction(axis));
         }
-        self.box_view_data_mut().axis = axis;
+        self.box_view_data().borrow_mut().axis = axis;
         self.invalidate();
     }
 

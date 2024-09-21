@@ -11,11 +11,7 @@ pub struct Hint;
 pub trait HintTrait: BoxTrait {}
 
 impl BoxTrait for Hint {
-    fn box_view_data(&self) -> &BoxViewData {
-        todo!()
-    }
-
-    fn box_view_data_mut(&mut self) -> &mut BoxViewData {
+    fn box_view_data(&self) -> &Rc<RefCell<BoxViewData>> {
         todo!()
     }
 }
@@ -39,11 +35,7 @@ pub struct Hints;
 pub trait HintsTrait: BoxTrait {}
 
 impl BoxTrait for Hints {
-    fn box_view_data(&self) -> &BoxViewData {
-        todo!()
-    }
-
-    fn box_view_data_mut(&mut self) -> &mut BoxViewData {
+    fn box_view_data(&self) -> &Rc<RefCell<BoxViewData>> {
         todo!()
     }
 }
