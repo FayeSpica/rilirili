@@ -16,6 +16,14 @@ export CC=gcc
 export CXX=g++
 ```
 
+## release dll needed
+```shell
+C:\\msys64\\mingw64\\bin\\SDL2.dll
+C:\\msys64\\mingw64\\bin\\libstdc++-6.dll
+C:\\msys64\\mingw64\\bin\\libwinpthread-1.dll
+C:\\msys64\\mingw64\\bin\\libgcc_s_seh-1.dll
+```
+
 ## ubuntu
 ```shell
 apt install libssl-dev
