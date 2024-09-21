@@ -20,6 +20,7 @@ use crate::views::recycler::{RecyclerCell, RecyclerHeader};
 use crate::views::scrolling_frame::{BaseScrollingFrame, ScrollingFrame};
 use crate::views::slider::Slider;
 use crate::views::tab_frame::TabFrame;
+#[cfg(feature = "mpv")]
 use crate::views::video::{Video, VideoTrait};
 use roxmltree::Node;
 use std::cell::RefCell;
@@ -236,6 +237,7 @@ pub enum BoxEnum {
     ScrollingFrame(ScrollingFrame),
     Slider(Slider),
     TabFrame(TabFrame),
+    #[cfg(feature = "mpv")]
     Video(Video),
 }
 
@@ -246,6 +248,7 @@ impl ViewDrawer for BoxEnum {
     fn draw(&mut self, ctx: &FrameContext, x: f32, y: f32, width: f32, height: f32) {
         match self {
             BoxEnum::Box(v) => BoxTrait::draw(v, ctx, x, y, width, height),
+            #[cfg(feature = "mpv")]
             BoxEnum::Video(v) => VideoTrait::draw(v, ctx, x, y, width, height),
             _ => {}
         }
@@ -261,6 +264,7 @@ impl ViewBase for BoxEnum {
         match self {
             BoxEnum::Box(v) => v.view_data(),
             BoxEnum::AppletFrame(v) => v.view_data(),
+            #[cfg(feature = "mpv")]
             BoxEnum::Video(v) => v.view_data(),
             BoxEnum::ScrollingFrame(v) => v.view_data(),
             _ => todo!(),

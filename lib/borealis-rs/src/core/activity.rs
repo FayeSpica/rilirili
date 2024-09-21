@@ -6,6 +6,7 @@ use crate::core::view_box::{BoxEnum, BoxTrait, BoxView};
 use crate::core::view_drawer::ViewDrawer;
 use crate::core::view_layout::ViewLayout;
 use crate::demo::activity::main_activity::MainActivity;
+#[cfg(feature = "mpv")]
 use crate::views::video::Video;
 use sdl2::VideoSubsystem;
 use std::cell::RefCell;
@@ -54,6 +55,7 @@ pub trait ActivityDyn {
         let box_view = BoxView::new(0.0, 0.0, 0.0, 0.0);
         let mut box_enum = BoxEnum::Box(box_view);
 
+        #[cfg(feature = "mpv")]
         box_enum.add_view(Rc::new(RefCell::new(View::Box(BoxEnum::Video(
             Video::new(
                 20.0,

@@ -17,4 +17,6 @@ pub mod scrolling_frame;
 pub mod sidebar;
 pub mod slider;
 pub mod tab_frame;
+
+#[cfg(feature = "mpv")]
 pub mod video;
