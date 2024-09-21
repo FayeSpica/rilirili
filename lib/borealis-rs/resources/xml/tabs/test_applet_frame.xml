@@ -31,7 +31,7 @@
                 height="auto"
                 marginTop="@style/brls/applet_frame/header_title_top_offset"
                 fontSize="@style/brls/applet_frame/header_title_font_size"
-                text="test test"/>
+                text="test test中文"/>
 
     </brls:Box>
 

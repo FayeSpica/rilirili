@@ -422,7 +422,8 @@ impl Application {
     }
 
     pub fn load_fonts(&mut self) {
-        self.load_font_from_file(FONT_REGULAR, &resource("inter/Inter-Switch.ttf"))
+        // self.load_font_from_file(FONT_REGULAR, &resource("inter/Inter-Switch.ttf"));
+        self.load_font_from_file(FONT_REGULAR, &resource("inter/font.ttf"));
     }
 
     pub fn load_font_from_file(&mut self, font_name: &str, file_path: &str) {
@@ -434,7 +435,7 @@ impl Application {
         };
 
         if handle == -1 {
-            panic!("nvgCreateFont failed");
+            panic!("nvgCreateFont failed: {}", handle);
         }
 
         add_font_stash(font_name, handle);
