@@ -67,7 +67,10 @@ impl SdlContext {
             nanovg_sys::gladLoadGL();
             let f = nanovg_sys::NVGcreateFlags::NVG_STENCIL_STROKES
                 | nanovg_sys::NVGcreateFlags::NVG_ANTIALIAS;
-            nanovg_sys::nvgCreateGL3(f.bits())
+            #[cfg(not(target_os = "android"))]
+            nanovg_sys::nvgCreateGL3(f.bits());
+            #[cfg(target_os = "android")]
+            nanovg_sys::nvgCreateGLES2(f.bits());
         };
 
         set_frame_context(FrameContext {

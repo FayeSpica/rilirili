@@ -22,7 +22,7 @@ nanovg-sys = { git = "https://github.com/FayeSpica/nanovg-rs.git", tag = "v1.0.2
 libmpv2-sys = { git = "https://github.com/FayeSpica/libmpv2-rs.git", tag = "v0.0.2" }
 
 [target.'cfg(target_os = "android")'.dependencies]
-nanovg-sys = { git = "https://github.com/FayeSpica/nanovg-rs.git", tag = "v1.0.2glesv3", default-features = false, features = ["gles3"] }
+nanovg-sys = { git = "https://github.com/FayeSpica/nanovg-rs.git", tag = "v1.0.2glesv3", default-features = false, features = ["gles2"] }
 android_log = "0.1.3"
 
 [features]
