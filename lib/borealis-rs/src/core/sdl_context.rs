@@ -62,15 +62,20 @@ impl SdlContext {
             ClearColor(0.0, 0.0, 0.0, 0.0);
         }
 
+        #[cfg(not(target_os = "android"))]
         let nvg_context = unsafe {
             #[cfg(target_os = "windows")]
             nanovg_sys::gladLoadGL();
             let f = nanovg_sys::NVGcreateFlags::NVG_STENCIL_STROKES
                 | nanovg_sys::NVGcreateFlags::NVG_ANTIALIAS;
-            #[cfg(not(target_os = "android"))]
-            nanovg_sys::nvgCreateGL3(f.bits());
-            #[cfg(target_os = "android")]
-            nanovg_sys::nvgCreateGLES2(f.bits());
+            nanovg_sys::nvgCreateGL3(f.bits())
+        };
+
+        #[cfg(target_os = "android")]
+        let nvg_context = unsafe {
+            let f = nanovg_sys::NVGcreateFlags::NVG_STENCIL_STROKES
+                | nanovg_sys::NVGcreateFlags::NVG_ANTIALIAS;
+            nanovg_sys::nvgCreateGLES2(f.bits())
         };
 
         set_frame_context(FrameContext {
