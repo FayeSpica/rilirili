@@ -15,7 +15,7 @@ use crate::core::view_style::ViewStyle;
 use crate::views::image::Image;
 use crate::views::label::Label;
 use crate::views::progress_spinner::ProgressSpinner;
-use crate::views::rectangle::Rectangle;
+use crate::views::rectangle::{Rectangle, RectangleTrait};
 use nanovg_sys::{
     nvgBeginFrame, nvgBeginPath, nvgEndFrame, nvgFill, nvgFillColor, nvgRect, NVGcolor,
 };
@@ -265,7 +265,7 @@ pub trait ViewBase {
      * Required to be able to use actions that need
      * focus on that view (such as an A press).
      */
-    fn set_focusable(&mut self, focusable: bool) {
+    fn set_focusable(&self, focusable: bool) {
         let mut view_data_mut = self.view_data().borrow_mut();
         view_data_mut.focusable = focusable;
     }
@@ -289,7 +289,7 @@ pub trait ViewBase {
     /**
      * Sets the sound to play when this view gets focused.
      */
-    fn set_focus_sound(&mut self, sound: Sound) {
+    fn set_focus_sound(&self, sound: Sound) {
         let mut view_data_mut = self.view_data().borrow_mut();
         view_data_mut.focus_sound = sound;
     }
@@ -309,7 +309,7 @@ pub trait ViewBase {
      *
      * detach() must be called before adding the view to the parent.
      */
-    fn detach(&mut self) {
+    fn detach(&self) {
         let mut view_data_mut = self.view_data().borrow_mut();
         view_data_mut.detached = true;
     }
@@ -322,7 +322,7 @@ pub trait ViewBase {
     /**
      * Sets the position of the view, if detached.
      */
-    fn set_detached_position(&mut self, x: f32, y: f32) {
+    fn set_detached_position(&self, x: f32, y: f32) {
         let mut view_data_mut = self.view_data().borrow_mut();
         view_data_mut.detached_origin.x = x;
         view_data_mut.detached_origin.y = y;
@@ -331,7 +331,7 @@ pub trait ViewBase {
     /**
      * Sets the position X of the view, if detached.
      */
-    fn set_detached_position_x(&mut self, x: f32) {
+    fn set_detached_position_x(&self, x: f32) {
         let mut view_data_mut = self.view_data().borrow_mut();
         view_data_mut.detached_origin.x = x;
     }
@@ -339,7 +339,7 @@ pub trait ViewBase {
     /**
      * Sets the position Y of the view, if detached.
      */
-    fn set_detached_position_y(&mut self, y: f32) {
+    fn set_detached_position_y(&self, y: f32) {
         let mut view_data_mut = self.view_data().borrow_mut();
         view_data_mut.detached_origin.y = y;
     }
@@ -357,7 +357,7 @@ pub trait ViewBase {
         view_data.parent.is_some()
     }
 
-    fn set_parent(&mut self, parent: Option<Rc<RefCell<BoxEnum>>>) {
+    fn set_parent(&self, parent: Option<Rc<RefCell<BoxEnum>>>) {
         let mut view_data_mut = self.view_data().borrow_mut();
         view_data_mut.parent = parent;
     }
@@ -373,7 +373,7 @@ pub trait ViewBase {
         view_data.view.clone()
     }
 
-    fn set_view(&mut self, self_ref: Option<Rc<RefCell<View>>>) {
+    fn set_view(&self, self_ref: Option<Rc<RefCell<View>>>) {
         let mut view_data_mut = self.view_data().borrow_mut();
         view_data_mut.view = self_ref;
     }
@@ -386,7 +386,7 @@ pub trait ViewBase {
     ///     other refs = None
     ///
     /// view will not be released before reference removed
-    fn free_view(&mut self) {
+    fn free_view(&self) {
         self.set_view(None);
     }
 
@@ -398,12 +398,12 @@ pub trait ViewBase {
         String::new()
     }
 
-    fn ptr_lock(&mut self) {
+    fn ptr_lock(&self) {
         let mut view_data_mut = self.view_data().borrow_mut();
         view_data_mut.ptr_lock_counter += 1;
     }
 
-    fn ptr_unlock(&mut self) {
+    fn ptr_unlock(&self) {
         let mut view_data_mut = self.view_data().borrow_mut();
         view_data_mut.ptr_lock_counter -= 1;
     }
@@ -433,7 +433,7 @@ pub trait ViewBase {
         None
     }
 
-    fn set_parent_activity(&mut self, parent_activity: Option<Rc<RefCell<Activity>>>) {
+    fn set_parent_activity(&self, parent_activity: Option<Rc<RefCell<Activity>>>) {
         let mut view_data_mut = self.view_data().borrow_mut();
         view_data_mut.parent_activity = parent_activity;
     }
@@ -477,6 +477,7 @@ impl ViewBase for View {
         match self {
             View::Box(v) => v.view_data(),
             View::Label(v) => v.view_data(),
+            View::Rectangle(v) => v.view_data(),
             _ => todo!(),
         }
     }
@@ -506,14 +507,14 @@ impl ViewDrawer for View {
             View::Image(v) => ViewDrawer::draw(v, ctx, x, y, width, height),
             View::Label(v) => ViewDrawer::draw(v, ctx, x, y, width, height),
             View::ProgressSpinner(v) => ViewDrawer::draw(v, ctx, x, y, width, height),
-            View::Rectangle(v) => ViewDrawer::draw(v, ctx, x, y, width, height),
+            View::Rectangle(v) => Rectangle::draw(v, ctx, x, y, width, height),
         }
     }
 }
 
 impl ViewLayout for View {
     fn handle_xml_attributes(
-        &mut self,
+        &self,
         element: Node,
         view_creator_registry: &Rc<RefCell<ViewCreatorRegistry>>,
     ) {

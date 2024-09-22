@@ -42,31 +42,31 @@
         Direction inverted so that the bottom left text can be
         set to visibility="gone" without affecting the hint
     -->
-<!--    <brls:Box-->
-<!--            width="auto"-->
-<!--            height="@style/brls/applet_frame/footer_height"-->
-<!--            axis="row"-->
-<!--            direction="rightToLeft"-->
-<!--            paddingLeft="@style/brls/applet_frame/footer_padding_sides"-->
-<!--            paddingRight="@style/brls/applet_frame/footer_padding_sides"-->
-<!--            paddingTop="@style/brls/applet_frame/footer_padding_top_bottom"-->
-<!--            paddingBottom="@style/brls/applet_frame/footer_padding_top_bottom"-->
-<!--            marginLeft="@style/brls/applet_frame/padding_sides"-->
-<!--            marginRight="@style/brls/applet_frame/padding_sides"-->
-<!--            lineColor="@theme/brls/applet_frame/separator"-->
-<!--            lineTop="1px"-->
-<!--            justifyContent="spaceBetween" >-->
+    <brls:Box
+            width="auto"
+            height="@style/brls/applet_frame/footer_height"
+            axis="row"
+            direction="rightToLeft"
+            paddingLeft="@style/brls/applet_frame/footer_padding_sides"
+            paddingRight="@style/brls/applet_frame/footer_padding_sides"
+            paddingTop="@style/brls/applet_frame/footer_padding_top_bottom"
+            paddingBottom="@style/brls/applet_frame/footer_padding_top_bottom"
+            marginLeft="@style/brls/applet_frame/padding_sides"
+            marginRight="@style/brls/applet_frame/padding_sides"
+            lineColor="@theme/brls/applet_frame/separator"
+            lineTop="1px"
+            justifyContent="spaceBetween" >
 
-<!--        <brls:Rectangle-->
-<!--                width="272px"-->
-<!--                height="auto"-->
-<!--                color="#FF0000" />-->
+        <brls:Rectangle
+                width="272px"
+                height="auto"
+                color="#FF0000" />
 
-<!--        <brls:Rectangle-->
-<!--                width="75px"-->
-<!--                height="auto"-->
-<!--                color="#FF00FF" />-->
+        <brls:Rectangle
+                width="75px"
+                height="auto"
+                color="#FF00FF" />
 
-<!--    </brls:Box>-->
+    </brls:Box>
 
 </brls:Box>

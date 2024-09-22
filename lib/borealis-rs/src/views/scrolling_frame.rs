@@ -49,12 +49,14 @@ impl ScrollingFrameTrait for ScrollingFrame {}
 
 pub struct BaseScrollingFrame {
     box_view_data: Rc<RefCell<BoxViewData>>,
+    view_data: Rc<RefCell<ViewData>>,
 }
 
 impl Default for BaseScrollingFrame {
     fn default() -> Self {
         Self {
             box_view_data: Default::default(),
+            view_data: Default::default(),
         }
     }
 }
@@ -73,7 +75,7 @@ impl ViewStyle for BaseScrollingFrame {}
 
 impl ViewBase for BaseScrollingFrame {
     fn view_data(&self) -> &Rc<RefCell<ViewData>> {
-        todo!()
+        &self.view_data
     }
 }
 

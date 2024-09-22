@@ -120,7 +120,7 @@ pub trait ViewLayout: ViewStyle {
             YGNodeStyleSetWidth(self.view_data().borrow().yg_node, width);
             YGNodeStyleSetMinWidth(self.view_data().borrow().yg_node, width);
         }
-        // self.invalidate();
+        self.invalidate();
     }
 
     /**
@@ -136,7 +136,7 @@ pub trait ViewLayout: ViewStyle {
             YGNodeStyleSetHeight(self.view_data().borrow().yg_node, height);
             YGNodeStyleSetMinHeight(self.view_data().borrow().yg_node, height);
         }
-        // self.invalidate();
+        self.invalidate();
     }
 
     /**
@@ -355,7 +355,7 @@ pub trait ViewLayout: ViewStyle {
             }
         }
 
-        // self.invalidate();
+        self.invalidate();
     }
 
     /**
@@ -434,7 +434,7 @@ pub trait ViewLayout: ViewStyle {
     /**
      * Sets the visibility of the view.
      */
-    fn set_visibility(&mut self, visibility: Visibility) {
+    fn set_visibility(&self, visibility: Visibility) {
         // Only change YG properties and invalidate if going from or to GONE
         if (self.view_data().borrow().visibility == Visibility::Gone && visibility != Visibility::Gone) || (self.view_data().borrow().visibility != Visibility::Gone && visibility == Visibility::Gone) {
             if visibility == Visibility::Gone {
@@ -638,7 +638,7 @@ pub trait ViewLayout: ViewStyle {
     /**
      * Sets the id of the view.
      */
-    fn set_id(&mut self, id: &str) {
+    fn set_id(&self, id: &str) {
         self.view_data().borrow_mut().id = id.into();
     }
 
@@ -676,14 +676,14 @@ pub trait ViewLayout: ViewStyle {
     }
 
     fn handle_xml_attributes(
-        &mut self,
+        &self,
         element: roxmltree::Node,
         view_creator_registry: &Rc<RefCell<ViewCreatorRegistry>>,
     ) {
         panic!("Raw views cannot have child XML tags");
     }
 
-    fn set_wireframe_enabled(&mut self, wireframe: bool) {
+    fn set_wireframe_enabled(&self, wireframe: bool) {
         self.view_data().borrow_mut().wireframe_enabled = wireframe;
     }
 

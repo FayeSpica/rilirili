@@ -312,7 +312,7 @@ pub trait BoxTrait: ViewDrawer {
      * Adds a view to this Box.
      * Returns the position the view was added at.
      */
-    fn add_view(&mut self, view: Rc<RefCell<View>>) {
+    fn add_view(&self, view: Rc<RefCell<View>>) {
         let position = unsafe { YGNodeGetChildCount(self.view_data().borrow().yg_node) };
         self.add_view_position(view, position as usize);
     }
@@ -321,7 +321,7 @@ pub trait BoxTrait: ViewDrawer {
      * Adds a view to this Box at the given position.
      * Returns the position the view was added at.
      */
-    fn add_view_position(&mut self, view: Rc<RefCell<View>>, position: usize) {
+    fn add_view_position(&self, view: Rc<RefCell<View>>, position: usize) {
         if position > self.box_view_data().borrow().children.len() {
             panic!(
                 "cannot insert view at {}:{}/{}",
@@ -546,7 +546,7 @@ pub trait BoxTrait: ViewDrawer {
     }
 
     fn handle_xml_attributes(
-        &mut self,
+        &self,
         element: Node,
         view_creator_registry: &Rc<RefCell<ViewCreatorRegistry>>,
     ) {

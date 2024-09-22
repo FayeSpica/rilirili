@@ -60,77 +60,73 @@ impl AttributeSetter {
     fn register_common_attributes(&mut self) {
         // Width
         self.register_auto_xml_attribute("width", Box::new(|view_clone| {
-            view_clone.borrow_mut().set_width(AUTO);
-            view_clone.borrow().invalidate();
+            view_clone.borrow().set_width(AUTO);
         }));
 
         self.register_float_xml_attribute("width", Box::new(|view_clone, value| {
-            view_clone.borrow_mut().set_width(value);
-            view_clone.borrow().invalidate();
+            view_clone.borrow().set_width(value);
         }));
 
         self.register_percentage_xml_attribute("width", Box::new(|view_clone, value| {
-            view_clone.borrow_mut().set_width_percentage(value);
+            view_clone.borrow().set_width_percentage(value);
         }));
 
         // Height
         self.register_auto_xml_attribute("height", Box::new(|view_clone| {
-            view_clone.borrow_mut().set_height(AUTO);
-            view_clone.borrow().invalidate();
+            view_clone.borrow().set_height(AUTO);
         }));
 
         self.register_float_xml_attribute("height", Box::new(|view_clone,value| {
-            view_clone.borrow_mut().set_height(value);
-            view_clone.borrow().invalidate();
+            view_clone.borrow().set_height(value);
         }));
 
         self.register_percentage_xml_attribute("height", Box::new(|view_clone,value| {
-            view_clone.borrow_mut().set_height_percentage(value);
+            view_clone.borrow().set_height_percentage(value);
         }));
 
         // Max width
         self.register_auto_xml_attribute("maxWidth", Box::new(|view_clone,| {
-            view_clone.borrow_mut().set_max_width(AUTO);
+            view_clone.borrow().set_max_width(AUTO);
         }));
 
         self.register_float_xml_attribute("maxWidth", Box::new(|view_clone,value| {
-            view_clone.borrow_mut().set_max_width(value);
+            view_clone.borrow().set_max_width(value);
         }));
 
         self.register_percentage_xml_attribute("maxWidth", Box::new(|view_clone,value| {
-            view_clone.borrow_mut().set_max_width_percentage(value);
+            view_clone.borrow().set_max_width_percentage(value);
         }));
 
         // Max Height
         self.register_auto_xml_attribute("maxHeight", Box::new(|view_clone,| {
-            view_clone.borrow_mut().set_max_height(AUTO);
+            view_clone.borrow().set_max_height(AUTO);
         }));
 
 
         self.register_float_xml_attribute("maxHeight", Box::new(|view_clone,value| {
-            view_clone.borrow_mut().set_max_height(value);
+            view_clone.borrow().set_max_height(value);
         }));
 
 
         self.register_percentage_xml_attribute("maxHeight", Box::new(|view_clone,value| {
-            view_clone.borrow_mut().set_max_height_percentage(value);
+            view_clone.borrow().set_max_height_percentage(value);
         }));
 
         // Grow and shrink
 
         self.register_float_xml_attribute("grow", Box::new(|view_clone,value| {
-            view_clone.borrow_mut().set_grow(value);
+            view_clone.borrow().set_grow(value);
         }));
 
 
         self.register_percentage_xml_attribute("shrink", Box::new(|view_clone,value| {
-            view_clone.borrow_mut().set_shrink(value);
+            view_clone.borrow().set_shrink(value);
         }));
 
         // Alignment
 
         self.register_string_xml_attribute("alignSelf", Box::new(|view_clone,value| {
-            view_clone.borrow_mut().set_align_self( match value {
+            view_clone.borrow().set_align_self( match value {
                 "auto" => AlignSelf::Auto,
                 "flexStart" => AlignSelf::FlexStart,
                 "center" => AlignSelf::Center,
@@ -144,119 +140,115 @@ impl AttributeSetter {
         }));
 
         // Margins top
-
         self.register_float_xml_attribute("marginTop", Box::new(|view_clone,value| {
-            view_clone.borrow_mut().set_margin_top(value);
+            view_clone.borrow().set_margin_top(value);
             view_clone.borrow().invalidate();
         }));
 
 
         self.register_auto_xml_attribute("marginTop", Box::new(|view_clone,| {
-            view_clone.borrow_mut().set_margin_top(AUTO);
+            view_clone.borrow().set_margin_top(AUTO);
         }));
 
         // Margins right
-
         self.register_float_xml_attribute("marginRight", Box::new(|view_clone,value| {
-            view_clone.borrow_mut().set_margin_right(value);
+            view_clone.borrow().set_margin_right(value);
         }));
 
 
         self.register_auto_xml_attribute("marginRight", Box::new(|view_clone,| {
-            view_clone.borrow_mut().set_margin_right(AUTO);
+            view_clone.borrow().set_margin_right(AUTO);
         }));
 
         // Margins bottom
-
         self.register_float_xml_attribute("marginBottom", Box::new(|view_clone,value| {
-            view_clone.borrow_mut().set_margin_bottom(value);
+            view_clone.borrow().set_margin_bottom(value);
         }));
 
 
         self.register_auto_xml_attribute("marginBottom", Box::new(|view_clone,| {
-            view_clone.borrow_mut().set_margin_bottom(AUTO);
+            view_clone.borrow().set_margin_bottom(AUTO);
         }));
 
         // Margins left
-
         self.register_float_xml_attribute("marginLeft", Box::new(|view_clone,value| {
-            view_clone.borrow_mut().set_margin_left(value);
+            view_clone.borrow().set_margin_left(value);
         }));
 
 
         self.register_auto_xml_attribute("marginLeft", Box::new(|view_clone,| {
-            view_clone.borrow_mut().set_margin_left(AUTO);
+            view_clone.borrow().set_margin_left(AUTO);
         }));
 
         // Line
         self.register_color_xml_attribute("lineColor", Box::new(|view_clone, value| {
-            view_clone.borrow_mut().set_line_color(value);
+            view_clone.borrow().set_line_color(value);
         }));
 
 
         self.register_float_xml_attribute("lineTop", Box::new(|view_clone, value| {
-            view_clone.borrow_mut().set_line_top(value);
+            view_clone.borrow().set_line_top(value);
         }));
 
 
         self.register_float_xml_attribute("lineRight", Box::new(|view_clone, value| {
-            view_clone.borrow_mut().set_line_right(value);
+            view_clone.borrow().set_line_right(value);
         }));
 
 
         self.register_float_xml_attribute("lineBottom", Box::new(|view_clone, value| {
-            view_clone.borrow_mut().set_line_bottom(value);
+            view_clone.borrow().set_line_bottom(value);
         }));
 
 
         self.register_float_xml_attribute("lineLeft", Box::new(|view_clone, value| {
-            view_clone.borrow_mut().set_line_left(value);
+            view_clone.borrow().set_line_left(value);
         }));
 
         // Position
 
         self.register_float_xml_attribute("positionTop", Box::new(|view_clone,value| {
-            view_clone.borrow_mut().set_position_top(value);
+            view_clone.borrow().set_position_top(value);
         }));
 
 
         self.register_float_xml_attribute("positionRight", Box::new(|view_clone,value| {
-            view_clone.borrow_mut().set_position_right(value);
+            view_clone.borrow().set_position_right(value);
         }));
 
 
         self.register_float_xml_attribute("positionBottom", Box::new(|view_clone,value| {
-            view_clone.borrow_mut().set_position_bottom(value);
+            view_clone.borrow().set_position_bottom(value);
         }));
 
 
         self.register_float_xml_attribute("positionLeft", Box::new(|view_clone,value| {
-            view_clone.borrow_mut().set_position_left(value);
+            view_clone.borrow().set_position_left(value);
         }));
 
 
         self.register_percentage_xml_attribute("positionTop", Box::new(|view_clone,value| {
-            view_clone.borrow_mut().set_position_top_percentage(value);
+            view_clone.borrow().set_position_top_percentage(value);
         }));
 
 
         self.register_percentage_xml_attribute("positionRight", Box::new(|view_clone,value| {
-            view_clone.borrow_mut().set_position_right_percentage(value);
+            view_clone.borrow().set_position_right_percentage(value);
         }));
 
 
         self.register_percentage_xml_attribute("positionBottom", Box::new(|view_clone,value| {
-            view_clone.borrow_mut().set_position_bottom_percentage(value);
+            view_clone.borrow().set_position_bottom_percentage(value);
         }));
 
 
         self.register_percentage_xml_attribute("positionLeft", Box::new(|view_clone,value| {
-            view_clone.borrow_mut().set_position_left_percentage(value);
+            view_clone.borrow().set_position_left_percentage(value);
         }));
 
 
         self.register_string_xml_attribute("positionType", Box::new(|view_clone,value| {
-            view_clone.borrow_mut().set_position_type( match value {
+            view_clone.borrow().set_position_type( match value {
                 "relative" => PositionType::Relative,
                 "absolute" => PositionType::Absolute,
                 &_ => PositionType::Relative,
@@ -266,45 +258,45 @@ impl AttributeSetter {
         // Custom focus routes
 
         self.register_string_xml_attribute("focusUp", Box::new(|view_clone, value| {
-            view_clone.borrow_mut().set_custom_navigation_route_by_id(FocusDirection::Up, value);
+            view_clone.borrow().set_custom_navigation_route_by_id(FocusDirection::Up, value);
         }));
 
 
         self.register_string_xml_attribute("focusRight", Box::new(|view_clone, value| {
-            view_clone.borrow_mut().set_custom_navigation_route_by_id(FocusDirection::Right, value);
+            view_clone.borrow().set_custom_navigation_route_by_id(FocusDirection::Right, value);
         }));
 
 
         self.register_string_xml_attribute("focusDown", Box::new(|view_clone, value| {
-            view_clone.borrow_mut().set_custom_navigation_route_by_id(FocusDirection::Down, value);
+            view_clone.borrow().set_custom_navigation_route_by_id(FocusDirection::Down, value);
         }));
 
         self.register_string_xml_attribute("focusLeft", Box::new(|view_clone, value| {
-            view_clone.borrow_mut().set_custom_navigation_route_by_id(FocusDirection::Left, value);
+            view_clone.borrow().set_custom_navigation_route_by_id(FocusDirection::Left, value);
         }));
 
         // Shape
         self.register_color_xml_attribute("backgroundColor", Box::new(|view_clone, value| {
-            view_clone.borrow_mut().set_background_color(value);
+            view_clone.borrow().set_background_color(value);
         }));
 
         self.register_color_xml_attribute("borderColor", Box::new(|view_clone, value| {
-            view_clone.borrow_mut().set_border_color(value);
+            view_clone.borrow().set_border_color(value);
         }));
 
 
         self.register_float_xml_attribute("borderThickness", Box::new(|view_clone, value| {
-            view_clone.borrow_mut().set_border_thickness(value);
+            view_clone.borrow().set_border_thickness(value);
         }));
 
 
         self.register_float_xml_attribute("cornerRadius", Box::new(|view_clone, value| {
-            view_clone.borrow_mut().set_corner_radius(value);
+            view_clone.borrow().set_corner_radius(value);
         }));
 
 
         self.register_string_xml_attribute("shadowType", Box::new(|view_clone, value| {
-            view_clone.borrow_mut().set_shadow_type( match value {
+            view_clone.borrow().set_shadow_type( match value {
                 "none" => ShadowType::None,
                 "generic" => ShadowType::Generic,
                 "custom" => ShadowType::Custom,
@@ -315,7 +307,7 @@ impl AttributeSetter {
         // Misc
 
         self.register_string_xml_attribute("visibility", Box::new(|view_clone,value| {
-            view_clone.borrow_mut().set_visibility( match value {
+            view_clone.borrow().set_visibility( match value {
                 "visible" => Visibility::Visible,
                 "invisible" => Visibility::Invisible,
                 "gone" => Visibility::Gone,
@@ -325,12 +317,12 @@ impl AttributeSetter {
 
 
         self.register_string_xml_attribute("id", Box::new(|view_clone,value| {
-            view_clone.borrow_mut().set_id(value);
+            view_clone.borrow().set_id(value);
         }));
 
 
         self.register_string_xml_attribute("background", Box::new(|view_clone,value| {
-            view_clone.borrow_mut().set_background( match value {
+            view_clone.borrow().set_background( match value {
                 "sidebar" => ViewBackground::SideBar,
                 "backdrop" => ViewBackground::BackDrop,
                 &_ => ViewBackground::None,
@@ -339,28 +331,28 @@ impl AttributeSetter {
 
 
         self.register_bool_xml_attribute("focusable", Box::new(|view_clone, value| {
-            view_clone.borrow_mut().set_focusable(value);
+            view_clone.borrow().set_focusable(value);
         }));
 
 
         self.register_bool_xml_attribute("wireframe", Box::new(|view_clone, value| {
-            view_clone.borrow_mut().set_wireframe_enabled(value);
+            view_clone.borrow().set_wireframe_enabled(value);
         }));
 
         // Highlight
 
         self.register_bool_xml_attribute("hideHighlightBackground", Box::new(|view_clone, value| {
-            view_clone.borrow_mut().set_hide_highlight_background(value);
+            view_clone.borrow().set_hide_highlight_background(value);
         }));
 
 
         self.register_float_xml_attribute("highlightPadding", Box::new(|view_clone, value| {
-            view_clone.borrow_mut().set_highlight_padding(value);
+            view_clone.borrow().set_highlight_padding(value);
         }));
 
 
         self.register_float_xml_attribute("highlightCornerRadius", Box::new(|view_clone, value| {
-            view_clone.borrow_mut().set_highlight_corner_radius(value);
+            view_clone.borrow().set_highlight_corner_radius(value);
         }));
     }
 

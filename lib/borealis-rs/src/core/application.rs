@@ -36,6 +36,7 @@ use crate::core::font::add_font_stash;
 use crate::core::theme::theme;
 use crate::core::view_creator::{create_from_xml_file};
 use crate::views::label::Label;
+use crate::views::rectangle::Rectangle;
 
 pub type XMLViewCreator = Box<dyn Fn() -> Rc<RefCell<View>>>;
 
@@ -462,7 +463,7 @@ impl Application {
     pub fn register_built_in_xml_views(&mut self) {
         self.register_xml_view("ScrollingFrame", Box::new(BaseScrollingFrame::create));
         self.register_xml_view("Box", Box::new(BoxView::create));
-        self.register_xml_view("Rectangle", Box::new(BaseScrollingFrame::create));
+        self.register_xml_view("Rectangle", Box::new(Rectangle::create));
         self.register_xml_view("Label", Box::new(Label::create));
     }
 
