@@ -473,7 +473,7 @@ pub trait LabelTrait: ViewTrait {
 
     }
 
-    fn draw(&mut self, ctx: &FrameContext, x: f32, y: f32, width: f32, height: f32) {
+    fn draw(&self, ctx: &FrameContext, x: f32, y: f32, width: f32, height: f32) {
         trace!("Label::draw ({},{},{},{}), font: {}, font_size: {}, text: {:?}", x, y, width, height, self.font(), self.font_size(), self.label_data().borrow().truncated_text);
         if width == 0.0 {
             warn!("zero width label");
@@ -526,7 +526,7 @@ pub trait LabelTrait: ViewTrait {
 impl ViewTrait for Label {}
 
 impl ViewDrawer for Label {
-    fn draw(&mut self, ctx: &FrameContext, x: f32, y: f32, width: f32, height: f32) {
+    fn draw(&self, ctx: &FrameContext, x: f32, y: f32, width: f32, height: f32) {
         LabelTrait::draw(self, ctx, x, y, width, height);
     }
 }

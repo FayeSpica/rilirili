@@ -208,7 +208,7 @@ impl ViewStyle for BoxView {}
 impl ViewLayout for BoxView {}
 
 impl ViewDrawer for BoxView {
-    fn draw(&mut self, ctx: &FrameContext, x: f32, y: f32, width: f32, height: f32) {
+    fn draw(&self, ctx: &FrameContext, x: f32, y: f32, width: f32, height: f32) {
         BoxTrait::draw(self, ctx, x, y, width, height);
     }
 }
@@ -245,7 +245,7 @@ impl ViewTrait for BoxEnum {}
 
 impl ViewDrawer for BoxEnum {
     /// manually dispatch
-    fn draw(&mut self, ctx: &FrameContext, x: f32, y: f32, width: f32, height: f32) {
+    fn draw(&self, ctx: &FrameContext, x: f32, y: f32, width: f32, height: f32) {
         match self {
             BoxEnum::Box(v) => BoxTrait::draw(v, ctx, x, y, width, height),
             #[cfg(feature = "mpv")]
@@ -278,7 +278,6 @@ pub struct BoxViewData {
     pub default_focused_index: usize,
     pub last_focused_view: Option<Rc<RefCell<View>>>,
     pub forwarded_attributes: HashMap<String, (String, Rc<RefCell<RefCell<View>>>)>,
-    pub box_view: Option<Rc<RefCell<BoxEnum>>>,
 }
 
 impl Default for BoxViewData {
@@ -289,7 +288,6 @@ impl Default for BoxViewData {
             default_focused_index: 0,
             last_focused_view: None,
             forwarded_attributes: Default::default(),
-            box_view: None,
         }
     }
 }
@@ -347,7 +345,7 @@ pub trait BoxTrait: ViewDrawer {
         }
 
         /// todo: userdata
-        view.borrow_mut().set_parent(self.box_view());
+        view.borrow_mut().set_parent(self.view());
 
         // Layout and events
         self.invalidate();
@@ -357,7 +355,7 @@ pub trait BoxTrait: ViewDrawer {
     /**
      * Removes the given view from the Box. It will be freed.
      */
-    fn remove_view(&mut self, to_remove: Rc<RefCell<View>>, free: bool) {
+    fn remove_view(&self, to_remove: Rc<RefCell<View>>, free: bool) {
         let mut delete_index = None;
         for (index, view) in self.box_view_data().borrow().children.iter().enumerate() {
             if Rc::ptr_eq(view, &to_remove) {
@@ -442,28 +440,30 @@ pub trait BoxTrait: ViewDrawer {
     }
 
     fn on_child_focus_gained(
-        &mut self,
+        &self,
         direct_child: Rc<RefCell<View>>,
         focused_view: Rc<RefCell<View>>,
     ) {
         self.box_view_data().borrow_mut().last_focused_view = Some(direct_child);
         if let Some(parent) = self.parent() {
-            parent
-                .borrow_mut()
-                .on_child_focus_gained(self.view().unwrap().clone(), focused_view);
+            match &*parent.borrow() {
+                View::Box(v) => v.on_child_focus_gained(self.view().unwrap().clone(), focused_view),
+                _ => {}
+            }
         }
     }
 
     fn on_child_focus_lost(
-        &mut self,
+        &self,
         direct_child: Rc<RefCell<View>>,
         focused_view: Rc<RefCell<View>>,
     ) {
         self.box_view_data().borrow_mut().last_focused_view = Some(direct_child);
         if let Some(parent) = self.parent() {
-            parent
-                .borrow_mut()
-                .on_child_focus_lost(self.view().unwrap().clone(), focused_view);
+            match &*parent.borrow() {
+                View::Box(v) => v.on_child_focus_lost(self.view().unwrap().clone(), focused_view),
+                _ => {}
+            }
         }
     }
 
@@ -529,19 +529,11 @@ pub trait BoxTrait: ViewDrawer {
         None
     }
 
-    fn box_view(&self) -> Option<Rc<RefCell<BoxEnum>>> {
-        self.box_view_data().borrow().box_view.clone()
-    }
-
-    fn set_box_view(&mut self, box_view: Option<Rc<RefCell<BoxEnum>>>) {
-        self.box_view_data().borrow_mut().box_view = box_view;
-    }
-
     fn draw(&self, ctx: &FrameContext, x: f32, y: f32, width: f32, height: f32) {
         trace!("box draw ({},{},{},{}), childs: {}", x, y, width, height,  &self.box_view_data().borrow().children.len());
         for child in &self.box_view_data().borrow().children {
             trace!("draw {}", child.borrow().describe());
-            child.borrow_mut().frame(ctx);
+            child.borrow().frame(ctx);
         }
     }
 

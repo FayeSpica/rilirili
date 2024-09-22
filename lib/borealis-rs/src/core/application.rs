@@ -291,7 +291,7 @@ impl Application {
             nvgScale(ctx.context, scale, scale);
         }
         for view in &self.views_to_draw {
-            view.borrow_mut().frame(ctx);
+            view.borrow().frame(ctx);
         }
         unsafe {
             nvgEndFrame(ctx.context);

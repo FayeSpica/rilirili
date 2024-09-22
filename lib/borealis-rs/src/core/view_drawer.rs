@@ -28,7 +28,7 @@ pub trait ViewDrawer: ViewLayout {
      * Do not override it to draw your view,
      * override draw() instead
      */
-    fn frame(&mut self, ctx: &FrameContext) {
+    fn frame(&self, ctx: &FrameContext) {
         if self.view_data().borrow().visibility != Visibility::Visible {
             return;
         }
@@ -120,7 +120,7 @@ pub trait ViewDrawer: ViewLayout {
      * Views should not draw outside of their bounds (they
      * may be clipped if they do so).
      */
-    fn draw(&mut self, ctx: &FrameContext, x: f32, y: f32, width: f32, height: f32) {
+    fn draw(&self, ctx: &FrameContext, x: f32, y: f32, width: f32, height: f32) {
         trace!("default draw");
     }
 
@@ -133,7 +133,7 @@ pub trait ViewDrawer: ViewLayout {
     /**
      * Shows the view with a fade in animation.
      */
-    fn show(&mut self, cb: Box<dyn Fn()>) {
+    fn show(&self, cb: Box<dyn Fn()>) {
         self.show_animated(
             cb,
             true,
@@ -144,7 +144,7 @@ pub trait ViewDrawer: ViewLayout {
     /**
      * Shows the view with a fade in animation, or no animation at all.
      */
-    fn show_animated(&mut self, cb: Box<dyn Fn()>, animate: bool, animation_duration: f32) {
+    fn show_animated(&self, cb: Box<dyn Fn()>, animate: bool, animation_duration: f32) {
         if !self.view_data().borrow().hidden {
             self.on_show_animation_end();
             cb();
@@ -193,7 +193,7 @@ pub trait ViewDrawer: ViewLayout {
     /**
      * Hides the view with a fade out animation, or no animation at all.
      */
-    fn hide_animated(&mut self, cb: Box<dyn Fn()>, animate: bool, animation_duration: f32) {
+    fn hide_animated(&self, cb: Box<dyn Fn()>, animate: bool, animation_duration: f32) {
         if self.view_data().borrow().hidden {
             cb();
             return;

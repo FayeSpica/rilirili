@@ -62,7 +62,8 @@ pub trait RectangleTrait: ViewTrait {
 impl ViewTrait for Rectangle {}
 
 impl ViewDrawer for Rectangle {
-    fn draw(&mut self, ctx: &FrameContext, x: f32, y: f32, width: f32, height: f32) {
+    fn draw(&self, ctx: &FrameContext, x: f32, y: f32, width: f32, height: f32) {
+        trace!("Rectangle draw({}, {}, {}, {}), has_parent: {}", x, y, width, height, self.has_parent());
         let color = self.a(self.rectangle_data.borrow().color);
 
         if color.rgba[3] == 0.0 {

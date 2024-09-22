@@ -31,11 +31,25 @@ pub trait ViewLayout: ViewStyle {
     }
 
     fn x(&self) -> f32 {
-        return unsafe { YGNodeLayoutGetLeft(self.view_data().borrow().yg_node) };
+        let view_data = self.view_data().borrow();
+        if view_data.detached {
+            return view_data.detached_origin.x + view_data.translation.x;
+        } else if self.has_parent() {
+            return self.parent().unwrap().borrow().x() + unsafe { YGNodeLayoutGetLeft(self.view_data().borrow().yg_node) } + view_data.translation.x;
+        } else {
+            return unsafe { YGNodeLayoutGetLeft(self.view_data().borrow().yg_node) } + view_data.translation.x;
+        }
     }
 
     fn y(&self) -> f32 {
-        return unsafe { YGNodeLayoutGetTop(self.view_data().borrow().yg_node) };
+        let view_data = self.view_data().borrow();
+        if view_data.detached {
+            return view_data.detached_origin.y + view_data.translation.y;
+        } else if self.has_parent() {
+            return self.parent().unwrap().borrow().y() + unsafe { YGNodeLayoutGetTop(self.view_data().borrow().yg_node) } + view_data.translation.y;
+        } else {
+            return unsafe { YGNodeLayoutGetTop(self.view_data().borrow().yg_node) } + view_data.translation.y;
+        }
     }
 
     fn local_rect(&self) -> Rect {
@@ -61,8 +75,13 @@ pub trait ViewLayout: ViewStyle {
         return unsafe { YGNodeLayoutGetHeight(self.view_data().borrow().yg_node) };
     }
 
-    fn height_include_collapse(&self) -> f32 {
-        todo!()
+    fn height_include_collapse(&self, include_collapse: bool) -> f32 {
+        let factor = if include_collapse {
+            self.view_data().borrow().collapse_state.current_value
+        } else {
+            1.0
+        };
+        return unsafe { YGNodeLayoutGetHeight(self.view_data().borrow().yg_node) } * factor;
     }
 
     /**

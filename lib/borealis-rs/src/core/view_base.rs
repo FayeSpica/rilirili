@@ -45,6 +45,7 @@ pub struct ViewData {
     pub alpha: Animatable,
     pub detached: bool,
     pub detached_origin: Point,
+    pub translation: Point,
     pub focusable: bool,
     pub focused: bool,
     pub focus_sound: Sound,
@@ -69,7 +70,7 @@ pub struct ViewData {
     pub collapse_state: Animatable,
     pub clips_to_bounds: bool,
     pub wireframe_enabled: bool,
-    pub parent: Option<Rc<RefCell<BoxEnum>>>,
+    pub parent: Option<Rc<RefCell<View>>>,
     pub parent_activity: Option<Rc<RefCell<Activity>>>,
     pub view: Option<Rc<RefCell<View>>>,
     pub ptr_lock_counter: i32,
@@ -110,6 +111,7 @@ impl Default for ViewData {
             alpha: Animatable::new(1.0),
             detached: false,
             detached_origin: Default::default(),
+            translation: Default::default(),
             focusable: false,
             focused: false,
             focus_sound: Sound::SoundNone,
@@ -204,10 +206,16 @@ pub trait ViewBase {
         view_data_mut.highlight_alpha.start();
 
         if let Some(parent) = self.parent() {
-            parent.borrow_mut().on_child_focus_gained(
-                parent.borrow().view().unwrap().clone(),
-                parent.borrow().view().unwrap().clone(),
-            );
+            match &*parent.borrow() {
+                View::Box(v) => v.on_child_focus_gained(
+                    parent.borrow().view().unwrap().clone(),
+                    parent.borrow().view().unwrap().clone(),
+                ),
+                View::Image(_) => {}
+                View::Label(_) => {}
+                View::ProgressSpinner(_) => {}
+                View::Rectangle(_) => {}
+            }
         }
     }
 
@@ -225,10 +233,16 @@ pub trait ViewBase {
         view_data_mut.highlight_alpha.start();
 
         if let Some(parent) = self.parent() {
-            parent.borrow_mut().on_child_focus_lost(
-                parent.borrow().view().unwrap().clone(),
-                parent.borrow().view().unwrap().clone(),
-            );
+            match &*parent.borrow() {
+                View::Box(v) => v.on_child_focus_lost(
+                    parent.borrow().view().unwrap().clone(),
+                    parent.borrow().view().unwrap().clone(),
+                ),
+                View::Image(_) => {}
+                View::Label(_) => {}
+                View::ProgressSpinner(_) => {}
+                View::Rectangle(_) => {}
+            }
         }
     }
 
@@ -281,7 +295,13 @@ pub trait ViewBase {
     fn remove_from_super_view(&self, free: bool) {
         if let Some(parent) = &self.view_data().borrow_mut().parent {
             if let Some(self_ref) = self.view() {
-                parent.borrow_mut().remove_view(self_ref, free);
+                match &*parent.borrow() {
+                    View::Box(v) => v.remove_view(self_ref, free),
+                    View::Image(_) => {}
+                    View::Label(_) => {}
+                    View::ProgressSpinner(_) => {}
+                    View::Rectangle(_) => {}
+                }
             }
         }
     }
@@ -357,12 +377,15 @@ pub trait ViewBase {
         view_data.parent.is_some()
     }
 
-    fn set_parent(&self, parent: Option<Rc<RefCell<BoxEnum>>>) {
+    fn set_parent(&self, parent: Option<Rc<RefCell<View>>>) {
+        if parent.is_none() {
+            panic!("")
+        }
         let mut view_data_mut = self.view_data().borrow_mut();
         view_data_mut.parent = parent;
     }
 
-    fn parent(&self) -> Option<Rc<RefCell<BoxEnum>>> {
+    fn parent(&self) -> Option<Rc<RefCell<View>>> {
         let view_data = self.view_data().borrow();
         view_data.parent.clone()
     }
@@ -491,17 +514,7 @@ impl ViewBase for View {
 impl ViewTrait for View {}
 
 impl ViewDrawer for View {
-    fn frame(&mut self, ctx: &FrameContext) {
-        match self {
-            View::Box(v) => ViewDrawer::frame(v, ctx),
-            View::Image(v) => ViewDrawer::frame(v, ctx),
-            View::Label(v) => ViewDrawer::frame(v, ctx),
-            View::ProgressSpinner(v) => ViewDrawer::frame(v, ctx),
-            View::Rectangle(v) => ViewDrawer::frame(v, ctx),
-        }
-    }
-
-    fn draw(&mut self, ctx: &FrameContext, x: f32, y: f32, width: f32, height: f32) {
+    fn draw(&self, ctx: &FrameContext, x: f32, y: f32, width: f32, height: f32) {
         match self {
             View::Box(v) => BoxTrait::draw(v, ctx, x, y, width, height),
             View::Image(v) => ViewDrawer::draw(v, ctx, x, y, width, height),
