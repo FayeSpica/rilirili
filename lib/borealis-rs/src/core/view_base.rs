@@ -29,6 +29,7 @@ use std::rc::Rc;
 use yoga_sys::{YGNodeFree, YGNodeNew, YGNodeRef, YGNodeSetContext, YGNodeStyleSetHeightAuto, YGNodeStyleSetWidthAuto};
 use crate::core::attribute::{AutoAttributeHandler, BoolAttributeHandler, ColorAttributeHandler, FilePathAttributeHandler, FloatAttributeHandler, StringAttributeHandler};
 use crate::core::theme::transparent_color;
+use crate::views::sidebar::SidebarSeparator;
 
 // common ViewData
 pub struct ViewData {
@@ -215,6 +216,7 @@ pub trait ViewBase {
                 View::Label(_) => {}
                 View::ProgressSpinner(_) => {}
                 View::Rectangle(_) => {}
+                View::SidebarSeparator(_) => {}
             }
         }
     }
@@ -242,6 +244,7 @@ pub trait ViewBase {
                 View::Label(_) => {}
                 View::ProgressSpinner(_) => {}
                 View::Rectangle(_) => {}
+                View::SidebarSeparator(_) => {}
             }
         }
     }
@@ -301,6 +304,7 @@ pub trait ViewBase {
                     View::Label(_) => {}
                     View::ProgressSpinner(_) => {}
                     View::Rectangle(_) => {}
+                    View::SidebarSeparator(_) => {}
                 }
             }
         }
@@ -475,6 +479,7 @@ pub enum View {
     Label(Label),
     ProgressSpinner(ProgressSpinner),
     Rectangle(Rectangle),
+    SidebarSeparator(SidebarSeparator),
 }
 
 impl Drop for View {
@@ -491,6 +496,7 @@ impl View {
             View::Label(_) => "Label",
             View::ProgressSpinner(_) => "ProgressSpinner",
             View::Rectangle(_) => "Rectangle",
+            View::SidebarSeparator(_) => "SidebarSeparator",
         }
     }
 }
@@ -501,6 +507,7 @@ impl ViewBase for View {
             View::Box(v) => v.view_data(),
             View::Label(v) => v.view_data(),
             View::Rectangle(v) => v.view_data(),
+            View::Image(v) => v.view_data(),
             _ => todo!(),
         }
     }
@@ -517,10 +524,11 @@ impl ViewDrawer for View {
     fn draw(&self, ctx: &FrameContext, x: f32, y: f32, width: f32, height: f32) {
         match self {
             View::Box(v) => BoxTrait::draw(v, ctx, x, y, width, height),
-            View::Image(v) => ViewDrawer::draw(v, ctx, x, y, width, height),
-            View::Label(v) => ViewDrawer::draw(v, ctx, x, y, width, height),
+            View::Image(v) => Image::draw(v, ctx, x, y, width, height),
+            View::Label(v) => Label::draw(v, ctx, x, y, width, height),
             View::ProgressSpinner(v) => ViewDrawer::draw(v, ctx, x, y, width, height),
             View::Rectangle(v) => Rectangle::draw(v, ctx, x, y, width, height),
+            View::SidebarSeparator(v) => SidebarSeparator::draw(v, ctx, x, y, width, height),
         }
     }
 }
@@ -537,6 +545,7 @@ impl ViewLayout for View {
             View::Label(_) => todo!(),
             View::ProgressSpinner(_) => todo!(),
             View::Rectangle(_) => todo!(),
+            View::SidebarSeparator(_) => todo!(),
         }
     }
 }

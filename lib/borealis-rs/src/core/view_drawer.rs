@@ -10,12 +10,7 @@ use crate::core::view_base::{
 };
 use crate::core::view_box::BoxTrait;
 use crate::core::view_layout::ViewLayout;
-use nanovg_sys::{
-    nvgBeginPath, nvgBoxGradient, nvgClosePath, nvgFill, nvgFillColor, nvgFillPaint,
-    nvgIntersectScissor, nvgLineTo, nvgLinearGradient, nvgMoveTo, nvgPathWinding, nvgRGB, nvgRGBA,
-    nvgRGBAf, nvgRect, nvgResetScissor, nvgRestore, nvgRoundedRect, nvgRoundedRectVarying, nvgSave,
-    nvgStroke, nvgStrokeColor, nvgStrokeWidth, NVGcolor, NVGsolidity,
-};
+use nanovg_sys::{nvgBeginPath, nvgBoxGradient, nvgClosePath, nvgFill, nvgFillColor, nvgFillPaint, nvgIntersectScissor, nvgLineTo, nvgLinearGradient, nvgMoveTo, nvgPathWinding, nvgRGB, nvgRGBA, nvgRGBAf, nvgRect, nvgResetScissor, nvgRestore, nvgRoundedRect, nvgRoundedRectVarying, nvgSave, nvgStroke, nvgStrokeColor, nvgStrokeWidth, NVGcolor, NVGsolidity, NVGpaint};
 use std::ffi::{c_float, c_uchar};
 use yoga_sys::YGEdge::{YGEdgeBottom, YGEdgeLeft, YGEdgeRight, YGEdgeTop};
 use yoga_sys::{YGNodeLayoutGetMargin, YGNodeLayoutGetPadding};
@@ -217,8 +212,15 @@ pub trait ViewDrawer: ViewLayout {
 
     fn a(&self, color: NVGcolor) -> NVGcolor {
         let mut new_color = color.clone();
-        new_color.rgba[3] = self.alpha();
+        new_color.rgba[3] *= self.alpha();
         new_color
+    }
+
+    fn a_paint(&self, paint: NVGpaint) -> NVGpaint {
+        let mut new_paint = paint.clone();
+        new_paint.innerColor.rgba[3] *= self.alpha();
+        new_paint.outerColor.rgba[3] *= self.alpha();
+        new_paint
     }
 
     fn draw_background(&self, ctx: &FrameContext, rect: &Rect) {

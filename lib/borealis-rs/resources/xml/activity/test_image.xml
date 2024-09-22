@@ -1,0 +1,15 @@
+<brls:Box
+        width="auto"
+        height="auto"
+        axis="column"
+        justifyContent="spaceBetween">
+
+    <brls:Image
+            width="auto"
+            height="auto"
+            imageWidth="auto"
+            imageHeight="75px"
+            image="img/tiles.png"
+            scalingType="crop"/>
+
+</brls:Box>

@@ -42,7 +42,9 @@ impl ActivityDyn for MainActivity {
         // create_from_xml_file("resources/xml/activity/main.xml".parse().unwrap())
         // create_from_xml_file("resources/xml/tabs/text_test_v0.xml".parse().unwrap(), &view_creator_registry)
         // create_from_xml_file("resources/xml/tabs/text_test_v1.xml".parse().unwrap(), &view_creator_registry)
-        create_from_xml_file("xml/tabs/test_applet_frame.xml", &view_creator_registry)
+        // create_from_xml_file("xml/tabs/test_applet_frame.xml", &view_creator_registry)
+        // create_from_xml_file("xml/activity/test_tab_frame.xml", &view_creator_registry)
+        create_from_xml_file("xml/activity/test_image.xml", &view_creator_registry)
         // create_from_xml_string(
         //     r#"
         //     <brls:View xml="@res/xml/tabs/layout.xml" />

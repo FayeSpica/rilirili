@@ -30,6 +30,7 @@ use yoga_sys::YGEdge::{YGEdgeBottom, YGEdgeLeft, YGEdgeRight, YGEdgeTop};
 use yoga_sys::{YGAlign, YGDirection, YGFlexDirection, YGJustify, YGNodeGetChildCount, YGNodeInsertChild, YGNodeRemoveChild, YGNodeStyleGetPadding, YGNodeStyleSetAlignItems, YGNodeStyleSetDirection, YGNodeStyleSetFlexDirection, YGNodeStyleSetJustifyContent, YGNodeStyleSetPadding};
 use crate::core::attribute::{register_float_xml_attribute, register_string_xml_attribute};
 use crate::views::label::{HorizontalAlign, LabelTrait};
+use crate::views::sidebar::SidebarItem;
 
 pub enum JustifyContent {
     FlexStart,
@@ -239,6 +240,7 @@ pub enum BoxEnum {
     TabFrame(TabFrame),
     #[cfg(feature = "mpv")]
     Video(Video),
+    SidebarItem(SidebarItem),
 }
 
 impl ViewTrait for BoxEnum {}
@@ -267,6 +269,7 @@ impl ViewBase for BoxEnum {
             #[cfg(feature = "mpv")]
             BoxEnum::Video(v) => v.view_data(),
             BoxEnum::ScrollingFrame(v) => v.view_data(),
+            BoxEnum::TabFrame(v) => v.view_data(),
             _ => todo!(),
         }
     }
@@ -297,6 +300,7 @@ impl BoxTrait for BoxEnum {
         match self {
             BoxEnum::Box(v) => BoxView::box_view_data(v),
             BoxEnum::ScrollingFrame(v) => ScrollingFrame::box_view_data(v),
+            BoxEnum::TabFrame(v) => TabFrame::box_view_data(v),
             _ => todo!(),
         }
     }

@@ -35,8 +35,11 @@ use crate::core::attribute::AttributeSetter;
 use crate::core::font::add_font_stash;
 use crate::core::theme::theme;
 use crate::core::view_creator::{create_from_xml_file};
+use crate::views::image::Image;
 use crate::views::label::Label;
 use crate::views::rectangle::Rectangle;
+use crate::views::sidebar::{SidebarItem, SidebarSeparator};
+use crate::views::tab_frame::TabFrame;
 
 pub type XMLViewCreator = Box<dyn Fn() -> Rc<RefCell<View>>>;
 
@@ -465,6 +468,10 @@ impl Application {
         self.register_xml_view("Box", Box::new(BoxView::create));
         self.register_xml_view("Rectangle", Box::new(Rectangle::create));
         self.register_xml_view("Label", Box::new(Label::create));
+        self.register_xml_view("TabFrame", Box::new(TabFrame::create));
+        self.register_xml_view("SidebarSeparator", Box::new(SidebarSeparator::create));
+        self.register_xml_view("SidebarItem", Box::new(SidebarItem::create));
+        self.register_xml_view("Image", Box::new(Image::create));
     }
 
     pub fn register_xml_view(&mut self, name: &str, creator: XMLViewCreator) {
